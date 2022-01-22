@@ -1,0 +1,20 @@
+{
+  parserClass="org.toitlang.intellij.parser.ToitParser"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="Toit"
+  psiImplClassSuffix="Impl"
+  psiPackage="org.toitlang.intellij.psi"
+  psiImplPackage="org.toitlang.intellij.impl"
+
+  elementTypeHolderClass="org.toitlang.intellij.psi.ToitTypes"
+  elementTypeClass="org.toitlang.intellij.psi.ToitElementType"
+  tokenTypeClass="org.toitlang.intellij.psi.ToitTokenType"
+}
+
+simpleFile ::= item_*
+
+private item_ ::= (property|COMMENT|CRLF)
+
+property ::= (KEY? SEPARATOR VALUE?) | KEY

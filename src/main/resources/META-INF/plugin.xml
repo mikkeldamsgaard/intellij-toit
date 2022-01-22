@@ -1,0 +1,29 @@
+<idea-plugin>
+    <id>org.toitlang.intellij-toit</id>
+    <name>Toit language support</name>
+    <vendor email="krulimut@gmail.com" url="https://github.com/mikkeldamsgaard">Crash Junkie</vendor>
+
+    <description><![CDATA[
+    Provides support for working with toit projects
+    ]]></description>
+
+    <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
+         on how to target different products -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileType name="Toit File"
+                  implementationClass="org.toitlang.intellij.ToitFileType"
+                  fieldName="INSTANCE"
+                  language="Toit"
+                  extensions="toit"/>
+        <lang.parserDefinition language="Toit"
+                               implementationClass="org.toitlang.intellij.ToitParserDefinition"/>
+
+        <!-- Add your extensions here -->
+    </extensions>
+
+    <actions>
+        <!-- Add your actions here -->
+    </actions>
+</idea-plugin>
