@@ -18,9 +18,16 @@
                   language="Toit"
                   extensions="toit"/>
         <lang.parserDefinition language="Toit"
-                               implementationClass="org.toitlang.intellij.ToitParserDefinition"/>
+                               implementationClass="org.toitlang.intellij.parser.ToitParserDefinition"/>
+        <lang.syntaxHighlighterFactory language="Toit"
+                                       implementationClass="org.toitlang.intellij.ToitSyntaxHighlighterFactory"/>
 
-        <!-- Add your extensions here -->
+        <colorSettingsPage implementation="org.toitlang.intellij.ToitColorSettingsPage"/>
+        <annotator language="Toit" implementationClass="org.toitlang.intellij.ToitAnnotationHighlighter"/>
+        <applicationConfigurable parentId="language" instance="org.toitlang.intellij.ToitApplicationSettings"
+                                 id="org.toitlang.intellij.ToitApplicationSettings" displayName="Toit"/>
+        <projectService serviceImplementation="org.toitlang.intellij.engine.ToitApiEngine"/>
+        <indexedRootsProvider implementation="org.toitlang.intellij.indexer.ToitSdkIndexRoot"/>
     </extensions>
 
     <actions>

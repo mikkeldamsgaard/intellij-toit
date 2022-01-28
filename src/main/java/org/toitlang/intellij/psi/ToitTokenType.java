@@ -12,6 +12,6 @@ public class ToitTokenType extends IElementType {
 
     @Override
     public String toString() {
-        return "ToitTokenType." + super.toString();
+        return "x" + super.toString();
     }
 }

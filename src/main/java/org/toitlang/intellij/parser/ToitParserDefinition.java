@@ -1,4 +1,4 @@
-package org.toitlang.intellij;
+package org.toitlang.intellij.parser;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.ParserDefinition;
@@ -12,18 +12,25 @@ import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
 import org.jetbrains.annotations.NotNull;
-import org.toitlang.intellij.parser.ToitParser;
+import org.toitlang.intellij.ToitLanguage;
+import org.toitlang.intellij.lexer.ToitLexerAdapter;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitTypes;
 
 public class ToitParserDefinition implements ParserDefinition {
     public static final TokenSet WHITE_SPACES = TokenSet.create(TokenType.WHITE_SPACE);
     public static final TokenSet COMMENTS = TokenSet.create(ToitTypes.COMMENT);
+    public static final TokenSet STRINGS = TokenSet.create(ToitTypes.STRING);
     public static final IFileElementType FILE = new IFileElementType(ToitLanguage.INSTANCE);
 
     @Override
     public @NotNull Lexer createLexer(Project project) {
         return new ToitLexerAdapter();
+    }
+
+    @Override
+    public @NotNull TokenSet getWhitespaceTokens() {
+        return WHITE_SPACES;
     }
 
     @Override
@@ -43,7 +50,7 @@ public class ToitParserDefinition implements ParserDefinition {
 
     @Override
     public @NotNull TokenSet getStringLiteralElements() {
-        return TokenSet.EMPTY;
+        return STRINGS;
     }
 
     @Override
