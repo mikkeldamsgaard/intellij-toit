@@ -1,5 +1,5 @@
 {
-  parserClass="org.toitlang.intellij.parser.ToitParser"
+  parserClass="org.toitlang.intellij.parser.ToitParser2"
   parserUtilClass="org.toitlang.intellij.parser.ToitParserUtil"
 
   //extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
@@ -23,7 +23,7 @@
      space='regexp:[ \t\f]+'
   ]
 }
-toitFile ::= toplevel_declarations_* eof_rule
+toitFile ::= toplevel_declarations_* <<eof>>
 
 // limited_block_expressino is an expression where a block must be encapsulated in parenthesis as in:
 // if (method: it + 3): print 1
@@ -50,21 +50,19 @@ private toplevel_declarations_ ::=
   function_declaration |
   assigment_declaration
 
-import_declaration ::= IMPORT DOT? qualified_name (AS variable_name)? (SHOW variable_name)? statement_terminator
-export_declaration ::= EXPORT (qualified_name | STAR) statement_terminator
+import_declaration ::= IMPORT DOT? qualified_name (AS variable_name)? (SHOW variable_name)? NEWLINE
+export_declaration ::= EXPORT (qualified_name | STAR) NEWLINE
 class_declaration ::= ABSTRACT? CLASS class_name (EXTENDS qualified_name)? (IMPLEMENTS qualified_name+)?  class_body
 {methods=[getName getSuper ]}
 interface_declaration ::= INTERFACE class_name (NEWLINE? EXTENDS qualified_name)? interface_body
-function_declaration ::= ABSTRACT function_signature statement_terminator | function_signature block
+function_declaration ::= ABSTRACT? function_signature NEWLINE | function_signature block
 assigment_declaration ::= variable_name type_indicator? assignment_operator expression_outer statement_terminator
 
 class_body ::= COLON (NEWLINE block_start class_declaration_declaration_+ block_terminator | class_declaration_declaration_? statement_terminator)
 interface_body ::= COLON (NEWLINE block_start interface_declaration_declarations+ block_terminator | interface_declaration_declarations? statement_terminator)
 
-block_start ::= (INDENT_OUT NEWLINE)? INDENT_IN // The indent out can happens with multiline parameters in method declaration
-eof_rule ::= <<eof>>
 block_terminator ::= NEWLINE INDENT_OUT | INDENT_OUT | &eof_rule
-statement_terminator ::= SEMICOLON |  &(INDENT_OUT | NEWLINE | eof_rule)
+statement_terminator ::= SEMICOLON NEWLINE | SEMICOLON | NEWLINE
 
 private class_declaration_declaration_ ::=
   empty |
@@ -90,10 +88,10 @@ private interface_declaration_declarations ::=
     empty |
     function_signature statement_terminator
 
-block ::= COLON (PIPE variable_name+ PIPE)? (NEWLINE block_start block_statement_+ block_terminator | block_statement_ | &eof_rule)
+block ::= COLON block_parameters? block_statement_ &(NEWLINE | eof_rule) | COLON block_parameters? INDENT_IN (block_statement_ NEWLINE)+ (INDENT_OUT | &eof_rule)
+block_parameters ::= PIPE variable_name+ PIPE
 
 private block_statement_ ::=
-  empty |
   if_statement |
   while_statement |
   for_statement |
@@ -135,7 +133,7 @@ expression ::= assignment_expression
 private unary_group ::=  unary_minus_expression | bitwise_not_expression
 private multiplication_group ::= multiplication_expression | division_expression | remainder_expression
 private addition_group ::= addition_expression | subtraction_expression
-private primary_group ::= block_expression | simple_reference_or_call_expression | literal_expression | parenthesis_expression
+private primary_group ::= block_expression | simple_reference_or_call_expression | literal_expression | parenthesis_expression | lambda_expression
 private qualification_or_call_group ::= qualification_call_expression | qualification_expression
 
 // public rules for each expression
@@ -221,7 +219,7 @@ private map_entry ::= expression_with_limited_block &(nli COLON) nl COLON nl exp
 
 literal_expression ::= INTEGER | FLOAT | STRING | CHARACTER | BOOLEAN | NULL | list_literal | map_literal | set_literal
 block_expression ::= x_block_expression
-
+lambda_expression ::= COLON_COLON block_parameters? block_statement_ &(NEWLINE | EOF) | COLON_COLON block_parameters? NEWLINE INDENT_IN (block_statement_ (NEWLINE | &eof))+ (INDENT_OUT | &eof)
 // Operator groups
 overloadable_operator ::= EQUALS_EQUALS | LBRACKET RBRACKET | SLASH | PLUS | MINUS | PERCENT | STAR | GREATER_OR_EQUALS | GREATER | LESS_OR_EQUALS | LESS | HAT | PIPE | AMPERSAND | TILDE | LBRACKET DOT DOT RBRACKET
 assignment_operator ::= DEFINE | CONST_DEFINE | ADD_ASSIGN | SUB_ASSIGN | MUL_ASSIGN | DIV_ASSIGN | REMAINDER_ASSIGN | OR_ASSIGN | NOT_ASSIGN | AND_ASSIGN | SHIFT_LEFT_ASSIGN | SHIFT_RIGHT_ASSIGN | SHIFT_SHIFT_RIGHT_ASSIGN | EQUALS

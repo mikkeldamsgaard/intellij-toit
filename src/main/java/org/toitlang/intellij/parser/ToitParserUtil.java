@@ -1,6 +1,5 @@
 package org.toitlang.intellij.parser;
 
-import com.intellij.lang.LighterASTNode;
 import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.parser.GeneratedParserUtilBase;
 import com.intellij.openapi.util.Key;
@@ -9,95 +8,95 @@ import org.toitlang.intellij.psi.ToitTypes;
 import java.util.*;
 
 public class ToitParserUtil extends GeneratedParserUtilBase {
-//    private final static Key<Boolean> LIMITED_BLOCK_EXPRESSION = Key.create("limitedBlockExpression");
-    private final static Key<Integer> PAREN_COUNT = Key.create("parenCount");
-    public static boolean parseExpressionWithLimitedBlock(PsiBuilder psiBuilder, int level) {
-//        psiBuilder.putUserData(LIMITED_BLOCK_EXPRESSION, true);
-        psiBuilder.putUserData(PAREN_COUNT, 0);
-        boolean r = parseOuterExpression(psiBuilder, level);
-        psiBuilder.putUserData(PAREN_COUNT, null);
-        return r;
-    }
-    public static boolean parseGuardedExpression(PsiBuilder psiBuilder, int level) {
-//        psiBuilder.putUserData(LIMITED_BLOCK_EXPRESSION, true);
-        Integer c = psiBuilder.getUserData(PAREN_COUNT);
-        if (c != null) psiBuilder.putUserData(PAREN_COUNT, c+1);
-        boolean r = ToitParser.expression(psiBuilder, level, -1);
-        psiBuilder.putUserData(PAREN_COUNT, c);
-        return r;
-    }
-
-    public static boolean parseBlockExpression(PsiBuilder psiBuilder, int level) {
-        Integer c = psiBuilder.getUserData(PAREN_COUNT);
-        if (c != null && c == 0) return false;
-        return ToitParser.block(psiBuilder,level);
-    }
-
-    static class IndentTracker {
-        Map<Integer, Integer> levelToStart = new HashMap<>();
-        SortedSet<Integer> indentMarkers = new TreeSet<>();
-
-
-        void startLevel(int level, int position) {
-            levelToStart.put(level, position);
-        }
-
-        // Returns the number of INDENT_OUT to safely consume
-        int leaveLevel(int level, int position) {
-            int result = 0;
-            int startPosition = levelToStart.get(level);
-            for (int indentPos : indentMarkers.tailSet(startPosition)) {
-                if (indentPos >= position) break;
-                result ++;
-            }
-            return result;
-        }
-
-        void recordIndent(int position) {
-            indentMarkers.add(position);
-        }
-    }
-
-    private final static Key<IndentTracker> expressionIndentTrackerKey = Key.create("expressionIndentTracker");
-    public static boolean parseOuterExpression(PsiBuilder psiBuilder, int level) {
-        var indentTracker = new IndentTracker();
-        indentTracker.startLevel(level, psiBuilder.getCurrentOffset());
-        psiBuilder.putUserData(expressionIndentTrackerKey, indentTracker);
-
-        boolean r = ToitParser.expression(psiBuilder, level, -1);
-        if (!r) return false;
-
-        int indentOutsToPop = indentTracker.leaveLevel(level, psiBuilder.getCurrentOffset());
-        if (indentOutsToPop > 0 ) {
-            while (Objects.equals(psiBuilder.getTokenType(), ToitTypes.NEWLINE)) {
-                psiBuilder.advanceLexer(); // EAT newlines
-            }
-
-            while (indentOutsToPop-- > 0 && Objects.equals(psiBuilder.getTokenType(), ToitTypes.INDENT_OUT)) {
-                psiBuilder.advanceLexer();
-            }
-
-        }
-
-        return true;
-    }
-
-    public static boolean parseHandleExpressionNewlineAndIndent(PsiBuilder psiBuilder, int level) {
-        IndentTracker indentTracker = psiBuilder.getUserData(expressionIndentTrackerKey);
-        if (indentTracker == null) return false;
-psiBuilder.advanceLexer();
-        while (true) {
-            if (Objects.equals(psiBuilder.getTokenType(), ToitTypes.NEWLINE)) {
-                psiBuilder.advanceLexer();
-            } else if (Objects.equals(psiBuilder.getTokenType(), ToitTypes.INDENT_IN)) {
-                psiBuilder.advanceLexer();
-                indentTracker.recordIndent(psiBuilder.getCurrentOffset());
-            } else {
-                psiBuilder.putUserData(expressionIndentTrackerKey, indentTracker);
-                return true;
-            }
-        }
-    }
+////    private final static Key<Boolean> LIMITED_BLOCK_EXPRESSION = Key.create("limitedBlockExpression");
+//    private final static Key<Integer> PAREN_COUNT = Key.create("parenCount");
+//    public static boolean parseExpressionWithLimitedBlock(PsiBuilder psiBuilder, int level) {
+////        psiBuilder.putUserData(LIMITED_BLOCK_EXPRESSION, true);
+//        psiBuilder.putUserData(PAREN_COUNT, 0);
+//        boolean r = parseOuterExpression(psiBuilder, level);
+//        psiBuilder.putUserData(PAREN_COUNT, null);
+//        return r;
+//    }
+//    public static boolean parseGuardedExpression(PsiBuilder psiBuilder, int level) {
+////        psiBuilder.putUserData(LIMITED_BLOCK_EXPRESSION, true);
+//        Integer c = psiBuilder.getUserData(PAREN_COUNT);
+//        if (c != null) psiBuilder.putUserData(PAREN_COUNT, c+1);
+//        boolean r = ToitParser.expression(psiBuilder, level, -1);
+//        psiBuilder.putUserData(PAREN_COUNT, c);
+//        return r;
+//    }
+//
+//    public static boolean parseBlockExpression(PsiBuilder psiBuilder, int level) {
+//        Integer c = psiBuilder.getUserData(PAREN_COUNT);
+//        if (c != null && c == 0) return false;
+//        return ToitParser.block(psiBuilder,level);
+//    }
+//
+//    static class IndentTracker {
+//        Map<Integer, Integer> levelToStart = new HashMap<>();
+//        SortedSet<Integer> indentMarkers = new TreeSet<>();
+//
+//
+//        void startLevel(int level, int position) {
+//            levelToStart.put(level, position);
+//        }
+//
+//        // Returns the number of INDENT_OUT to safely consume
+//        int leaveLevel(int level, int position) {
+//            int result = 0;
+//            int startPosition = levelToStart.get(level);
+//            for (int indentPos : indentMarkers.tailSet(startPosition)) {
+//                if (indentPos >= position) break;
+//                result ++;
+//            }
+//            return result;
+//        }
+//
+//        void recordIndent(int position) {
+//            indentMarkers.add(position);
+//        }
+//    }
+//
+//    private final static Key<IndentTracker> expressionIndentTrackerKey = Key.create("expressionIndentTracker");
+//    public static boolean parseOuterExpression(PsiBuilder psiBuilder, int level) {
+//        var indentTracker = new IndentTracker();
+//        indentTracker.startLevel(level, psiBuilder.getCurrentOffset());
+//        psiBuilder.putUserData(expressionIndentTrackerKey, indentTracker);
+//
+//        boolean r = ToitParser.expression(psiBuilder, level, -1);
+//        if (!r) return false;
+//
+//        int indentOutsToPop = indentTracker.leaveLevel(level, psiBuilder.getCurrentOffset());
+//        if (indentOutsToPop > 0 ) {
+//            while (Objects.equals(psiBuilder.getTokenType(), ToitTypes.NEWLINE)) {
+//                psiBuilder.advanceLexer(); // EAT newlines
+//            }
+//
+//            while (indentOutsToPop-- > 0 && Objects.equals(psiBuilder.getTokenType(), ToitTypes.DEDENT)) {
+//                psiBuilder.advanceLexer();
+//            }
+//
+//        }
+//
+//        return true;
+//    }
+//
+//    public static boolean parseHandleExpressionNewlineAndIndent(PsiBuilder psiBuilder, int level) {
+//        IndentTracker indentTracker = psiBuilder.getUserData(expressionIndentTrackerKey);
+//        if (indentTracker == null) return false;
+//psiBuilder.advanceLexer();
+//        while (true) {
+//            if (Objects.equals(psiBuilder.getTokenType(), ToitTypes.NEWLINE)) {
+//                psiBuilder.advanceLexer();
+//            } else if (Objects.equals(psiBuilder.getTokenType(), ToitTypes.INDENT)) {
+//                psiBuilder.advanceLexer();
+//                indentTracker.recordIndent(psiBuilder.getCurrentOffset());
+//            } else {
+//                psiBuilder.putUserData(expressionIndentTrackerKey, indentTracker);
+//                return true;
+//            }
+//        }
+//    }
 
 //    public static boolean parsePreviousImplicitlyClosesStatement(PsiBuilder psiBuilder, int level) {
 //        LighterASTNode latestDoneMarker = psiBuilder.getLatestDoneMarker();

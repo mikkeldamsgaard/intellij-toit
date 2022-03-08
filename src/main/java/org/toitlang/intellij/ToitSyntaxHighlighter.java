@@ -46,7 +46,8 @@ public class ToitSyntaxHighlighter extends SyntaxHighlighterBase {
     @Override
     public TextAttributesKey @NotNull [] getTokenHighlights(IElementType tokenType) {
         // Is called once per tokenType to determine its class
-        if (tokenType.equals(ToitTypes.STRING) ||
+        if (tokenType.equals(ToitTypes.STRING_PART) ||
+            tokenType.equals(ToitTypes.STRING_END) ||
                 tokenType.equals(ToitTypes.CHARACTER)) {
             return STRING_KEYS;
         }

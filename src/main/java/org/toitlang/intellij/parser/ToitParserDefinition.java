@@ -14,13 +14,14 @@ import com.intellij.psi.tree.TokenSet;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.ToitLanguage;
 import org.toitlang.intellij.lexer.ToitLexerAdapter;
+import org.toitlang.intellij.psi.ToitElementType;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitTypes;
 
 public class ToitParserDefinition implements ParserDefinition {
     public static final TokenSet WHITE_SPACES = TokenSet.create(TokenType.WHITE_SPACE);
     public static final TokenSet COMMENTS = TokenSet.create(ToitTypes.COMMENT);
-    public static final TokenSet STRINGS = TokenSet.create(ToitTypes.STRING);
+    public static final TokenSet STRINGS = TokenSet.create(ToitTypes.STRING_START, ToitTypes.STRING_END, ToitTypes.STRING_PART);
     public static final IFileElementType FILE = new IFileElementType(ToitLanguage.INSTANCE);
 
     @Override
@@ -30,12 +31,13 @@ public class ToitParserDefinition implements ParserDefinition {
 
     @Override
     public @NotNull TokenSet getWhitespaceTokens() {
-        return WHITE_SPACES;
+        //return WHITE_SPACES;
+        return TokenSet.EMPTY;
     }
 
     @Override
     public @NotNull PsiParser createParser(Project project) {
-        return new ToitParser();
+        return new ToitParserAdapter();
     }
 
     @Override
@@ -55,7 +57,9 @@ public class ToitParserDefinition implements ParserDefinition {
 
     @Override
     public @NotNull PsiElement createElement(ASTNode node) {
-        return ToitTypes.Factory.createElement(node);
+        ToitElementType t = (ToitElementType) node.getElementType();
+
+        return t.createPsiElement(node);
     }
 
     @Override
