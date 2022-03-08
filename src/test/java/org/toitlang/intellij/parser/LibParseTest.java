@@ -12,9 +12,12 @@ public class LibParseTest extends  ParserTest {
             if (c.isDirectory() ) parseAllSub(c);
             else if (c.getName().endsWith("toit") ) {
                 try {
+                    long t = System.currentTimeMillis();
                     String content = new String(new FileInputStream(c).readAllBytes(), Charsets.UTF_8);
                     var psi = parseFile(c.getName(), content);
+                    System.out.println(System.currentTimeMillis()-t);
                     checkError(psi, c.getPath());
+                    System.out.println(System.currentTimeMillis()-t);
                     System.out.println("Success: " + c);
                 } catch (Throwable t) {
                     System.err.println("Failed to parse: " + c);

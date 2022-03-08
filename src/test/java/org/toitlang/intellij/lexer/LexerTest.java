@@ -1,8 +1,10 @@
 package org.toitlang.intellij.lexer;
 
+import com.google.common.base.Charsets;
 import junit.framework.TestCase;
 import org.toitlang.intellij.parser.SimpleParserTest;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 
 public class LexerTest extends TestCase {

@@ -940,6 +940,7 @@ public class Parser {
         }
         if (isNewLine()) consumeAllowNewlines();
         if (!expect(RBRACKET)) return list.error("Expected ]");
+
         return list.done(LIST_LITERAL);
     }
 

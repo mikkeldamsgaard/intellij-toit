@@ -1,5 +1,8 @@
 package org.toitlang.intellij.parser;
 
+import com.google.common.base.Charsets;
+
+import java.io.FileInputStream;
 import java.io.IOException;
 
 public class SimpleParserTest extends ParserTest {
@@ -15,7 +18,7 @@ public class SimpleParserTest extends ParserTest {
             "*/\n" +
             "interface Device extends L:";
 
-    public void testReturnWithMethodCall() throws IOException {
+    public void testReturnWithMethodCall() {
         var p = parseFile("t", PARSION_RETURN_WiTH_METHOD_CALL);
 
         checkError(p, "");
@@ -29,13 +32,13 @@ public class SimpleParserTest extends ParserTest {
             "close:\n" +
             "  abc\n";
 
-    public void testParsingTestArgumentOnNewLine() throws IOException {
+    public void testParsingTestArgumentOnNewLine() {
         var p = parseFile("tmp", PARSING_ARGUMENTS_ON_NEW_LINES);
 
         checkError(p, "");
     }
 
-    public void testElvis() throws IOException {
+    public void testElvis() {
         var p = parseFile("tmp", "" +
                 "main:\n" +
                 "  f = mosi ? mosi.num : -1\n");
@@ -43,7 +46,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testInterfaceParameterLess() throws IOException {
+    public void testInterfaceParameterLess() {
         var p = parseFile("tmp", ""
                 + "interface A:\n"
                 + "  open\n"
@@ -55,7 +58,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testParsingTestMultipleArgumentOnNewLine() throws IOException {
+    public void testParsingTestMultipleArgumentOnNewLine() {
         var p = parseFile("tmp", "" +
                 "main:\n" +
                 "  f = method\n" +
@@ -76,7 +79,7 @@ public class SimpleParserTest extends ParserTest {
             "      return m2_ / (count_ - 1)\n";
 
 
-    public void testIfElse() throws IOException {
+    public void testIfElse() {
         var p = parseFile("t", PARSE_TEST_IF_ELSE);
 
         checkError(p, "");
@@ -86,7 +89,7 @@ public class SimpleParserTest extends ParserTest {
             "x ::= a is b\n" +
             "  and b is c";
 
-    public void testOperatorNewline() throws IOException {
+    public void testOperatorNewline() {
         var p = parseFile("t", PARSE_OPERATOR_NEWLINE);
         checkError(p, "");
     }
@@ -96,13 +99,13 @@ public class SimpleParserTest extends ParserTest {
             "  --p:\n" +
             " j\n";
 
-    public void testMultilineParameters() throws IOException {
+    public void testMultilineParameters() {
         var p = parseFile("tmp", MULTILINE_PARAMATER_TESTDATA);
 
         checkError(p, "");
     }
 
-    public void testMultilineListLiteral() throws IOException {
+    public void testMultilineListLiteral() {
         var p = parseFile("tmp", "" +
                 "x ::= [\n" +
                 "  1, 2 ]\n" +
@@ -116,7 +119,7 @@ public class SimpleParserTest extends ParserTest {
             "f:\n" +
             "  8.repeat";
 
-    public void testLiteralMethodInvocation() throws IOException {
+    public void testLiteralMethodInvocation() {
         var p = parseFile("tmp", PARSE_LITERAL_METHOD_INVOCATION);
 
         checkError(p, "");
@@ -136,17 +139,17 @@ public class SimpleParserTest extends ParserTest {
 
             "";
 
-    public void testNewParser() throws IOException {
+    public void testNewParser() {
         var p = parseFile("tmp", NEW_PARSER_TEST);
 
         checkError(p, "");
     }
 
-    public void testNewParserExternalFiles() throws IOException {
+    public void testNewParserExternalFiles() {
 
     }
 
-    public void testConstructor() throws IOException {
+    public void testConstructor() {
         var p = parseFile("tmp", ""
                 + "class A:\n"
                 + "  constructor.x .x_:\n"
@@ -156,7 +159,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testConstructorDeafultValues() throws IOException {
+    public void testConstructorDeafultValues() {
         var p = parseFile("tmp", ""
                 + "class A:\n"
                 + "  constructor .from_=p .to_=byte_array_.size:\n"
@@ -165,7 +168,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testNamedArgument() throws IOException {
+    public void testNamedArgument() {
         var p = parseFile("tmp", ""
                 + "main:\n"
                 + "  a 1 --p=true\n"
@@ -174,7 +177,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testNonInitializedVar() throws IOException {
+    public void testNonInitializedVar() {
         var p = parseFile("tmp", ""
                 + "class A:\n"
                 + "  a/int\n"
@@ -184,7 +187,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testDoubleAssignment() throws IOException {
+    public void testDoubleAssignment() {
         var p = parseFile("tmp", "" +
                 "a := {}\n" +
                 "c := 1\n"
@@ -193,7 +196,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testIndexing() throws IOException {
+    public void testIndexing() {
         var p = parseFile("tmp", "" +
                 "c := r[1].b\n"
         );
@@ -201,7 +204,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testDerefCall() throws IOException {
+    public void testDerefCall() {
         var p = parseFile("tmp", "" +
                 "c := a.b x\n"
         );
@@ -209,7 +212,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testConstDeclare() throws IOException {
+    public void testConstDeclare() {
         var p = parseFile("tmp", ""
                 + "f:\n"
                 + "  y --p=: \n"
@@ -220,7 +223,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testCatch() throws IOException {
+    public void testCatch() {
         var p = parseFile("tmp", ""
                 + "f:\n"
                 + "  a := catch: \n"
@@ -230,7 +233,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testDotParam() throws IOException {
+    public void testDotParam() {
         var p = parseFile("tmp", ""
                 + "class A:\n"
                 + "  constructor --logger=log.default --pwr_on=null --.reset_n=null: \n"
@@ -239,7 +242,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testNewLineParam() throws IOException {
+    public void testNewLineParam() {
         var p = parseFile("tmp", ""
                 + "f: \n"
                 + "  p := a.b\n"
@@ -249,7 +252,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testDotContructorType() throws IOException {
+    public void testDotContructorType() {
         var p = parseFile("tmp", ""
                 + "class a: \n"
                 + "  constructor a/b c/d .p_/d:\n"
@@ -258,7 +261,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testoperatorSlash() throws IOException {
+    public void testoperatorSlash() {
         var p = parseFile("tmp", ""
                 + "class a: \n"
                 + "  operator / other:\n"
@@ -267,7 +270,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testSemiColon() throws IOException {
+    public void testSemiColon() {
         var p = parseFile("tmp", ""
                 + "a := (: a; true )\n"
         );
@@ -275,17 +278,17 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testSpacedElvis() throws IOException {
+    public void testSpacedElvis() {
         var p = parseFile("tmp", ""
                 + "f:\n" +
                 "    a\n" +
                 "      ? l\n" +
-                "      : z\n" );
+                "      : z\n");
 
         checkError(p, "");
     }
 
-    public void testStringExpression() throws IOException {
+    public void testStringExpression() {
         var p = parseFile("tmp", ""
                 + "f:= \"\\n\" \n" // Escape
                 + "f:= \"\" \n"  // Empty string
@@ -297,7 +300,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testInlineStringExpression() throws IOException {
+    public void testInlineStringExpression() {
         var p = parseFile("tmp", ""
                 + "f:= \"$n+\" \n"
                 + "f:= \"$n[1+2*x[8]]\" \n"
@@ -309,7 +312,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testFormat() throws IOException {
+    public void testFormat() {
         var p = parseFile("tmp", ""
                 + "f:= \"$(%02x n)\" \n"
         );
@@ -317,7 +320,7 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testNestedComments() throws IOException {
+    public void testNestedComments() {
         var p = parseFile("tmp", ""
                 + "/** /* */ */ \n"
         );
@@ -325,8 +328,8 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testMoreElvis() throws IOException {
-        var p = parseFile("tmp", ""+
+    public void testMoreElvis() {
+        var p = parseFile("tmp", "" +
                 "alignment_width := start == pos - 1\n" +
                 "            ? 0\n" +
                 "            : int.parse_ format start (pos - 1) --on_error=: throw it\n \n"
@@ -335,8 +338,8 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testIfAssignemnt() throws IOException {
-        var p = parseFile("tmp", ""+
+    public void testIfAssignemnt() {
+        var p = parseFile("tmp", "" +
                 "f: \n" +
                 "  if p := 1:\n" +
                 "    return\n"
@@ -345,8 +348,8 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testMultilineAssignemnt() throws IOException {
-        var p = parseFile("tmp", ""+
+    public void testMultilineAssignemnt() {
+        var p = parseFile("tmp", "" +
                 "f := x\n" +
                 "  --p=:\n" +
                 "     f\n" +
@@ -357,8 +360,8 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testParenBlock() throws IOException {
-        var p = parseFile("tmp", ""+
+    public void testParenBlock() {
+        var p = parseFile("tmp", "" +
                 "f:\n" +
                 "  map_.update id --if_absent=(: return ): | existing |\n" +
                 "     f\n"
@@ -367,8 +370,8 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
-    public void testFor()  throws IOException {
-        var p = parseFile("tmp", ""+
+    public void testFor() {
+        var p = parseFile("tmp", "" +
                 "f:\n" +
                 "  for i := 1; i< 10; i++: \n" +
                 "     f\n"
