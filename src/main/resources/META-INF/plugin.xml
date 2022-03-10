@@ -28,6 +28,8 @@
                                  id="org.toitlang.intellij.ToitApplicationSettings" displayName="Toit"/>
         <projectService serviceImplementation="org.toitlang.intellij.engine.ToitApiEngine"/>
         <indexedRootsProvider implementation="org.toitlang.intellij.indexer.ToitSdkIndexRoot"/>
+
+        <localInspection level="ERROR" enabledByDefault="true" displayName="Syntax errors" implementationClass="org.toitlang.intellij.psi.inspections.ErrorInspector"/>
     </extensions>
 
     <actions>

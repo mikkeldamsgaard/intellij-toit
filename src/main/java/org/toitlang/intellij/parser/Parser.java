@@ -15,7 +15,7 @@ import java.util.function.Function;
 
 public class Parser {
     private final IElementType root;
-    private final ToitPsiBuilderAdapter builder;
+    private final PsiBuilder builder;
     private int currentBaseIndentLevel = 0; // The indent level for the current "block"
     private int currentIndentLevel = 0; // The current indent level
     // Invariant: currentIndentLevel >= currentBaseIndentLevel
@@ -23,7 +23,7 @@ public class Parser {
     private boolean currentTokenIsAttached = false;
     private boolean currentIsAtBeggingOfLine = true;
 
-    public Parser(IElementType root, ToitPsiBuilderAdapter builder) {
+    public Parser(IElementType root, PsiBuilder builder) {
         this.root = root;
         this.builder = builder;
     }
@@ -51,42 +51,32 @@ public class Parser {
         consumeAllowNewlines();
 
         if (is(DOT) || is(DOT_DOT)) {
-            var m = mark();
             while (is(DOT) || is(DOT_DOT)) consumeAllowNewlines();
-            m.done(ToitTypes.LOCAL_IMPORT);
         }
 
-        var qn = mark();
         while (true) {
-            if (!variableName(true)) {
-                qn.error("Expected identifier");
-                return error("Expected identifier", qn, importPart);
+            if (!identifier(true, IMPORT_IDENTIFIER)) {
+                return importPart.error("Expected identifier");
             }
             if (!is(ToitTypes.DOT)) break;
             consumeAllowNewlines();
         }
-        qn.done(ToitTypes.QUALIFIED_NAME);
 
         if (is(ToitTypes.AS)) {
-            var as = mark();
             consumeAllowNewlines();
 
-            if (!variableName(true)) return error("Expected identifier after as", as, importPart);
-
-            as.done(ToitTypes.IMPORT_AS);
+            if (!identifier(true, IMPORT_AS_IDENTIFIER)) return importPart.error("Expected identifier after as");
         } else if (isIdentifier("show")) {
-            var show = mark();
-            consumeAllowNewlines();
+            identifier(true, PSEUDO_KEYWORD);
 
             if (is(STAR)) consumeAllowNewlines();
             else {
-                if (!variableName(true)) return drop(show, importPart);
+                if (!identifier(true, IMPORT_SHOW_IDENTIFIER)) return importPart.drop();
 
                 while (isIdentifier() && !atNextStatement()) {
-                    variableName(true);
+                    identifier(true, IMPORT_SHOW_IDENTIFIER);
                 }
             }
-            show.done(ToitTypes.IMPORT_SHOW);
         }
 
         if (isNewLine()) consumeAllowNewlines();
@@ -100,12 +90,10 @@ public class Parser {
         consumeAllowNewlines();
 
         if (is(ToitTypes.STAR)) {
-            var m = mark();
             consumeAllowNewlines();
-            m.done(ToitTypes.EXPORT_STAR);
-        } else if (isIdentifier()) {
-            variableName(true);
-            while (isIdentifier()) variableName(true);
+        } else if (!atStatementTerminator(false) && isIdentifier()) {
+            identifier(true, EXPORT_IDENTIFIER);
+            while (!atStatementTerminator(false) && isIdentifier()) identifier(true, EXPORT_IDENTIFIER);
         } else {
             export.error("Expected * or identifier");
             return false;
@@ -141,7 +129,7 @@ public class Parser {
         var m = mark();
         if (is(STATIC)) consumeAllowNewlines();
         if (!isIdentifier())
-            return m.error("Expected variable/constant declaration or method declaration, found " + tokenType());
+             return m.error("Expected variable/constant declaration or method declaration, found " + tokenType());
         if (isIdentifier("operator")) {
             m.rollback();
             return functionDeclaration();
@@ -162,7 +150,7 @@ public class Parser {
 
         if (is(STATIC)) consumeAllowNewlines();
 
-        if (!variableName(true)) return assignment.drop();
+        if (!identifier(true, VARIABLE_IDENTIFIER)) return assignment.drop();
 
         if (is(SLASH)) {
             consumeAllowNewlines();
@@ -208,7 +196,7 @@ public class Parser {
         if (isIdentifier("constructor")) {
             if (abstract_) return function.error("Constructors may not be abstract");
             if (static_) return function.error("Constructors may not be static");
-            consume();
+            identifier(false, PSEUDO_KEYWORD);
             if (is(NEWLINE)) {
                 // constructor
                 //       --param:
@@ -216,7 +204,7 @@ public class Parser {
             } else if (is(DOT) && currentTokenIsAttached) {
                 // constructor.type
                 consumeAllowNewlines();
-                if (!variableName(true)) return function.error("Expected constructor override name");
+                if (!identifier(true, FACTORY_IDENTIFIER)) return function.error("Expected constructor override name");
             }
             constructor = true;
         } else if (isIdentifier("operator")) {
@@ -236,7 +224,7 @@ public class Parser {
                 function.error("Invalid overloaded operator");
             }
         } else {
-            if (!variableName(true)) return function.error("Expected function name");
+            if (!identifier(true, FUNCTION_IDENTIFIER)) return function.error("Expected function name");
 
             if (is(EQUALS) && currentTokenIsAttached) consumeAllowNewlines(); // Setter
         }
@@ -290,20 +278,20 @@ public class Parser {
             } else if (!isIdentifier())
                 return parameter.error("Expected parameter name, got " + tokenType());
         }
-        variableName(true);
+        identifier(true, NAMED_PARAMETER_IDENTIFIER);
         return parameter.done(PARAMETER_NAME);
     }
 
 
     private boolean typeName(boolean requireAttached) {
         var type = mark();
-        if (!variableName(true)) return type.drop();
+        if (!identifier(true, TYPE_IDENTIFIER)) return type.drop();
 
         while (!builder.eof()) {
             if (!is(DOT)) break;
             if (requireAttached && !currentTokenIsAttached) break;
             consumeAllowNewlines();
-            if (!variableName(true)) return type.error("Expected qualified type");
+            if (!identifier(true, TYPE_IDENTIFIER)) return type.error("Expected qualified type");
         }
         return type.done(QUALIFIED_NAME);
     }
@@ -329,7 +317,7 @@ public class Parser {
             if (!allowParameters) return block.error("Parameter specification is not allowed here");
             consumeAllowNewlines();
             while (!builder.eof() && !is(PIPE)) {
-                if (!variableName(true)) return block.error("Expected parameter name");
+                if (!identifier(true, SIMPLE_PARAMETER_IDENTIFIER)) return block.error("Expected parameter name");
                 if (is(SLASH)) {
                     consumeAllowNewlines();
                     if (!typeName(false)) return block.error("Expected type name");
@@ -403,7 +391,7 @@ public class Parser {
                 consumeAllowNewlines();
                 if (is(DOT) && currentTokenIsAttached) {
                     consume();
-                    if (!variableName(true)) return m.error("Expected label name");
+                    if (!identifier(true, BREAK_CONTINUE_LABEL_IDENTIFIER)) return m.error("Expected label name");
                     tryRule(() -> expression(true));
                 }
 
@@ -533,7 +521,7 @@ public class Parser {
             consumeAllowNewlines(); // class
         }
 
-        if (!variableName(true)) return interface_.error("Expected " + type + " name");
+        if (!identifier(true, STRUCTURE_IDENTIFIER)) return interface_.error("Expected " + type + " name");
         if (isIdentifier("extends")) {
             consumeAllowNewlines();
             if (!typeName(false)) return interface_.error("Expected " + type + " name");
@@ -648,7 +636,7 @@ public class Parser {
 
             var namedArgument = mark();
             if (expect(MINUS_MINUS)) {
-                if (!variableName(true)) return error("Variable name expected", expr, m, namedArgument);
+                if (!identifier(true, NAMED_PARAMETER_IDENTIFIER)) return error("Variable name expected", expr, m, namedArgument);
                 if (is(EQUALS)) {
                     consumeAllowNewlines();
                     if (!(areArgumentsOnNewLines ? expression(allowBlock) : assignmentExpression(allowBlock)))
@@ -781,7 +769,7 @@ public class Parser {
         var deref = mark();
         if (isNewLine()) consumeAllowNewlines();
         consumeAllowNewlines();
-        if (!variableName(false)) return deref.error("Expected expression after .");
+        if (!identifier(false, REFERENCE_IDENTIFIER)) return deref.error("Expected expression after .");
         return deref.done(DEREF_EXPRESSION);
     }
 
@@ -843,13 +831,13 @@ public class Parser {
             consumeAllowNewlines();
             if (!listLiteral()) return expression.drop();
         } else if (isIdentifier()) {
-            variableName(false);
+            identifier(false, REFERENCE_IDENTIFIER);
         } else if (is(PRIMITIVE)) {
             var primitive = mark();
             consume();
             while (!builder.eof() && is(DOT) && currentTokenIsAttached) {
                 consumeAllowNewlines();
-                if (!variableName(false)) return error("Incorrect primitive declaration", primitive, expression);
+                if (!identifier(false, REFERENCE_IDENTIFIER)) return error("Incorrect primitive declaration", primitive, expression);
             }
             if (is(COLON)) {
                 if (!block(false, this::functionStatement)) return drop(primitive, expression);
@@ -953,14 +941,10 @@ public class Parser {
         return assignmentOperator.collapse();
     }
 
-    private boolean variableName(boolean allowNewlines) {
+    private boolean identifier(boolean allowNewlines, IElementType elementType) {
         var i = mark();
         if (!isIdentifier()) return i.error("Expected identifier");
-
-        if (allowNewlines) consumeAllowNewlines();
-        else consume();
-
-        return i.done(ToitTypes.VARIABLE_NAME);
+        return consume(allowNewlines, i, elementType);
     }
 
     boolean tryRule(Producer<Boolean> rule) {
@@ -1138,7 +1122,17 @@ public class Parser {
 
     }
 
+    boolean consume(boolean allowNewLines, Marker mark, IElementType doneType) {
+        if (allowNewLines) consumeAllowNewlines(mark,doneType);
+        else consume(mark,doneType);
+        return true;
+    }
+
     void consume() {
+        consume(null, null);
+    }
+
+    boolean consume(Marker mark, IElementType doneType) {
         // Detect if we are at begging of line and increment line number
         if (isNewLine()) {
             currentLineNo++;
@@ -1147,17 +1141,22 @@ public class Parser {
             currentIsAtBeggingOfLine = false;
         }
 
+        builder.advanceLexer();
+        if (mark != null) mark.done(doneType);
+
         // Detect if the current token is seperated by white space or not and consume any whitespace.
-        int loopCount = 0;
-        do {
-            loopCount++;
-            builder.advanceLexer();
-        } while (is(TokenType.WHITE_SPACE));
-        currentTokenIsAttached = loopCount == 1;
+        currentTokenIsAttached = !is(TokenType.WHITE_SPACE);
+        while (is(TokenType.WHITE_SPACE)) builder.advanceLexer();
+
+        return true;
     }
 
     void consumeAllowNewlines() {
-        if (!isNewLine()) consume();
+        consumeAllowNewlines(null,null);
+    }
+
+    boolean consumeAllowNewlines(Marker mark, IElementType doneType) {
+        if (!isNewLine()) consume(mark,doneType);
         while (!builder.eof()) {
             if (isNewLine()) consume();
             else if (isIndent()) {
@@ -1170,6 +1169,7 @@ public class Parser {
                 break;
             }
         }
+        return true;
     }
 
     private void skipToDedent() {

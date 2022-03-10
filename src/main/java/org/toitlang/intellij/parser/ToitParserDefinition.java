@@ -19,7 +19,6 @@ import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitTypes;
 
 public class ToitParserDefinition implements ParserDefinition {
-    public static final TokenSet WHITE_SPACES = TokenSet.create(TokenType.WHITE_SPACE);
     public static final TokenSet COMMENTS = TokenSet.create(ToitTypes.COMMENT);
     public static final TokenSet STRINGS = TokenSet.create(ToitTypes.STRING_START, ToitTypes.STRING_END, ToitTypes.STRING_PART);
     public static final IFileElementType FILE = new IFileElementType(ToitLanguage.INSTANCE);
@@ -31,7 +30,6 @@ public class ToitParserDefinition implements ParserDefinition {
 
     @Override
     public @NotNull TokenSet getWhitespaceTokens() {
-        //return WHITE_SPACES;
         return TokenSet.EMPTY;
     }
 

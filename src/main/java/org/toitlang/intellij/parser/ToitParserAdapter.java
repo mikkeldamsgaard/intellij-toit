@@ -12,8 +12,7 @@ public class ToitParserAdapter implements PsiParser {
 
     @Override
     public @NotNull ASTNode parse(@NotNull IElementType root, @NotNull PsiBuilder builder) {
-        var adapterBuilder = new ToitPsiBuilderAdapter(builder);
-        new Parser(root, adapterBuilder).parse();
+        new Parser(root, builder).parse();
         return builder.getTreeBuilt();
     }
 }

@@ -13,6 +13,7 @@ import java.util.Set;
 public class ToitSdkIndexRoot extends IndexableSetContributor {
     @Override
     public @NotNull Set<VirtualFile> getAdditionalRootsToIndex() {
-        return Collections.singleton(LocalFileSystem.getInstance().findFileByIoFile(new File(ToitApplicationSettings.SettingsState.getInstance().sdkPath)));
+        return Collections.emptySet();
+        //return Collections.singleton(LocalFileSystem.getInstance().findFileByIoFile(new File(ToitApplicationSettings.SettingsState.getInstance().sdkPath)));
     }
 }
