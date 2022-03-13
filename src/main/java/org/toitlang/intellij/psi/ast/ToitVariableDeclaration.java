@@ -1,18 +1,69 @@
 // This is a generated file. Not intended for manual editing.
 package org.toitlang.intellij.psi.ast;
 
+import com.intellij.icons.AllIcons;
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.util.NlsSafe;
+import com.intellij.psi.stubs.IStubElementType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.toitlang.intellij.psi.ToitFile;
+import org.toitlang.intellij.psi.stub.ToitVariableDeclarationStub;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
-public class ToitVariableDeclaration extends ToitElement {
+import javax.swing.*;
 
-  public ToitVariableDeclaration(@NotNull ASTNode node) {
-    super(node);
-  }
+public class ToitVariableDeclaration extends ToitPrimaryLanguageElement<ToitVariableDeclaration, ToitVariableDeclarationStub> {
+    public ToitVariableDeclaration(@NotNull ASTNode node) {
+        super(node);
+    }
 
-  @Override
-  protected void accept(ToitVisitor visitor) {
-    visitor.visit(this);
-  }
+    public ToitVariableDeclaration(@NotNull ToitVariableDeclarationStub stub, @NotNull IStubElementType nodeType) {
+        super(stub, nodeType);
+    }
+
+    @Override
+    protected void accept(ToitVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    public boolean isStatic() {
+        var stub = getStub();
+        if (stub != null) return stub.isStatic();
+
+        return getNode().getChildren(STATIC).length > 0;
+    }
+
+
+    // TODO: Stub this
+    public String getType() {
+        for (ToitType toitType : childrenOfType(ToitType.class)) {
+            return toitType.getName();
+        }
+        return null;
+    }
+
+    @Override
+    protected @NotNull Icon getElementTypeIcon() {
+        return AllIcons.Nodes.Field;
+    }
+
+    @Override
+    public @NlsSafe @Nullable String getPresentableText() {
+        return getName();
+    }
+
+    public boolean isGlobal() {
+        return getParent() instanceof ToitFile;
+    }
+
+    public boolean isField() {
+        return getParent().getParent() instanceof ToitStructure;
+    }
+    public boolean isConstant() {
+        for (ToitOperator toitOperator : childrenOfType(ToitOperator.class)) {
+            return toitOperator.isConstDeclare();
+        }
+        return false;
+    }
 }

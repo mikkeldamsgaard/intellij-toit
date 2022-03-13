@@ -24,7 +24,7 @@ public class ToitExportDeclaration extends ToitElement {
     return hasToken(STAR_SET);
   }
 
-  public List<ToitIdentifier> getExportList() {
-    return childrenOfType(ToitIdentifier.class);
+  public List<ToitReferenceIdentifier> getExportList() {
+    return childrenOfType(ToitReferenceIdentifier.class);
   }
 }

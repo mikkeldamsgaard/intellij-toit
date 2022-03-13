@@ -9,7 +9,7 @@ import org.toitlang.intellij.ToitLanguage;
 
 import java.util.function.Function;
 
-public class ToitElementType extends IElementType {
+public class ToitElementType extends IElementType implements ToitPsiCreator {
     private Function<? super ASTNode, ? extends PsiElement> creator;
 
     public ToitElementType(@NotNull @NonNls String debugName) {

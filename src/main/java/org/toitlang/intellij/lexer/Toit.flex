@@ -1,7 +1,6 @@
 // Copyright 2000-2022 JetBrains s.r.o. and other contributors. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package org.toitlang.intellij.lexer;
 
-import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
 import lombok.AllArgsConstructor;import lombok.Data;import org.toitlang.intellij.psi.ToitTypes;
 import com.intellij.psi.TokenType;
@@ -242,7 +241,7 @@ Spacing=[\ \t]
  ";"                                             { return ToitTypes.SEMICOLON; }
  ".."                                            { return ToitTypes.DOT_DOT; }
  "/"                                             { return ToitTypes.SLASH; }
- "->"                                            { return ToitTypes.RETURN_TYPE; }
+ "->"                                            { return ToitTypes.RETURN_TYPE_OPERATOR; }
  "="                                             { return ToitTypes.EQUALS; }
  "|"                                             { return ToitTypes.PIPE; }
  "#"                                             { return ToitTypes.HASH; }

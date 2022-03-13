@@ -8,20 +8,22 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.TokenType;
+import com.intellij.psi.stubs.IStubElementType;
+import com.intellij.psi.stubs.PsiFileStub;
 import com.intellij.psi.tree.IFileElementType;
+import com.intellij.psi.tree.IStubFileElementType;
 import com.intellij.psi.tree.TokenSet;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.ToitLanguage;
 import org.toitlang.intellij.lexer.ToitLexerAdapter;
 import org.toitlang.intellij.psi.ToitElementType;
 import org.toitlang.intellij.psi.ToitFile;
+import org.toitlang.intellij.psi.ToitPsiCreator;
 import org.toitlang.intellij.psi.ToitTypes;
 
 public class ToitParserDefinition implements ParserDefinition {
     public static final TokenSet COMMENTS = TokenSet.create(ToitTypes.COMMENT);
     public static final TokenSet STRINGS = TokenSet.create(ToitTypes.STRING_START, ToitTypes.STRING_END, ToitTypes.STRING_PART);
-    public static final IFileElementType FILE = new IFileElementType(ToitLanguage.INSTANCE);
 
     @Override
     public @NotNull Lexer createLexer(Project project) {
@@ -40,7 +42,7 @@ public class ToitParserDefinition implements ParserDefinition {
 
     @Override
     public @NotNull IFileElementType getFileNodeType() {
-        return FILE;
+        return ToitFileElementType.INSTANCE;
     }
 
     @Override
@@ -55,9 +57,7 @@ public class ToitParserDefinition implements ParserDefinition {
 
     @Override
     public @NotNull PsiElement createElement(ASTNode node) {
-        ToitElementType t = (ToitElementType) node.getElementType();
-
-        return t.createPsiElement(node);
+        return ((ToitPsiCreator)node.getElementType()).createPsiElement(node);
     }
 
     @Override

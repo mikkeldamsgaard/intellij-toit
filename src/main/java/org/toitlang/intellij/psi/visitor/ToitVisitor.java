@@ -12,8 +12,8 @@ public class ToitVisitor extends PsiElementVisitor {
         visitElement(toitBlock);
     }
 
-    public void visit(ToitClass toitClass) {
-        visitElement(toitClass);
+    public void visit(ToitStructure toitStructure) {
+        visitElement(toitStructure);
     }
 
     public void visit(ToitEmptyStatement toitEmptyStatement) {
@@ -40,24 +40,8 @@ public class ToitVisitor extends PsiElementVisitor {
         visitElement(toitIf);
     }
 
-    public void visit(ToitImportAs toitImportAs) {
-        visitElement(toitImportAs);
-    }
-
     public void visit(ToitImportDeclaration toitImportDeclaration) {
         visitElement(toitImportDeclaration);
-    }
-
-    public void visit(ToitImportShow toitImportShow) {
-        visitElement(toitImportShow);
-    }
-
-    public void visit(ToitInterface toitInterface) {
-        visitElement(toitInterface);
-    }
-
-    public void visit(ToitMonitor toitMonitor) {
-        visitElement(toitMonitor);
     }
 
     public void visit(ToitNamedArgument toitNamedArgument) {
@@ -76,16 +60,12 @@ public class ToitVisitor extends PsiElementVisitor {
         visitElement(toitPrimitive);
     }
 
-    public void visit(ToitQualifiedName toitQualifiedName) {
-        visitElement(toitQualifiedName);
+    public void visit(ToitType toitType) {
+        visitElement(toitType);
     }
 
     public void visit(ToitReturn toitReturn) {
         visitElement(toitReturn);
-    }
-
-    public void visit(ToitSimpleLiteral toitSimpleLiteral) {
-        visitElement(toitSimpleLiteral);
     }
 
     public void visit(ToitTry toitTry) {
@@ -96,7 +76,19 @@ public class ToitVisitor extends PsiElementVisitor {
         visitElement(toitVariableDeclaration);
     }
 
-    public void visit(ToitIdentifier toitIdentifier) {
-        visitElement(toitIdentifier);
+    public void visit(ToitReferenceIdentifier toitReferenceIdentifier) {
+        visitElement(toitReferenceIdentifier);
+    }
+
+    public void visit(ToitNameableIdentifier toitNameableIdentifier) {
+        visitElement(toitNameableIdentifier);
+    }
+
+    public void visit(ToitPseudoKeyword toitPseudoKeyword) {
+        visitElement(toitPseudoKeyword);
+    }
+
+    public void visit(ToitAssert toitAssert) {
+        visitElement(toitAssert);
     }
 }

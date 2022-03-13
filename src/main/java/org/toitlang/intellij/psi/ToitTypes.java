@@ -3,6 +3,10 @@ package org.toitlang.intellij.psi;
 
 import com.intellij.psi.tree.IElementType;
 import org.toitlang.intellij.psi.ast.*;
+import org.toitlang.intellij.psi.stub.ToitFunctionElementType;
+import org.toitlang.intellij.psi.stub.ToitStructureElementType;
+import org.toitlang.intellij.psi.stub.ToitStructureElementType.StructureType;
+import org.toitlang.intellij.psi.stub.ToitVariableDeclartionElementType;
 
 public interface ToitTypes {
   IElementType ABSTRACT = new ToitTokenType("ABSTRACT");
@@ -76,7 +80,7 @@ public interface ToitTypes {
   IElementType RCURLY = new ToitTokenType("RCURLY");
   IElementType REMAINDER_ASSIGN = new ToitTokenType("REMAINDER_ASSIGN");
   IElementType RETURN = new ToitTokenType("RETURN");
-  IElementType RETURN_TYPE = new ToitTokenType("RETURN_TYPE");
+  IElementType RETURN_TYPE_OPERATOR = new ToitTokenType("RETURN_TYPE");
   IElementType RPAREN = new ToitTokenType("RPAREN");
   IElementType SEMICOLON = new ToitTokenType("SEMICOLON");
   IElementType SHIFT_LEFT_ASSIGN = new ToitTokenType("SHIFT_LEFT_ASSIGN");
@@ -93,33 +97,40 @@ public interface ToitTypes {
   IElementType TRY = new ToitTokenType("TRY");
   IElementType WHILE = new ToitTokenType("WHILE");
 
-  IElementType PSEUDO_KEYWORD = new ToitElementType("PSEUDO_KEYWORD", ToitIdentifier::new);
+  // pseudo keyword (constructor, interface, ...)
+  IElementType PSEUDO_KEYWORD = new ToitElementType("PSEUDO_KEYWORD", ToitPseudoKeyword::new);
 
-  IElementType IMPORT_IDENTIFIER = new ToitElementType("IMPORT_IDENTIFIER", ToitIdentifier::new);
-  IElementType IMPORT_AS_IDENTIFIER = new ToitElementType("IMPORT_AS_IDENTIFIER", ToitIdentifier::new);
-  IElementType IMPORT_SHOW_IDENTIFIER = new ToitElementType("IMPORT_SHOW_IDENTIFIER", ToitIdentifier::new);
-  IElementType EXPORT_IDENTIFIER = new ToitElementType("EXPORT_IDENTIFIER", ToitIdentifier::new);
-  IElementType VARIABLE_IDENTIFIER = new ToitElementType("VARIABLE_IDENTIFIER", ToitIdentifier::new);
-  IElementType REFERENCE_IDENTIFIER = new ToitElementType("REFERENCE_IDENTIFIER", ToitIdentifier::new);
-  IElementType FACTORY_IDENTIFIER = new ToitElementType("FACTORY_IDENTIFIER", ToitIdentifier::new);
-  IElementType FUNCTION_IDENTIFIER = new ToitElementType("FUNCTION_IDENTIFIER", ToitIdentifier::new);
-  IElementType NAMED_PARAMETER_IDENTIFIER = new ToitElementType("NAMED_PARAMETER_IDENTIFIER", ToitIdentifier::new);
-  IElementType TYPE_IDENTIFIER = new ToitElementType("TYPE_IDENTIFIER", ToitIdentifier::new);
-  IElementType SIMPLE_PARAMETER_IDENTIFIER = new ToitElementType("SIMPLE_PARAMETER_IDENTIFIER", ToitIdentifier::new);
-  IElementType BREAK_CONTINUE_LABEL_IDENTIFIER = new ToitElementType("BREAK_CONTINUE_LABEL_IDENTIFIER", ToitIdentifier::new);
-  IElementType STRUCTURE_IDENTIFIER = new ToitElementType("STRUCTURE_IDENTIFIER", ToitIdentifier::new);
+  // Named indentifiers
+  IElementType STRUCTURE_IDENTIFIER = new ToitElementType("STRUCTURE_IDENTIFIER", ToitNameableIdentifier::new);
+  IElementType FUNCTION_IDENTIFIER = new ToitElementType("FUNCTION_IDENTIFIER", ToitNameableIdentifier::new);
+  IElementType IMPORT_AS_IDENTIFIER = new ToitElementType("IMPORT_AS_IDENTIFIER", ToitNameableIdentifier::new);
+  IElementType FACTORY_IDENTIFIER = new ToitElementType("FACTORY_IDENTIFIER", ToitNameableIdentifier::new);
+  IElementType NAMED_PARAMETER_IDENTIFIER = new ToitElementType("NAMED_PARAMETER_IDENTIFIER", ToitNameableIdentifier::new);
+  IElementType SIMPLE_PARAMETER_IDENTIFIER = new ToitElementType("SIMPLE_PARAMETER_IDENTIFIER", ToitNameableIdentifier::new);
+  IElementType VARIABLE_IDENTIFIER = new ToitElementType("VARIABLE_IDENTIFIER", ToitNameableIdentifier::new);
 
-  IElementType QUALIFIED_NAME = new ToitElementType("QUALIFIED_NAME", ToitQualifiedName::new);
-  IElementType VARIABLE_DECLARATION = new ToitElementType("VARIABLE_NAME", ToitVariableDeclaration::new);
+  // Reference identifier
+  IElementType IMPORT_SHOW_IDENTIFIER = new ToitElementType("IMPORT_SHOW_IDENTIFIER", ToitReferenceIdentifier::new);
+  IElementType EXPORT_IDENTIFIER = new ToitElementType("EXPORT_IDENTIFIER", ToitReferenceIdentifier::new);
+  IElementType IMPORT_IDENTIFIER = new ToitElementType("IMPORT_IDENTIFIER", ToitReferenceIdentifier::new);
+  IElementType TYPE_IDENTIFIER = new ToitElementType("TYPE_IDENTIFIER", ToitReferenceIdentifier::new);
+  IElementType REFERENCE_IDENTIFIER = new ToitElementType("REFERENCE_IDENTIFIER", ToitReferenceIdentifier::new);
+  IElementType BREAK_CONTINUE_LABEL_IDENTIFIER = new ToitElementType("BREAK_CONTINUE_LABEL_IDENTIFIER", ToitReferenceIdentifier::new);
+
+
+  IElementType VARIABLE_TYPE = new ToitElementType("VARIABLE_TYPE", ToitType::new);
+  IElementType RETURN_TYPE = new ToitElementType("RETURN_TYPE", ToitType::new);
+  IElementType IMPLEMENTS_TYPE = new ToitElementType("IMPLEMENTS_TYPE", ToitType::new);
+  IElementType EXTENDS_TYPE = new ToitElementType("EXTENDS_TYPE", ToitType::new);
+
+
   IElementType PARAMETER_NAME = new ToitElementType("PARAMETER_NAME", ToitParameterName::new);
 
   IElementType IMPORT_DECLARATION = new ToitElementType("IMPORT_STATEMENT", ToitImportDeclaration::new);
-  IElementType IMPORT_AS = new ToitElementType("IMPORT_AS", ToitImportAs::new);
-
-  IElementType IMPORT_SHOW = new ToitElementType("IMPORT_SHOW", ToitImportShow::new);
   IElementType EXPORT_DECLARATION = new ToitElementType("EXPORT_DECLARATION", ToitExportDeclaration::new);
 
-  IElementType EXPRESSION = new ToitElementType("EXPRESSION", ToitExpression::new);
+  IElementType EXPRESSION = new ToitElementType("EXPRESSION", ToitTopLevelExpression::new);
+  IElementType PRIMARY_EXPRESSION = new ToitElementType("EXPRESSION", ToitPrimaryExpression::new);
   IElementType ELVIS_EXPRESSION = new ToitElementType("ELVIS_EXPRESSION", ToitElvisExpression::new);
   IElementType OR_EXPRESSION = new ToitElementType("OR_EXPRESSION", ToitOrExpression::new);
   IElementType AND_EXPRESSION = new ToitElementType("AND_EXPRESSION", ToitAndExpression::new);
@@ -156,22 +167,12 @@ public interface ToitTypes {
   IElementType FOR_STATEMENT = new ToitElementType("FOR_STATEMENT", ToitFor::new);
   IElementType TRY_STATEMENT = new ToitElementType("TRY_STATEMENT", ToitTry::new);
 
-  IElementType CLASS_DECLARATION = new ToitElementType("CLASS_DECLARATION", ToitClass::new);
-  IElementType INTERFACE_DECLARATION = new ToitElementType("INTERFACE_DECLARATION", ToitInterface::new);
-  IElementType MONITOR_DECLARATION = new ToitElementType("MONITOR_DECLARATION", ToitMonitor::new);
-  IElementType FUNCTION_DECLARATION = new ToitElementType("FUNCTION_DECLARATION", ToitFunction::new);
+  IElementType CLASS_DECLARATION = new ToitStructureElementType("CLASS_DECLARATION", StructureType.CLASS);
+  IElementType INTERFACE_DECLARATION = new ToitStructureElementType("INTERFACE_DECLARATION", StructureType.INTERFACE);
+  IElementType MONITOR_DECLARATION = new ToitStructureElementType("MONITOR_DECLARATION", StructureType.MONITOR);
+  IElementType FUNCTION_DECLARATION = new ToitFunctionElementType("FUNCTION_DECLARATION");
+  IElementType VARIABLE_DECLARATION = new ToitVariableDeclartionElementType("VARIABLE_NAME");
 
-  IElementType O = new ToitElementType("OPERATOR", ToitOperator::new);
-  static IElementType operator(IElementType tokenType) {
-    return O;
-//    if (!(tokenType instanceof ToitTokenType)) throw new RuntimeException("Not valid type: "+tokenType.getDebugName()+", should be a token");
-//    return new ToitElementType("Operator "+tokenType.getDebugName(), n -> new ToitOperator(n, (ToitTokenType)tokenType));
-  }
-
-  IElementType L = new ToitElementType("LITERAL", ToitSimpleLiteral::new);
-  static IElementType simple_literal(IElementType tokenType) {
-    return L;
-//    if (!(tokenType instanceof ToitTokenType)) throw new RuntimeException("Not valid type: "+tokenType.getDebugName()+", should be a token");
-//    return new ToitElementType("Lietral "+tokenType.getDebugName(), n -> new ToitSimpleLiteral(n, (ToitTokenType)tokenType));
-  }
+  IElementType OPERATOR = new ToitElementType("OPERATOR", ToitOperator::new);
+  IElementType SIMPLE_LITERAL = new ToitElementType("SIMPLE_LITERAL", ToitSimpleLiteral::new);
 }

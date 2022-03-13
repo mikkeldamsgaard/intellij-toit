@@ -3,13 +3,27 @@ package org.toitlang.intellij.psi.ast;
 
 import com.intellij.lang.ASTNode;
 import org.jetbrains.annotations.NotNull;
-import org.toitlang.intellij.psi.visitor.ToitVisitor;
+import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 
-public class ToitSimpleLiteral extends ToitElement {
+import static org.toitlang.intellij.psi.ToitTypes.*;
+
+public class ToitSimpleLiteral extends ToitExpression {
   public ToitSimpleLiteral(@NotNull ASTNode node) { super(node); }
 
   @Override
-  protected void accept(ToitVisitor visitor) {
-    visitor.visit(this);
+  public <T> T accept(ToitExpressionVisitor<T> expressionVisitor) {
+    return expressionVisitor.visit(this);
+  }
+
+  public boolean isString() {
+    return getNode().getFirstChildNode().getElementType() == STRING_START;
+  }
+
+  public boolean isInt() {
+    return getNode().getFirstChildNode().getElementType() == INTEGER;
+  }
+
+  public boolean isFloat() {
+    return getNode().getFirstChildNode().getElementType() == FLOAT;
   }
 }

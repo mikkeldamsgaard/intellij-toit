@@ -17,19 +17,33 @@
                   fieldName="INSTANCE"
                   language="Toit"
                   extensions="toit"/>
+        <stubElementTypeHolder class="org.toitlang.intellij.psi.ToitTypes" externalIdPrefix="stub."/>
+        <stubIndex implementation="org.toitlang.intellij.psi.stub.indecies.ToitStructureShortNameIndex"/>
         <lang.parserDefinition language="Toit"
                                implementationClass="org.toitlang.intellij.parser.ToitParserDefinition"/>
         <lang.syntaxHighlighterFactory language="Toit"
-                                       implementationClass="org.toitlang.intellij.ToitSyntaxHighlighterFactory"/>
+                                       implementationClass="org.toitlang.intellij.highlighting.ToitSyntaxHighlighterFactory"/>
+        <lang.findUsagesProvider language="Toit"
+                                 implementationClass="org.toitlang.intellij.findusage.ToitFindUsageProvider"/>
+        <lang.psiStructureViewFactory language="Toit"
+                                      implementationClass="org.toitlang.intellij.structureview.ToitStructureViewFactory"/>
+        <colorSettingsPage implementation="org.toitlang.intellij.ui.ToitColorSettingsPage"/>
+        <annotator language="Toit" implementationClass="org.toitlang.intellij.highlighting.ToitAnnotationHighlighter"/>
 
-        <colorSettingsPage implementation="org.toitlang.intellij.ToitColorSettingsPage"/>
-        <annotator language="Toit" implementationClass="org.toitlang.intellij.ToitAnnotationHighlighter"/>
-        <applicationConfigurable parentId="language" instance="org.toitlang.intellij.ToitApplicationSettings"
-                                 id="org.toitlang.intellij.ToitApplicationSettings" displayName="Toit"/>
+        <notificationGroup displayType="STICKY_BALLOON" id="Toit Severe Group"/>
+
+        <applicationConfigurable parentId="language" instance="org.toitlang.intellij.ui.ToitApplicationSettings"
+                                 id="org.toitlang.intellij.ui.ToitApplicationSettings" displayName="Toit"/>
+        <applicationService serviceImplementation="org.toitlang.intellij.ui.ToitApplicationSettings$ToitPersistentStateComponent"/>
+
         <projectService serviceImplementation="org.toitlang.intellij.engine.ToitApiEngine"/>
-        <indexedRootsProvider implementation="org.toitlang.intellij.indexer.ToitSdkIndexRoot"/>
+        <indexedRootsProvider implementation="org.toitlang.intellij.files.ToitSdkFiles"/>
+        <localInspection level="ERROR" enabledByDefault="true" displayName="Semantic errors" groupName="Mandatory checks"
+                         implementationClass="org.toitlang.intellij.inspections.SemanticErrorInspector"/>
+        <localInspection level="ERROR" enabledByDefault="true" displayName="Reference errors" groupName="Mandatory checks"
+                         implementationClass="org.toitlang.intellij.inspections.ReferenceErrorInspector"/>
 
-        <localInspection level="ERROR" enabledByDefault="true" displayName="Syntax errors" implementationClass="org.toitlang.intellij.psi.inspections.ErrorInspector"/>
+        <completion.contributor language="Toit" implementationClass="org.toitlang.intellij.completion.ToitCompletionContributor"/>
     </extensions>
 
     <actions>

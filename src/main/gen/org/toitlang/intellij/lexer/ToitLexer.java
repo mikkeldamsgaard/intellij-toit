@@ -1235,7 +1235,7 @@ class ToitLexer implements FlexLexer {
             // fall through
           case 142: break;
           case 46: 
-            { return ToitTypes.RETURN_TYPE;
+            { return ToitTypes.RETURN_TYPE_OPERATOR;
             } 
             // fall through
           case 143: break;

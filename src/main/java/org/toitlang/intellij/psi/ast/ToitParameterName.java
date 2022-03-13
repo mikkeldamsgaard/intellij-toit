@@ -2,10 +2,15 @@
 package org.toitlang.intellij.psi.ast;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.util.NlsSafe;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiNameIdentifierOwner;
+import com.intellij.util.IncorrectOperationException;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
-public class ToitParameterName extends ToitElement {
+public class ToitParameterName extends ToitElement implements PsiNameIdentifierOwner {
 
   public ToitParameterName(@NotNull ASTNode node) {
     super(node);
@@ -14,5 +19,15 @@ public class ToitParameterName extends ToitElement {
   @Override
   protected void accept(ToitVisitor visitor) {
     visitor.visit(this);
+  }
+
+  @Override
+  public @NotNull ToitNameableIdentifier getNameIdentifier() {
+    return childrenOfType(ToitNameableIdentifier.class).get(0);
+  }
+
+  @Override
+  public PsiElement setName(@NlsSafe @NotNull String name) throws IncorrectOperationException {
+    return getNameIdentifier().setName(name);
   }
 }

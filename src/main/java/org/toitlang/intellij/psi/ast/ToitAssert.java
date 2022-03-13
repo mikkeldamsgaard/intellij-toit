@@ -3,11 +3,17 @@ package org.toitlang.intellij.psi.ast;
 
 import com.intellij.lang.ASTNode;
 import org.jetbrains.annotations.NotNull;
+import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
-public class ToitAssert extends ToitExpression {
+public class ToitAssert extends ToitElement {
 
   public ToitAssert(@NotNull ASTNode node) {
     super(node);
+  }
+
+  @Override
+  protected void accept(ToitVisitor visitor) {
+    visitor.visit(this);
   }
 
 }
