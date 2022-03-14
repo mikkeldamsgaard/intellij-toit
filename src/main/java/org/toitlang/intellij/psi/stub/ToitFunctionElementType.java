@@ -31,7 +31,7 @@ public class ToitFunctionElementType extends IStubElementType<ToitFunctionStub, 
 
     @Override
     public @NotNull String getExternalId() {
-        return "stub."+getDebugName();
+        return "stub.FUNCTION_DECLARATION";
     }
 
     @Override

@@ -15,8 +15,8 @@ import java.io.IOException;
 public class ToitStructureElementType extends IStubElementType<ToitStructureStub, ToitStructure> implements ToitPsiCreator {
     private final StructureType type;
 
-    public ToitStructureElementType(@NotNull @NonNls String debugName, StructureType type) {
-        super(debugName, ToitLanguage.INSTANCE);
+    public ToitStructureElementType(StructureType type) {
+        super(type.getDebugName(), ToitLanguage.INSTANCE);
         this.type = type;
     }
 
@@ -32,7 +32,7 @@ public class ToitStructureElementType extends IStubElementType<ToitStructureStub
 
     @Override
     public @NotNull String getExternalId() {
-        return "stub."+getDebugName();
+        return "stub."+type.getDebugName();
     }
 
     @Override
@@ -61,6 +61,16 @@ public class ToitStructureElementType extends IStubElementType<ToitStructureStub
 
 
     public enum StructureType {
-        CLASS, INTERFACE, MONITOR
+
+        CLASS("CLASS_DECLARATION"), INTERFACE("INTERFACE_DECLARATION"), MONITOR("MONITOR_DECLARATION");
+        private final String debugName;
+
+        StructureType(String debugName) {
+            this.debugName = debugName;
+        }
+
+        public @NotNull @NonNls String getDebugName() {
+            return debugName;
+        }
     }
 }

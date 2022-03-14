@@ -6,15 +6,13 @@ import com.intellij.psi.stubs.*;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.ToitLanguage;
-import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitPsiCreator;
-import org.toitlang.intellij.psi.ast.ToitFunction;
 import org.toitlang.intellij.psi.ast.ToitVariableDeclaration;
 
 import java.io.IOException;
 
-public class ToitVariableDeclartionElementType extends IStubElementType<ToitVariableDeclarationStub, ToitVariableDeclaration> implements ToitPsiCreator {
-    public ToitVariableDeclartionElementType(@NotNull @NonNls String debugName) {
+public class ToitVariableDeclarationElementType extends IStubElementType<ToitVariableDeclarationStub, ToitVariableDeclaration> implements ToitPsiCreator {
+    public ToitVariableDeclarationElementType(@NotNull @NonNls String debugName) {
         super(debugName, ToitLanguage.INSTANCE);
     }
 
@@ -30,7 +28,7 @@ public class ToitVariableDeclartionElementType extends IStubElementType<ToitVari
 
     @Override
     public @NotNull String getExternalId() {
-        return "stub."+getDebugName();
+        return "stub.VARIABLE_DECLARATION";
     }
 
     @Override

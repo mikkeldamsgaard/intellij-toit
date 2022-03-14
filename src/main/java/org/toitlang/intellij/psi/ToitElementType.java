@@ -22,7 +22,6 @@ public class ToitElementType extends IElementType implements ToitPsiCreator {
     }
 
     public PsiElement createPsiElement(ASTNode node) {
-        if (creator == null) throw new RuntimeException("No creator for "+getDebugName());
         return creator.apply(node);
     }
 }

@@ -6,7 +6,7 @@ import org.toitlang.intellij.psi.ast.*;
 import org.toitlang.intellij.psi.stub.ToitFunctionElementType;
 import org.toitlang.intellij.psi.stub.ToitStructureElementType;
 import org.toitlang.intellij.psi.stub.ToitStructureElementType.StructureType;
-import org.toitlang.intellij.psi.stub.ToitVariableDeclartionElementType;
+import org.toitlang.intellij.psi.stub.ToitVariableDeclarationElementType;
 
 public interface ToitTypes {
   IElementType ABSTRACT = new ToitTokenType("ABSTRACT");
@@ -167,11 +167,11 @@ public interface ToitTypes {
   IElementType FOR_STATEMENT = new ToitElementType("FOR_STATEMENT", ToitFor::new);
   IElementType TRY_STATEMENT = new ToitElementType("TRY_STATEMENT", ToitTry::new);
 
-  IElementType CLASS_DECLARATION = new ToitStructureElementType("CLASS_DECLARATION", StructureType.CLASS);
-  IElementType INTERFACE_DECLARATION = new ToitStructureElementType("INTERFACE_DECLARATION", StructureType.INTERFACE);
-  IElementType MONITOR_DECLARATION = new ToitStructureElementType("MONITOR_DECLARATION", StructureType.MONITOR);
+  IElementType CLASS_DECLARATION = new ToitStructureElementType(StructureType.CLASS);
+  IElementType INTERFACE_DECLARATION = new ToitStructureElementType(StructureType.INTERFACE);
+  IElementType MONITOR_DECLARATION = new ToitStructureElementType(StructureType.MONITOR);
   IElementType FUNCTION_DECLARATION = new ToitFunctionElementType("FUNCTION_DECLARATION");
-  IElementType VARIABLE_DECLARATION = new ToitVariableDeclartionElementType("VARIABLE_NAME");
+  IElementType VARIABLE_DECLARATION = new ToitVariableDeclarationElementType("VARIABLE_DECLARATION");
 
   IElementType OPERATOR = new ToitElementType("OPERATOR", ToitOperator::new);
   IElementType SIMPLE_LITERAL = new ToitElementType("SIMPLE_LITERAL", ToitSimpleLiteral::new);

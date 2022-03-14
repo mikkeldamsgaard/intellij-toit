@@ -378,4 +378,22 @@ public class SimpleParserTest extends ParserTest {
         );
         checkError(p, "");
     }
+
+    public void testMapLiteral() {
+        var p = parseFile("tmp", "" +
+                "respond_error res/RestResponse error/string:\n" +
+                "  respond_ res {\n" +
+                "      1: 2\n" +
+                "    ,\n" +
+                "      2: 3,\n" +
+                "      x: y,\n" +
+                "    }\n"+
+                "  f := {\n" +
+                "   :\n" +
+                "    }\n" +
+                "  g := {\n" +
+                "    }\n"
+        );
+        checkError(p, "");
+    }
 }

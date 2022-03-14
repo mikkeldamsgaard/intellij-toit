@@ -7,7 +7,6 @@ import com.intellij.psi.tree.TokenSet;
 import com.intellij.util.Producer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.toitlang.intellij.psi.ToitElementType;
 import org.toitlang.intellij.psi.ToitTypes;
 
 import static org.toitlang.intellij.psi.ToitTypes.*;
@@ -27,6 +26,7 @@ public class Parser {
     public Parser(IElementType root, PsiBuilder builder) {
         this.root = root;
         this.builder = builder;
+        builder.setDebugMode(true);
     }
 
     public void parse() {
@@ -886,6 +886,10 @@ public class Parser {
         return string.done(SIMPLE_LITERAL);
     }
 
+    private final static TokenSet MAP_SET_END = TokenSet.create(RCURLY);
+    private final static TokenSet MAP_SET_SEPARATOR = TokenSet.create(COMMA);
+    private final static TokenSet MAP_KEY_VALUE_SEPARATOR = TokenSet.create(COLON);
+
     private boolean setOrMapLiteral() {
         var literal = mark();
         consumeAllowNewlines();
@@ -895,7 +899,7 @@ public class Parser {
             consumeAllowNewlines();
             return literal.done(SET_LITERAL);
         }
-        if (is(COLON)) {
+        if (isAllowingNewlines(MAP_KEY_VALUE_SEPARATOR)) {
             consumeAllowNewlines();
             if (!is(RCURLY)) return literal.error("Missing closing '}");
             consumeAllowNewlines();
@@ -905,29 +909,29 @@ public class Parser {
         boolean map = false;
         boolean first = true;
         while (!builder.eof() && !is(RCURLY)) {
-            if (is(LCURLY)) break; // Trailing comma handling
+            if (is(RCURLY)) break; // Trailing comma handling
 
             if (!expression(false)) return literal.drop();
 
             if (first) {
-                if (is(COLON)) {
+                if (isAllowingNewlines(MAP_KEY_VALUE_SEPARATOR)) {
                     consumeAllowNewlines();
                     map = true;
                 }
                 first = false;
             } else {
-                if (map && !is(COLON)) return literal.error("Expected element separator ':'");
+                if (map && !isAllowingNewlines(MAP_KEY_VALUE_SEPARATOR)) return literal.error("Expected element separator ':'");
                 consumeAllowNewlines();
             }
 
             if (!expression(false)) return literal.drop();
 
-            if (!is(COMMA)) break;
+            if (!isAllowingNewlines(MAP_SET_SEPARATOR)) break;
             consumeAllowNewlines();
         }
 
-        if (!is(RCURLY)) {
-            return mark().error("Missing closing '}'");
+        if (!isAllowingNewlines(MAP_SET_END)) {
+            return literal.error("Missing closing '}'");
         }
         consumeAllowNewlines();
 
