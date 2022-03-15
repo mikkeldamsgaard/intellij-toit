@@ -7,7 +7,9 @@ import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ToitExportDeclaration extends ToitElement {
   private final static TokenSet STAR_SET = TokenSet.create(ToitTypes.STAR);
@@ -26,5 +28,10 @@ public class ToitExportDeclaration extends ToitElement {
 
   public List<ToitReferenceIdentifier> getExportList() {
     return childrenOfType(ToitReferenceIdentifier.class);
+  }
+
+
+  public Collection<String> getExportedNames() {
+    return getExportList().stream().map(ToitReferenceIdentifier::getName).collect(Collectors.toList());
   }
 }

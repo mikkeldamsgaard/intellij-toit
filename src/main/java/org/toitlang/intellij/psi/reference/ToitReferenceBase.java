@@ -13,31 +13,27 @@ import org.toitlang.intellij.psi.ast.ToitReferenceIdentifier;
 public class ToitReferenceBase extends PsiReferenceBase<ToitReferenceIdentifier> implements CachedValueProvider<ReferenceCalculation>, PsiPolyVariantReference {
     public ToitReferenceBase(@NotNull ToitReferenceIdentifier element) {
         super(element, new TextRange(0, element.getTextLength()), false);
-
     }
 
     @Override
     public @Nullable PsiElement resolve() {
         var res = multiResolve(false);
         if (res.length > 0) return res[0].getElement();
-//        Collection<PsiElement> referencedValue = CachedValuesManager.getCachedValue(myElement, this).getReferencedValue();
-//        if (referencedValue != null && referencedValue.size() > 0) return referencedValue.iterator().next();
         return null;
     }
 
     @Override
     public Object @NotNull [] getVariants() {
-        var fileScope = getElement().getParentOfType(ToitFile.class).getScope();
+        var fileScope = getElement().getParentOfType(ToitFile.class).getToitFileScope();
         ReferenceCalculation calc = getElement().calculateReference(fileScope);
         return calc.getVariants();
-        //return CachedValuesManager.getCachedValue(myElement, this).getVariants();
     }
 
     @Override
     public boolean isReferenceTo(@NotNull PsiElement element) {
-        //if (element.textMatches(getElement()))
+        if (element.textMatches(getElement()))
             return getElement().getManager().areElementsEquivalent(resolve(), element);
-        //return false;
+        return false;
     }
 
     @Override
@@ -54,7 +50,7 @@ public class ToitReferenceBase extends PsiReferenceBase<ToitReferenceIdentifier>
 
     @Override
     public @Nullable Result<ReferenceCalculation> compute() {
-        var fileScope = getElement().getParentOfType(ToitFile.class).getScope();
+        var fileScope = getElement().getParentOfType(ToitFile.class).getToitFileScope();
         ReferenceCalculation calc = getElement().calculateReference(fileScope);
         Object[] dependencies;
         if (calc.getDependencies().isEmpty()) dependencies = NEVER_CHANGE;
@@ -64,7 +60,7 @@ public class ToitReferenceBase extends PsiReferenceBase<ToitReferenceIdentifier>
 
     @Override
     public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
-        var fileScope = getElement().getParentOfType(ToitFile.class).getScope();
+        var fileScope = getElement().getParentOfType(ToitFile.class).getToitFileScope();
         ReferenceCalculation calc = getElement().calculateReference(fileScope);
         return calc.getResolveResult();
     }

@@ -31,9 +31,9 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
     }
 
     // TODO: Stub this
-    public String getType() {
+    public ToitType getType() {
         for (ToitType toitType : childrenOfType(ToitType.class)) {
-            if (toitType.isReturnType()) return toitType.getName();
+            if (toitType.isReturnType()) return toitType;
         }
         return null;
     }

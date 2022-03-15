@@ -1,7 +1,9 @@
 package org.toitlang.intellij.psi.scope;
 
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiNameIdentifierOwner;
+import org.toitlang.intellij.files.ToitPackageHandler;
 import org.toitlang.intellij.files.ToitProjectFiles;
 import org.toitlang.intellij.files.ToitSdkFiles;
 import org.toitlang.intellij.psi.ToitFile;
@@ -13,21 +15,23 @@ import java.io.File;
 import java.util.*;
 
 public class ToitFileScopeCalculator extends ToitVisitor {
-    ToitScope scope;
-    Map<PsiElement, Set<String>> missingShows = new HashMap<>();
-
+    ToitFileScope toitFileScope;
+    private Set<ToitFile> visitedFiles;
     List<PsiElement> dependencies = new ArrayList<>();
-    private final ToitFile file;
 
     public ToitFileScopeCalculator(ToitFile file) {
-        this.file = file;
-        scope = ToitSdkFiles.coreClosure(file.getProject()).derive();
+        this(file, new HashSet<>());
+    }
+
+    public ToitFileScopeCalculator(ToitFile file, Set<ToitFile> visitedFiles) {
+        toitFileScope = new ToitFileScope(file);
+        this.visitedFiles = visitedFiles;
         file.acceptChildren(this);
         dependencies.add(file);
     }
 
-    public ToitScope getScope() {
-        return scope;
+    public ToitFileScope getToitFileScope() {
+        return toitFileScope;
     }
 
     @Override
@@ -36,19 +40,25 @@ public class ToitFileScopeCalculator extends ToitVisitor {
     }
 
     @Override
-    public void visit(ToitStructure toitStructure) { scope.add(toitStructure.getName(), toitStructure); }
+    public void visit(ToitStructure toitStructure) { toitFileScope.locals.add(toitStructure.getName(), toitStructure); }
 
     @Override
-    public void visit(ToitFunction toitFunction) { scope.add(toitFunction.getName(), toitFunction); }
+    public void visit(ToitFunction toitFunction) { toitFileScope.locals.add(toitFunction.getName(), toitFunction); }
 
     @Override
-    public void visit(ToitVariableDeclaration toitVariableDeclaration) { scope.add(toitVariableDeclaration.getName(), toitVariableDeclaration); }
+    public void visit(ToitVariableDeclaration toitVariableDeclaration) { toitFileScope.locals.add(toitVariableDeclaration.getName(), toitVariableDeclaration); }
+
+    @Override
+    public void visit(ToitExportDeclaration toitExportDeclaration) {
+        if (toitExportDeclaration.isStar()) toitFileScope.exported.add("*");
+        else toitFileScope.exported.addAll(toitExportDeclaration.getExportedNames());
+    }
 
     public Object[] dependencies() {
         return dependencies.toArray(new PsiElement[0]);
     }
 
-    public void addImport(int prefixDots, List<String> paths, List<String> shows, ToitIdentifier as, ToitImportDeclaration importDeclaration) {
+    public void addImport(int prefixDots, List<String> paths, List<String> shows, ToitIdentifier as) {
         if (paths.isEmpty()) return;
 
         String path = String.join(File.separator, paths);
@@ -59,39 +69,35 @@ public class ToitFileScopeCalculator extends ToitVisitor {
 
         ToitFile psiFile;
         if (prefixDots == 0) {
-            psiFile = ToitSdkFiles.findLibraryFile(file.getProject(), filesToFind);
-        } else {
-            psiFile = ToitProjectFiles.findProjectFile(file, prefixDots, filesToFind);
-        }
-        if (psiFile == null) return;
-
-        dependencies.add(psiFile);
-        String prefix = "";
-        if (as != null) {
-            prefix = as + ".";
-            scope.add(as.getName(), as);
-        } else if (prefixDots == 0 && shows.isEmpty()) {
-            scope.add(lastPath, psiFile);
-            prefix = lastPath + ".";
-        }
-
-        if (shows.isEmpty()) {
-            for (PsiNameIdentifierOwner elm : psiFile.childrenOfType(PsiNameIdentifierOwner.class)) {
-                scope.add(prefix + elm.getName(), elm);
+            psiFile = ToitSdkFiles.findLibraryFile(toitFileScope.getToitFile().getProject(), filesToFind);
+            if (psiFile == null) {
+                psiFile = ToitPackageHandler.findPackageSourceFile(toitFileScope.getToitFile(), paths);
             }
         } else {
-            calcExported(psiFile, scope, shows);
+            psiFile = ToitProjectFiles.findProjectFile(toitFileScope.getToitFile(), prefixDots, filesToFind);
         }
+        if (psiFile == null || visitedFiles.contains(psiFile)) return;
+        visitedFiles.add(psiFile);
 
-        // Todo: add static fields
-    }
+        dependencies.add(psiFile);
 
-    public static void calcExported(ToitFile psiFile, ToitScope scope, List<String> limitedSymbols) {
-        // TODO: Handle export statements
-        for (PsiNameIdentifierOwner elm : psiFile.childrenOfType(PsiNameIdentifierOwner.class)) {
-            if (limitedSymbols == null || limitedSymbols.contains(elm.getName()))
-                scope.add(elm.getName(),elm);
+        toitFileScope.importedLibPackageFiles.put("$"+prefixDots+"$"+String.join(".",paths),psiFile);
+
+
+        var importedFileScope = new ToitFileScopeCalculator(psiFile,visitedFiles).getToitFileScope();
+        System.out.println(lastPath);
+        if (as != null) {
+            toitFileScope.importedWithPrefix.put(as.getName(), importedFileScope);
+        } else if (!shows.isEmpty()) {
+            var exportedScope = importedFileScope.getExportedScope();
+            for (String show : shows) {
+                var showElement = exportedScope.resolve(show);
+                toitFileScope.locals.add(show, showElement);
+            }
+        } else if (prefixDots == 0) {
+            toitFileScope.importedWithPrefix.put(lastPath, importedFileScope);
+        } else {
+            toitFileScope.importedLocals.add(importedFileScope);
         }
     }
-
 }

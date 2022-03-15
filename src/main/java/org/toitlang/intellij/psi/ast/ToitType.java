@@ -2,10 +2,13 @@
 package org.toitlang.intellij.psi.ast;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
+import org.toitlang.intellij.utils.ToitScope;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,5 +40,12 @@ public class ToitType extends ToitElement {
     return childrenOfType(ToitReferenceIdentifier.class).stream()
             .map(ToitReferenceIdentifier::getName)
             .collect(Collectors.joining("."));
+  }
+
+  public ToitStructure resolve(ToitScope scope) {
+    var refs =childrenOfType(ToitReferenceIdentifier.class);
+    var ref = refs.get(refs.size()-1).getReference().resolve();
+    if (ref != null && ref instanceof ToitStructure) return (ToitStructure) ref;
+    return null;
   }
 }

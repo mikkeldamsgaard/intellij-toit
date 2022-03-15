@@ -26,7 +26,7 @@ public class Parser {
     public Parser(IElementType root, PsiBuilder builder) {
         this.root = root;
         this.builder = builder;
-        builder.setDebugMode(true);
+        //builder.setDebugMode(true);
     }
 
     public void parse() {
@@ -825,51 +825,58 @@ public class Parser {
         }
     }
 
+    private int recursion_level = 0;
     private boolean primaryExpression(boolean allowBlock) {
         var expression = mark();
-        if (is(LPAREN)) {
-            consumeAllowNewlines();
-            if (!expression(true)) return expression.drop();
-            if (!is(RPAREN)) return expression.error("Expected )");
-            consume();
-        } else if (is(STRING_START)) {
-            if (!string()) return expression.drop();
-        } else if (is(INTEGER) || is(FLOAT) || is(NULL) || is(BOOLEAN) || is(CHARACTER)) {
-            var literal = mark();
-            consume();
-            tokenType();
-            //    if (!(tokenType instanceof ToitTokenType)) throw new RuntimeException("Not valid type: "+tokenType.getDebugName()+", should be a token");
-//    return new ToitElementType("Lietral "+tokenType.getDebugName(), n -> new ToitSimpleLiteral(n, (ToitTokenType)tokenType));
-            literal.done(SIMPLE_LITERAL);
-        } else if (is(LCURLY)) {
-            if (!setOrMapLiteral()) return expression.drop();
-        } else if (is(LBRACKET)) {
-            if (!listLiteral()) return expression.drop();
-        } else if (is(HASH)) {
-            consumeAllowNewlines();
-            if (!listLiteral()) return expression.drop();
-        } else if (isIdentifier()) {
-            identifier(false, REFERENCE_IDENTIFIER);
-        } else if (is(PRIMITIVE)) {
-            var primitive = mark();
-            consume();
-            while (!builder.eof() && is(DOT) && currentTokenIsAttached) {
+        try {
+            if (recursion_level++>100) return expression.error("Too deeply nested expression");
+            if (is(LPAREN)) {
                 consumeAllowNewlines();
-                if (!identifier(false, REFERENCE_IDENTIFIER)) return error("Incorrect primitive declaration", primitive, expression);
+                if (!expression(true)) return expression.drop();
+                if (!is(RPAREN)) return expression.error("Expected )");
+                consume();
+            } else if (is(STRING_START)) {
+                if (!string()) return expression.drop();
+            } else if (is(INTEGER) || is(FLOAT) || is(NULL) || is(BOOLEAN) || is(CHARACTER)) {
+                var literal = mark();
+                consume();
+                tokenType();
+                //    if (!(tokenType instanceof ToitTokenType)) throw new RuntimeException("Not valid type: "+tokenType.getDebugName()+", should be a token");
+//    return new ToitElementType("Lietral "+tokenType.getDebugName(), n -> new ToitSimpleLiteral(n, (ToitTokenType)tokenType));
+                literal.done(SIMPLE_LITERAL);
+            } else if (is(LCURLY)) {
+                if (!setOrMapLiteral()) return expression.drop();
+            } else if (is(LBRACKET)) {
+                if (!listLiteral()) return expression.drop();
+            } else if (is(HASH)) {
+                consumeAllowNewlines();
+                if (!listLiteral()) return expression.drop();
+            } else if (isIdentifier()) {
+                identifier(false, REFERENCE_IDENTIFIER);
+            } else if (is(PRIMITIVE)) {
+                var primitive = mark();
+                consume();
+                while (!builder.eof() && is(DOT) && currentTokenIsAttached) {
+                    consumeAllowNewlines();
+                    if (!identifier(false, REFERENCE_IDENTIFIER))
+                        return error("Incorrect primitive declaration", primitive, expression);
+                }
+                if (is(COLON)) {
+                    if (!block(false, this::functionStatement)) return drop(primitive, expression);
+                }
+                primitive.done(PRIMITIVE_STATEMENT);
+            } else if (allowBlock && is(COLON)) {
+                if (!block(true, this::functionStatement)) return expression.drop();
+            } else if (is(COLON_COLON)) {
+                if (!lambda()) return expression.drop();
+            } else {
+                return expression.error("Expected literal, variable or nested expression");
             }
-            if (is(COLON)) {
-                if (!block(false, this::functionStatement)) return drop(primitive, expression);
-            }
-            primitive.done(PRIMITIVE_STATEMENT);
-        } else if (allowBlock && is(COLON)) {
-            if (!block(true, this::functionStatement)) return expression.drop();
-        } else if (is(COLON_COLON)) {
-            if (!lambda()) return expression.drop();
-        } else {
-            return expression.error("Expected literal, variable or nested expression");
-        }
 
-        return expression.done(PRIMARY_EXPRESSION);
+            return expression.done(PRIMARY_EXPRESSION);
+        } finally {
+            recursion_level--;
+        }
     }
 
     private boolean string() {

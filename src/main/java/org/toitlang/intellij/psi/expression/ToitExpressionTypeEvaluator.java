@@ -3,8 +3,10 @@ package org.toitlang.intellij.psi.expression;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
+import org.toitlang.intellij.files.ToitSdkFiles;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ast.*;
+import org.toitlang.intellij.psi.scope.ToitFileScope;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 import org.toitlang.intellij.utils.ToitScope;
 
@@ -74,30 +76,25 @@ public class ToitExpressionTypeEvaluator  extends ToitExpressionVisitor<Set<PsiE
                 @Override
                 public void visit(ToitFunction toitFunction) {
                     // Use the return type (declared or inferred) to resolve
-                    String variableType = toitFunction.getType();
+                    ToitType variableType = toitFunction.getType();
                     processDeferredType(variableType);
                 }
 
                 @Override
                 public void visit(ToitVariableDeclaration toitVariableDeclaration) {
                     // Use the variables type (declared or inferred) to resolve
-                    String variableType = toitVariableDeclaration.getType();
+                    ToitType variableType = toitVariableDeclaration.getType();
                     processDeferredType(variableType);
                 }
 
-                private void processDeferredType(String variableType) {
+                private void processDeferredType(ToitType type) {
                     variants = null;
-                    if (variableType == null) return;
+                    if (type == null) return;
 
-                    List<PsiElement> typeElements = scope.resolve(variableType);
-                    if (typeElements.size() == 0) return;
+                    ToitStructure toitStructure = type.resolve(scope);
+                    if (toitStructure == null) return;
 
-                    List<Object> variants = new ArrayList<>();
-                    for (PsiElement typeElement : typeElements) {
-                        var structVars = processStructure((ToitStructure) typeElement);
-                        variants.addAll(Arrays.asList(structVars));
-                    }
-                    ToitExpressionTypeEvaluator.this.variants = variants.toArray();
+                    ToitExpressionTypeEvaluator.this.variants = processStructure(toitStructure);
                 }
             });
         }

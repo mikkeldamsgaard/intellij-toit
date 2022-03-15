@@ -25,8 +25,11 @@ public class ToitImportDeclaration extends ToitElement {
     visitor.visit(this);
   }
 
+  public boolean hasShow() { return childrenOfType(ToitIdentifier.class).stream().anyMatch(ToitIdentifier::isShow); }
+  public boolean hasAs() { return childrenOfType(ToitIdentifier.class).stream().anyMatch(ToitIdentifier::isImportAs); }
+
   private final static TokenSet DOT_AND_IMPORT_IDENTIFIERS = TokenSet.create(DOT, DOT_DOT, ToitTypes.IMPORT_IDENTIFIER);
-  public void computeScope(ToitFileScopeCalculator toitFileScopeCalculator) {
+  public int getPrefixDots() {
     int prefixDots = 0;
     for (ASTNode child : getNode().getChildren(DOT_AND_IMPORT_IDENTIFIERS)) {
       if (child.getElementType() == DOT) {
@@ -35,6 +38,11 @@ public class ToitImportDeclaration extends ToitElement {
         prefixDots += 2;
       } else break;
     }
+    return prefixDots;
+  }
+
+  public void computeScope(ToitFileScopeCalculator toitFileScopeCalculator) {
+    int prefixDots = getPrefixDots();
 
     List<String> paths = new ArrayList<>();
     List<String> shows = new ArrayList<>();
@@ -45,6 +53,7 @@ public class ToitImportDeclaration extends ToitElement {
       if (toitIdentifier.isImportAs()) as = toitIdentifier;
     }
 
-    toitFileScopeCalculator.addImport(prefixDots, paths,shows,as, this);
+    toitFileScopeCalculator.addImport(prefixDots, paths, shows, as);
   }
+
 }

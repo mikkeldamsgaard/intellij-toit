@@ -36,9 +36,9 @@ public class ToitVariableDeclaration extends ToitPrimaryLanguageElement<ToitVari
 
 
     // TODO: Stub this
-    public String getType() {
+    public ToitType getType() {
         for (ToitType toitType : childrenOfType(ToitType.class)) {
-            return toitType.getName();
+            return toitType;
         }
         return null;
     }

@@ -55,9 +55,10 @@ public class ToitSdkFiles extends IndexableSetContributor {
                         .collect(Collectors.toList());
 
                 for (PsiFile psiFile : psiFiles) {
-                    ToitFileScopeCalculator.calcExported((ToitFile) psiFile, cache, null);
+                    cache = cache.chain(new ToitFileScopeCalculator((ToitFile) psiFile).getToitFileScope().getExportedScope());
                 }
             }
+
 
             coreMap.put(project,cache);
         }
