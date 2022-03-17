@@ -7,7 +7,7 @@ import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 public abstract class ToitIdentifier extends ToitElement {
-  String name;
+  private String name;
   public ToitIdentifier(@NotNull ASTNode node) {
     super(node);
   }
@@ -32,5 +32,5 @@ public abstract class ToitIdentifier extends ToitElement {
   public boolean isStructureName() { return getNode().getElementType() == ToitTypes.STRUCTURE_IDENTIFIER; }
   public boolean isTypeName() { return getNode().getElementType() == ToitTypes.TYPE_IDENTIFIER; }
   public boolean isReference() { return getNode().getElementType() == ToitTypes.REFERENCE_IDENTIFIER; }
-
+  public boolean isFactoryName() { return getNode().getElementType() == ToitTypes.FACTORY_IDENTIFIER; }
 }

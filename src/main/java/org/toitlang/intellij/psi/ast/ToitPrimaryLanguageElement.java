@@ -10,6 +10,7 @@ import com.intellij.ui.RowIcon;
 import com.intellij.util.IncorrectOperationException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.toitlang.intellij.model.IToitPrimaryLanguageElement;
 import org.toitlang.intellij.structureview.IStructureViewable;
 import org.toitlang.intellij.psi.stub.ToitStubElement;
 
@@ -17,7 +18,7 @@ import javax.swing.*;
 
 public abstract class ToitPrimaryLanguageElement<S extends PsiElement, T extends ToitStubElement<S>>
         extends ToitBaseStubableElement<T>
-        implements PsiNameIdentifierOwner, StubBasedPsiElement<T>, IStructureViewable {
+        implements IToitPrimaryLanguageElement, StubBasedPsiElement<T> {
     public ToitPrimaryLanguageElement(@NotNull T stub, @NotNull IStubElementType nodeType) {
         super(stub, nodeType);
     }

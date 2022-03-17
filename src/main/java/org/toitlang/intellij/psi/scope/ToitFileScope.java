@@ -1,88 +1,139 @@
 package org.toitlang.intellij.psi.scope;
 
+import com.intellij.psi.PsiElement;
+import org.jetbrains.annotations.NotNull;
+import org.toitlang.intellij.files.ToitFileResolver;
+import org.toitlang.intellij.model.IToitPrimaryLanguageElement;
 import org.toitlang.intellij.psi.ToitFile;
-import org.toitlang.intellij.utils.ToitScope;
+import org.toitlang.intellij.psi.ast.*;
+import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ToitFileScope {
-    private ToitFile toitFile;
+    private final Map<String, ToitFile> imports = new HashMap<>();
+    private final Map<String, IToitPrimaryLanguageElement> locals = new HashMap<>();
+    private final Map<String, ToitFile> importedLibraries = new HashMap<>();
+    private final Map<ToitFile, List<String>> shows = new HashMap<>();
+    private final List<ToitFile> projectImports = new ArrayList<>();
+    private final List<String> exports = new ArrayList<>();
 
-    // The library/package files imported
-    // import lib
-    // import lib show xxx
-    // import .lib
-    // both would add lib to this map.
-    final Map<String, ToitFile> importedLibPackageFiles = new HashMap<>();
-
-    // The imported scope from library and packages
-    // import lib => adds lib
-    // import lib as xxx => adds xxx
-    // import .lib as xxx => adds xxx
-    Map<String, ToitFileScope> importedWithPrefix = new HashMap<>();
-
-    // For all locally defined names, they end in this scope (top level structures, functions and variables)
-    final ToitScope locals = new ToitScope();
-
-    // Everything that is imported with a "." and not an as.
-    // import .lib => Add all top level names from lib to this scope
-    // import lib show xxx => Add xxx to this scope
-    // import .lib show xxx => Add xxx to this scope
-    final List<ToitFileScope> importedLocals = new ArrayList<>();
-
-    // The list of exported names from this file. Can be a singleton "*" or empty
-    final List<String> exported = new ArrayList<>();
-
-    public ToitFileScope(ToitFile toitFile) {
-        this.toitFile = toitFile;
+    public ToitScope getToitScope() {
+        Map<String, PsiElement> scope = new HashMap<>(locals);
+        scope.putAll(imports);
+        shows.forEach((k,v)->{
+            Map<String, PsiElement> exported = k.getToitFileScope().getExportedScope(new HashSet<>());
+            if (v.contains("*")) scope.putAll(exported);
+            else {
+                for (String shown : v) {
+                    if (exported.containsKey(shown)) scope.put(shown, exported.get(shown));
+                }
+            }
+        });
+        projectImports.forEach(p -> scope.putAll(p.getToitFileScope().getExportedScope(new HashSet<>())));
+        return new ToitScope(scope);
     }
 
-    public ToitFile getToitFile() {
-        return toitFile;
-    }
 
     public ToitScope getExportedScope() {
-        // locals and exported names from imported locals
-        if (exported.isEmpty()) return locals;
+        return new ToitScope(getExportedScope(new HashSet<>()));
+    }
 
-        ToitScope locallyImportedScope = getLocallyImportedScope();
+    public Map<String, IToitPrimaryLanguageElement> getLocals() {
+        return locals;
+    }
 
-        if (exported.contains("*")) {
-            return locals.chain(locallyImportedScope);
-        } else {
-            var exportedScope = locals.derive();
-            for (String export : exported) {
-                var importedLocal = locallyImportedScope.resolve(export);
-                if (!importedLocal.isEmpty()) exportedScope.add(export, importedLocal);
+    public ToitFile getImportedLibrary(String name) {
+        return importedLibraries.get(name);
+    }
+
+    private @NotNull  Map<String, PsiElement> getExportedScope(Set<ToitFileScope> seen) {
+        Map<String, PsiElement> result = new HashMap<>();
+        if (seen.contains(this)) return result; // Cycle detection. If export are cycled, it is an error
+        seen.add(this);
+
+        if (exports.isEmpty()) result.putAll(locals);
+        else {
+            for (ToitFile projectImport : projectImports) {
+                Map<String, PsiElement> pExported =  projectImport.getToitFileScope().getExportedScope(seen);
+                pExported.entrySet().stream()
+                        .filter(e -> exports.contains("*") || exports.contains(e.getKey()))
+                        .forEach(e -> result.put(e.getKey(),e.getValue()));
             }
-            return exportedScope;
+            locals.entrySet().stream()
+                    .filter(e -> exports.contains("*") || exports.contains(e.getKey()))
+                    .forEach(e -> result.put(e.getKey(),e.getValue()));
         }
+        return result;
     }
 
-    private ToitScope getLocallyImportedScope() {
-        ToitScope locallyImportedScope = new ToitScope();
-        for (ToitFileScope importedLocal : importedLocals) {
-            locallyImportedScope = locallyImportedScope.chain(importedLocal.getExportedScope());
-        }
-        return locallyImportedScope;
+    public void build(ToitFile toitFile) {
+        toitFile.acceptChildren(new ToitVisitor() {
+            public void visit(ToitImportDeclaration toitImportDeclaration) {
+                int prefixDots = toitImportDeclaration.getPrefixDots();
+                List<String> paths = new ArrayList<>();
+                List<String> shows = new ArrayList<>();
+                ToitIdentifier as = null;
+                for (ToitIdentifier toitIdentifier : toitImportDeclaration.childrenOfType(ToitIdentifier.class)) {
+                    if (toitIdentifier.isImport()) paths.add(toitIdentifier.getName());
+                    if (toitIdentifier.isShow()) shows.add(toitIdentifier.getName());
+                    if (toitIdentifier.isImportAs()) as = toitIdentifier;
+                }
+
+                if (paths.isEmpty()) return;
+
+                ToitFile importedFile = ToitFileResolver.resolve(toitFile, prefixDots, paths);
+
+                if (importedFile == null) return;
+
+                importedLibraries.put("$"+prefixDots+"$"+String.join(".",paths), importedFile);
+
+                if (as != null) {
+                    imports.put(as.getName(), importedFile);
+                } else if (!shows.isEmpty()) {
+                    shows.forEach(s -> ToitFileScope.this.shows.computeIfAbsent(importedFile, (k) -> new ArrayList<>()).add(s));
+                } else if (prefixDots == 0) {
+                    imports.put(paths.get(paths.size()-1), importedFile);
+                } else {
+                    projectImports.add(importedFile);
+                }
+            }
+
+            @Override
+            public void visit(ToitStructure toitStructure) { locals.put(toitStructure.getName(), toitStructure); }
+
+            @Override
+            public void visit(ToitFunction toitFunction) { locals.put(toitFunction.getName(), toitFunction); }
+
+            @Override
+            public void visit(ToitVariableDeclaration toitVariableDeclaration) { locals.put(toitVariableDeclaration.getName(), toitVariableDeclaration); }
+
+            @Override
+            public void visit(ToitExportDeclaration toitExportDeclaration) {
+                if (toitExportDeclaration.isStar()) exports.add("*");
+                else exports.addAll(toitExportDeclaration.getExportedNames());
+            }
+        });
     }
 
-    // Returns the file used to resolve references after import in each of these:
-    public ToitFile getImportedFile(String name) {
-        return importedLibPackageFiles.get(name);
+    public Object[] dependencies(ToitFile toitFile) {
+        HashSet<PsiElement> dependencies = new HashSet<>(imports.values());
+        dependencies.add(toitFile);
+        dependencies.addAll(importedLibraries.values());
+        dependencies.addAll(shows.keySet());
+        dependencies.addAll(projectImports);
+        return dependencies.toArray();
     }
 
-    // Get this scope used to resolve any reference in toitFile itself
-    public ToitScope getScopeForElementsInFile(ToitScope core) {
-        var scope = core.chain(locals).chain(getLocallyImportedScope());
-        for (String prefix : importedWithPrefix.keySet()) {
-//            var exportedScope = importedWithPrefix.get(prefix).getExportedScope();
-//            scope = scope.chainWithPrefix(prefix,exportedScope);
-            scope.add(prefix, importedWithPrefix.get(prefix).toitFile);
-        }
-        return scope;
+    @Override
+    public String toString() {
+        return "ToitFileScope{" +
+                "imports=" + imports +
+                ", locals=" + locals +
+                ", importedLibraries=" + importedLibraries +
+                ", shows=" + shows +
+                ", projectImports=" + projectImports +
+                ", exports=" + exports +
+                '}';
     }
 }

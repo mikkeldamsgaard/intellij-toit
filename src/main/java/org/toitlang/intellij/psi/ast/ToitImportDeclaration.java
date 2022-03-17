@@ -5,11 +5,7 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.tree.TokenSet;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ToitTypes;
-import org.toitlang.intellij.psi.scope.ToitFileScopeCalculator;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.toitlang.intellij.psi.ToitTypes.DOT;
 import static org.toitlang.intellij.psi.ToitTypes.DOT_DOT;
@@ -40,20 +36,4 @@ public class ToitImportDeclaration extends ToitElement {
     }
     return prefixDots;
   }
-
-  public void computeScope(ToitFileScopeCalculator toitFileScopeCalculator) {
-    int prefixDots = getPrefixDots();
-
-    List<String> paths = new ArrayList<>();
-    List<String> shows = new ArrayList<>();
-    ToitIdentifier as = null;
-    for (ToitIdentifier toitIdentifier : childrenOfType(ToitIdentifier.class)) {
-      if (toitIdentifier.isImport()) paths.add(toitIdentifier.getName());
-      if (toitIdentifier.isShow()) shows.add(toitIdentifier.getName());
-      if (toitIdentifier.isImportAs()) as = toitIdentifier;
-    }
-
-    toitFileScopeCalculator.addImport(prefixDots, paths, shows, as);
-  }
-
 }

@@ -1,7 +1,8 @@
-package org.toitlang.intellij.utils;
+package org.toitlang.intellij.psi.scope;
 
 import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
+import org.toitlang.intellij.model.IToitPrimaryLanguageElement;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -33,8 +34,11 @@ public class ToitScope {
     public ToitScope() {
     }
 
+    public ToitScope(Map<String, PsiElement> locals) {
+        locals.forEach((k,v)->local.computeIfAbsent(k, k_-> new ArrayList<>()).add(v));
+    }
+
     private ToitScope(ToitScope parent) {
-        this();
         this.parent = parent;
     }
 

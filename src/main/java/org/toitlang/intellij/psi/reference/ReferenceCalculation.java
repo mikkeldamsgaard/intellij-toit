@@ -17,6 +17,7 @@ public class ReferenceCalculation {
     private ToitReferenceIdentifier reference;
     private Object[] variants = new Object[0];
     private List<PsiElement> dependencies = new ArrayList<>();
+    private boolean soft = false;
 
     public Object[] getVariants() {
         if (variants == null) return new Object[0];
@@ -26,5 +27,13 @@ public class ReferenceCalculation {
     public ResolveResult[] getResolveResult() {
         if (referencedValue == null || referencedValue.size() == 0) return new ResolveResult[0];
         return referencedValue.stream().map(PsiElementResolveResult::new).toArray(ResolveResult[]::new);
+    }
+
+    public void setSoft(boolean soft) {
+        this.soft = soft;
+    }
+
+    public boolean getSoft() {
+        return soft;
     }
 }

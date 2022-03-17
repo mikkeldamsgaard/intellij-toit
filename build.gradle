@@ -25,7 +25,10 @@ patchPluginXml {
     changeNotes = """
       Initial version of plugin.
       
-      
+      1.1: 
+        - Bug fixes.
+        - Added package detection nd package.lock parsing
+        - Much better handling of import/export
       """
 }
 test {

@@ -3,17 +3,17 @@ package org.toitlang.intellij.psi.expression;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
-import org.toitlang.intellij.files.ToitSdkFiles;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ast.*;
-import org.toitlang.intellij.psi.scope.ToitFileScope;
+import org.toitlang.intellij.psi.reference.ReferenceCalculation;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
-import org.toitlang.intellij.utils.ToitScope;
+import org.toitlang.intellij.psi.scope.ToitScope;
 
 import java.util.*;
 
 public class ToitExpressionTypeEvaluator  extends ToitExpressionVisitor<Set<PsiElement>> {
     private final ToitScope scope;
+    private ReferenceCalculation calc;
     private Object[] variants;
 
     private final static String LIST_CLASS_NAME = "List";
@@ -23,8 +23,9 @@ public class ToitExpressionTypeEvaluator  extends ToitExpressionVisitor<Set<PsiE
     private final static String MAP_CLASS_NAME = "Map";
     private final static String SET_CLASS_NAME = "Set";
 
-    public ToitExpressionTypeEvaluator(ToitScope scope) {
+    public ToitExpressionTypeEvaluator(ToitScope scope, ReferenceCalculation calc) {
         this.scope = scope;
+        this.calc = calc;
     }
 
     public Object[] getVariants() {
@@ -48,7 +49,10 @@ public class ToitExpressionTypeEvaluator  extends ToitExpressionVisitor<Set<PsiE
     public Set<PsiElement> visit(ToitDerefExpression toitDerefExpression) {
         var prevType = ((ToitExpression)toitDerefExpression.getPrevSibling()).accept(this);
 
-        if (prevType == null) return null;
+        if (prevType == null) {
+            calc.setSoft(true);
+            return null;
+        }
 
         final Set<PsiElement> res = new HashSet<>();
         String name = toitDerefExpression.childrenOfType(ToitReferenceIdentifier.class).get(0).getName();
@@ -56,7 +60,7 @@ public class ToitExpressionTypeEvaluator  extends ToitExpressionVisitor<Set<PsiE
             type.accept(new ToitVisitor() {
                 @Override
                 public void visitFile(@NotNull PsiFile file) {
-                    ToitScope scope = ((ToitFile) file).getScope();
+                    ToitScope scope = ((ToitFile) file).getToitFileScope().getToitScope();
                     res.addAll(safeResolve(scope,name));
                     variants = scope.asVariant();
                 }
@@ -89,7 +93,10 @@ public class ToitExpressionTypeEvaluator  extends ToitExpressionVisitor<Set<PsiE
 
                 private void processDeferredType(ToitType type) {
                     variants = null;
-                    if (type == null) return;
+                    if (type == null) {
+                        calc.setSoft(true);
+                        return;
+                    }
 
                     ToitStructure toitStructure = type.resolve(scope);
                     if (toitStructure == null) return;

@@ -2,13 +2,11 @@
 package org.toitlang.intellij.psi.ast;
 
 import com.intellij.lang.ASTNode;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
-import org.toitlang.intellij.utils.ToitScope;
+import org.toitlang.intellij.psi.scope.ToitScope;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 

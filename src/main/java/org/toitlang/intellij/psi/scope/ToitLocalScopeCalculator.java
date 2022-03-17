@@ -3,12 +3,8 @@ package org.toitlang.intellij.psi.scope;
 import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ast.*;
-import org.toitlang.intellij.psi.reference.ReferenceCalculation;
 import org.toitlang.intellij.psi.visitor.ToitVisitableElement;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
-import org.toitlang.intellij.utils.ToitScope;
-
-import java.util.Map;
 
 public class ToitLocalScopeCalculator extends ToitVisitor {
     private final ToitReferenceIdentifier origin;

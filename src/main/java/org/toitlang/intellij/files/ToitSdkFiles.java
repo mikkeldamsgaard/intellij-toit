@@ -3,15 +3,15 @@ package org.toitlang.intellij.files;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.indexing.IndexableSetContributor;
 import org.jetbrains.annotations.NotNull;
+import org.toitlang.intellij.model.IToitPrimaryLanguageElement;
 import org.toitlang.intellij.ui.ToitApplicationSettings;
 import org.toitlang.intellij.psi.ToitFile;
-import org.toitlang.intellij.psi.scope.ToitFileScopeCalculator;
 import org.toitlang.intellij.ui.ToitNotifier;
-import org.toitlang.intellij.utils.ToitScope;
+import org.toitlang.intellij.psi.scope.ToitScope;
 
 import java.io.File;
 import java.util.*;
@@ -44,21 +44,23 @@ public class ToitSdkFiles extends IndexableSetContributor {
             var root = getSdkRoot(project);
             if (root == null) return new ToitScope();
 
-            cache = new ToitScope();
+            Map<String, PsiElement> coreElements = new HashMap<>();
 
             VirtualFile core = root.findFileByRelativePath("core");
             if (core != null) {
                 var psiM = PsiManager.getInstance(project);
-                List<PsiFile> psiFiles = Arrays.stream(core.getChildren())
+                List<ToitFile> coreFiles = Arrays.stream(core.getChildren())
                         .map(psiM::findFile)
                         .filter(Objects::nonNull)
+                        .map(ToitFile.class::cast)
                         .collect(Collectors.toList());
 
-                for (PsiFile psiFile : psiFiles) {
-                    cache = cache.chain(new ToitFileScopeCalculator((ToitFile) psiFile).getToitFileScope().getExportedScope());
+                for (ToitFile toitFile : coreFiles) {
+                    coreElements.putAll(toitFile.getToitFileScope().getLocals());
                 }
             }
 
+            cache = new ToitScope(coreElements);
 
             coreMap.put(project,cache);
         }

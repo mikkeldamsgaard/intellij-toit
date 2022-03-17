@@ -110,4 +110,26 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
         if (getParent() instanceof ToitFile) return AllIcons.Nodes.Function;
         return isAbstract()? AllIcons.Nodes.AbstractMethod:AllIcons.Nodes.Method;
     }
+
+    public boolean isConstructor() {
+        for (ToitPseudoKeyword toitPseudoKeyword : childrenOfType(ToitPseudoKeyword.class)) {
+            if ("constructor".equals(toitPseudoKeyword.getName())) return true;
+        }
+        return false;
+    }
+
+    public boolean hasFactoryName() {
+        for (ToitNameableIdentifier toitNameableIdentifier : childrenOfType(ToitNameableIdentifier.class)) {
+            if (toitNameableIdentifier.isFactoryName()) return true;
+        }
+        return false;
+    }
+
+
+    public String getFactoryName() {
+        for (ToitNameableIdentifier toitNameableIdentifier : childrenOfType(ToitNameableIdentifier.class)) {
+            if (toitNameableIdentifier.isFactoryName()) return toitNameableIdentifier.getName();
+        }
+        return null;
+    }
 }

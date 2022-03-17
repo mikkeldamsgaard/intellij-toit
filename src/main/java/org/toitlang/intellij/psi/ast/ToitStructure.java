@@ -11,7 +11,7 @@ import org.toitlang.intellij.structureview.IStructureViewable;
 import org.toitlang.intellij.psi.stub.ToitStructureElementType;
 import org.toitlang.intellij.psi.stub.ToitStructureStub;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
-import org.toitlang.intellij.utils.ToitScope;
+import org.toitlang.intellij.psi.scope.ToitScope;
 
 import javax.swing.*;
 import java.util.Collections;
@@ -73,8 +73,16 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
 
                     @Override
                     public void visit(ToitFunction toitFunction) {
-                        scope.add(toitFunction.getName(), toitFunction);
+                        if (toitFunction.isConstructor()) {
+                         if (toitFunction.hasFactoryName()) {
+                             scope.add(toitFunction.getFactoryName(), toitFunction);
+                         }
+                        } else {
+                            scope.add(toitFunction.getName(), toitFunction);
+                        }
                     }
+
+
                 }));
     }
 
