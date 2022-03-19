@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ToitExportDeclaration extends ToitElement {
-  private final static TokenSet STAR_SET = TokenSet.create(ToitTypes.STAR);
   public ToitExportDeclaration(@NotNull ASTNode node) {
     super(node);
   }

@@ -18,7 +18,7 @@ public abstract class ToitIdentifier extends ToitElement {
   }
 
   @Override
-  public String getName() {
+  public @NotNull  String getName() {
     if (name == null) name = getText();
 
     return name;

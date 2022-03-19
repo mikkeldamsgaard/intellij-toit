@@ -80,6 +80,8 @@ public class ToitFileScope {
                     if (toitIdentifier.isImportAs()) as = toitIdentifier;
                 }
 
+                if (toitImportDeclaration.isShowStar()) shows.add("*");
+
                 if (paths.isEmpty()) return;
 
                 ToitFile importedFile = ToitFileResolver.resolve(toitFile, prefixDots, paths);

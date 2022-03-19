@@ -14,8 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class ToitBaseStubableElement<T extends StubElement> extends ToitVisitableElement<T> {
-    protected final TokenSet ABSTRACT = TokenSet.create(ToitTypes.ABSTRACT);
-    protected final TokenSet STATIC = TokenSet.create(ToitTypes.STATIC);
+    protected final static TokenSet ABSTRACT = TokenSet.create(ToitTypes.ABSTRACT);
+    protected final static TokenSet STATIC = TokenSet.create(ToitTypes.STATIC);
+    protected final static TokenSet STAR_SET = TokenSet.create(ToitTypes.STAR);
 
     public ToitBaseStubableElement(@NotNull ASTNode node) {
         super(node);

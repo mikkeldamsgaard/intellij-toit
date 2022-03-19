@@ -5,6 +5,8 @@ import com.intellij.psi.tree.IElementType;
 import lombok.AllArgsConstructor;import lombok.Data;import org.toitlang.intellij.psi.ToitTypes;
 import com.intellij.psi.TokenType;
 import java.util.Stack;
+import com.intellij.lexer.FlexLexer;
+
 %%
 
 %class ToitLexer
@@ -329,6 +331,7 @@ Spacing=[\ \t]
 
 <INLINE_STRING_EXPRESSION> {
   "["                                            { startDelimitedStringExpression(BRACKET); return ToitTypes.LBRACKET; }
+  "." [^:jletter:]                               { yypushback(2); resumeStringState();}
   [^]                                            { yypushback(1); resumeStringState();}
 }
 

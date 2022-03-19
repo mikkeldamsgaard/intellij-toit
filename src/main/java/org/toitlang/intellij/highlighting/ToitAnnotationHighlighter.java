@@ -7,6 +7,7 @@ import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ast.*;
+import org.toitlang.intellij.psi.reference.ToitReferenceBase;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 public class ToitAnnotationHighlighter implements Annotator {
@@ -39,9 +40,18 @@ public class ToitAnnotationHighlighter implements Annotator {
                 if (toitReferenceIdentifier.isTypeName()) {
                     applyHighlight(holder, toitReferenceIdentifier, ToitSyntaxHighlighter.CLASS_REFERENCE);
                 } else if (toitReferenceIdentifier.isReference()) {
-                    PsiElement ref = toitReferenceIdentifier.getReference().resolve();
-                    if (ref == null) return;
-                    ref.accept(annotateVariable(toitReferenceIdentifier, holder));
+                    ToitReferenceBase reference = toitReferenceIdentifier.getReference();
+                    PsiElement ref = reference.resolve();
+                    if (ref == null) {
+                        String name = toitReferenceIdentifier.getName();
+                        if (reference.isSoft() && ("it".equals(name) || "super".equals(name)))
+                            applyHighlight(holder, toitReferenceIdentifier, ToitSyntaxHighlighter.KEYWORD);
+                    } else {
+                        if ("this".equals(toitReferenceIdentifier.getName())) {
+                            applyHighlight(holder, toitReferenceIdentifier, ToitSyntaxHighlighter.KEYWORD);
+                        } else
+                            ref.accept(annotateVariable(toitReferenceIdentifier, holder));
+                    }
                 }
             }
 

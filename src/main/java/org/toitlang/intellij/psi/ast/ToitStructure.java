@@ -16,6 +16,7 @@ import org.toitlang.intellij.psi.scope.ToitScope;
 import javax.swing.*;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, ToitStructureStub> {
@@ -57,13 +58,22 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
         return getNameIdentifier().getName();
     }
 
-    public ToitScope getScope() {
-        ToitScope scope = new ToitScope();
-        getScope(scope);
-        return scope;
+    public ToitScope getScope(ToitScope scope) {
+        ToitScope structureScope = new ToitScope();
+        populateScope(structureScope);
+
+        var parents = childrenOfType(ToitType.class).stream()
+                .filter(ToitType::isExtendsType).collect(Collectors.toList());
+
+        for (ToitType parentType : parents) {
+            ToitStructure parent = parentType.resolve(scope);
+            if (parent != null)
+                structureScope = structureScope.chain(parent.getScope(scope));
+        };
+        return structureScope;
     }
 
-    public void getScope(ToitScope scope) {
+    public void populateScope(ToitScope scope) {
         childrenOfType(ToitBlock.class).forEach(b ->
                 b.acceptChildren(new ToitVisitor() {
                     @Override

@@ -3,6 +3,7 @@ package org.toitlang.intellij.psi.ast;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
+import org.bouncycastle.est.CACertsResponse;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.files.ToitSdkFiles;
 import org.toitlang.intellij.psi.scope.ToitFileScope;
@@ -71,8 +72,12 @@ public class ToitReferenceIdentifier extends ToitIdentifier {
                     }
                 }
             } else {
-                List<PsiElement> resolved = scope.resolve(getName());
-                recordResolveResult(resolved, calc);
+                if ("none".equals(getName()) || "any".equals(getName())) {
+                    calc.setSoft(true);
+                } else {
+                    List<PsiElement> resolved = scope.resolve(getName());
+                    recordResolveResult(resolved, calc);
+                }
             }
         } else if (getNode().getElementType() == ToitTypes.IMPORT_SHOW_IDENTIFIER || getNode().getElementType() == ToitTypes.EXPORT_IDENTIFIER) {
             List<PsiElement> resolved = scope.resolve(getName());
@@ -80,7 +85,7 @@ public class ToitReferenceIdentifier extends ToitIdentifier {
         } else if (getNode().getElementType() == ToitTypes.IMPORT_IDENTIFIER) {
             var importDecl = getParentOfType(ToitImportDeclaration.class);
             var imports = importDecl.childrenOfType(ToitReferenceIdentifier.class).stream().filter(ToitReferenceIdentifier::isImport).collect(Collectors.toList());
-            if (importDecl.hasShow() || importDecl.hasAs() || importDecl.getPrefixDots() > 0) {
+            if (importDecl.hasShow() || importDecl.isShowStar() || importDecl.hasAs() || importDecl.getPrefixDots() > 0) {
                 String fqn = "$"+importDecl.getPrefixDots()+"$"+imports.stream().map(ToitIdentifier::getName).collect(Collectors.joining("."));
                 var toitFile = toitFileScope.getImportedLibrary(fqn);
                 if (toitFile != null) {

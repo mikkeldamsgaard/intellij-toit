@@ -15,6 +15,7 @@ import org.toitlang.intellij.psi.stub.ToitFunctionStub;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 import javax.swing.*;
+import java.util.List;
 
 public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitFunctionStub> {
     public ToitFunction(@NotNull ASTNode node) {
@@ -94,7 +95,7 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
             }
 
             if (parent.isInterface()) {
-                if (hasBody && !isStatic)
+                if (hasBody && !isStatic && getFunctionName() != null)
                     holder.registerProblem(getFunctionName(), "Only static interface methods may have a body");
             }
         }
@@ -132,4 +133,9 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
         }
         return null;
     }
+
+    public List<ToitParameterName> getParameters() {
+        return childrenOfType(ToitParameterName.class);
+    }
+
 }

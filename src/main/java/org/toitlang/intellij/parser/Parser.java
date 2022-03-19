@@ -311,7 +311,7 @@ public class Parser {
 
     private boolean lambda() {
         var lambda = mark();
-        if (!expect(COLON_COLON)) return lambda.error("Expected :");
+        if (!expect(COLON_COLON)) return lambda.error("Expected ::");
         return blockOrLambdaBody(true, this::functionStatement, lambda);
     }
 
@@ -324,7 +324,7 @@ public class Parser {
             if (!allowParameters) return block.error("Parameter specification is not allowed here");
             consumeAllowNewlines();
             while (!builder.eof() && !is(PIPE)) {
-                if (!identifier(true, SIMPLE_PARAMETER_IDENTIFIER)) return block.error("Expected parameter name");
+                if (!blockParameter()) return block.error("Expected parameter name");
                 if (is(SLASH)) {
                     consumeAllowNewlines();
                     if (!typeName(false, VARIABLE_TYPE)) return block.error("Expected type name");
@@ -378,6 +378,12 @@ public class Parser {
         }
 
         return block.done(BLOCK);
+    }
+
+    private boolean blockParameter() {
+        var parameter = mark();
+        if (!identifier(true, SIMPLE_PARAMETER_IDENTIFIER)) return parameter.error("Expected parameter name");
+        return parameter.done(PARAMETER_NAME);
     }
 
     private boolean functionStatement() {

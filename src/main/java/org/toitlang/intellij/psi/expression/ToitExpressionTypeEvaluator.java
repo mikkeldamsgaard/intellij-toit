@@ -23,6 +23,11 @@ public class ToitExpressionTypeEvaluator  extends ToitExpressionVisitor<Set<PsiE
     private final static String MAP_CLASS_NAME = "Map";
     private final static String SET_CLASS_NAME = "Set";
 
+    private final static String SUPER = "super";
+    private final static String THIS = "this";
+    private final static String IT = "it";
+    private final static String PRIMITIVE = "#primitive";
+
     public ToitExpressionTypeEvaluator(ToitScope scope, ReferenceCalculation calc) {
         this.scope = scope;
         this.calc = calc;
@@ -71,9 +76,9 @@ public class ToitExpressionTypeEvaluator  extends ToitExpressionVisitor<Set<PsiE
                 }
 
                 private Object[] processStructure(ToitStructure toitStructure) {
-                    ToitScope scope = toitStructure.getScope();
-                    res.addAll(safeResolve(scope,name));
-                    variants = scope.asVariant();
+                    ToitScope structureScope = toitStructure.getScope(scope);
+                    res.addAll(safeResolve(structureScope,name));
+                    variants = structureScope.asVariant();
                     return variants;
                 }
 
@@ -89,6 +94,12 @@ public class ToitExpressionTypeEvaluator  extends ToitExpressionVisitor<Set<PsiE
                     // Use the variables type (declared or inferred) to resolve
                     ToitType variableType = toitVariableDeclaration.getType();
                     processDeferredType(variableType);
+                }
+
+                @Override
+                public void visit(ToitParameterName toitParameterName) {
+                    var toitType = toitParameterName.getType();
+                    processDeferredType(toitType);
                 }
 
                 private void processDeferredType(ToitType type) {
@@ -117,8 +128,33 @@ public class ToitExpressionTypeEvaluator  extends ToitExpressionVisitor<Set<PsiE
         toitPrimaryExpression.acceptChildren(new ToitVisitor() {
             @Override
             public void visit(ToitReferenceIdentifier toitReferenceIdentifier) {
-                var resolved = scope.resolve(toitReferenceIdentifier.getName());
-                if (resolved != null) res.addAll(resolved);
+                String name = toitReferenceIdentifier.getName();
+                switch (name) {
+                    case SUPER:
+                        var function = toitReferenceIdentifier.getParentOfType(ToitFunction.class);
+                        if (function != null && function.isConstructor()) calc.setSoft(true);
+
+                        break;
+                    case THIS:
+                        var struct = toitReferenceIdentifier.getParentOfType(ToitStructure.class);
+                        if (struct != null) {
+                            res.add(struct);
+                            return;
+                        }
+                        break;
+                    case IT:
+                        var block = toitReferenceIdentifier.getParentOfType(ToitBlock.class);
+                        if (block != null) {
+                            if (block.getParentOfType(ToitExpression.class) != null) calc.setSoft(true);
+                        }
+                        break;
+                    case PRIMITIVE:
+                        calc.setSoft(true);
+                        break;
+                }
+                if (!calc.isSoft()) {
+                    res.addAll(scope.resolve(name));
+                }
             }
         });
 

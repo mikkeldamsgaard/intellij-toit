@@ -30,4 +30,13 @@ public class ToitParameterName extends ToitElement implements PsiNameIdentifierO
   public PsiElement setName(@NlsSafe @NotNull String name) throws IncorrectOperationException {
     return getNameIdentifier().setName(name);
   }
+
+  public ToitType getType() {
+    var next = getNextSibling();
+    if (next instanceof ToitType) {
+      var toitType = (ToitType)next;
+      if (toitType.isVariableType()) return toitType;
+    }
+    return null;
+  }
 }

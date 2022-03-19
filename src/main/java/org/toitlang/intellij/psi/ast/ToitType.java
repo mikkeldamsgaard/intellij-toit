@@ -43,7 +43,7 @@ public class ToitType extends ToitElement {
   public ToitStructure resolve(ToitScope scope) {
     var refs =childrenOfType(ToitReferenceIdentifier.class);
     var ref = refs.get(refs.size()-1).getReference().resolve();
-    if (ref != null && ref instanceof ToitStructure) return (ToitStructure) ref;
+    if (ref instanceof ToitStructure) return (ToitStructure) ref;
     return null;
   }
 }

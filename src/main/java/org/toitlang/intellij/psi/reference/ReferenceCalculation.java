@@ -9,7 +9,6 @@ import org.toitlang.intellij.psi.ast.ToitReferenceIdentifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 public class ReferenceCalculation {
@@ -33,7 +32,7 @@ public class ReferenceCalculation {
         this.soft = soft;
     }
 
-    public boolean getSoft() {
+    public boolean isSoft() {
         return soft;
     }
 }

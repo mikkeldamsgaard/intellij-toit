@@ -67,7 +67,7 @@ public class ToitReferenceBase extends PsiReferenceBase<ToitReferenceIdentifier>
         toitFile = (ToitFile) toitFile.getOriginalFile();
         var fileScope = toitFile.getToitFileScope();
         ReferenceCalculation calc = getElement().calculateReference(fileScope);
-        mySoft = calc.getSoft();
+        mySoft = calc.isSoft();
         return calc.getResolveResult();
     }
 }

@@ -36,4 +36,8 @@ public class ToitImportDeclaration extends ToitElement {
     }
     return prefixDots;
   }
+  public boolean isShowStar() {
+    return hasToken(STAR_SET);
+  }
+
 }
