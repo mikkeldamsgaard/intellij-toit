@@ -31,12 +31,12 @@ public class ToitFileScope {
             }
         });
         projectImports.forEach(p -> scope.putAll(p.getToitFileScope().getExportedScope(new HashSet<>())));
-        return new ToitScope(scope);
+        return ToitScope.fromMap(scope);
     }
 
 
     public ToitScope getExportedScope() {
-        return new ToitScope(getExportedScope(new HashSet<>()));
+        return ToitScope.fromMap(getExportedScope(new HashSet<>()));
     }
 
     public Map<String, IToitPrimaryLanguageElement> getLocals() {

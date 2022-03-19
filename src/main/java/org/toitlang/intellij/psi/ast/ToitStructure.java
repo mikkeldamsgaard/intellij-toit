@@ -14,6 +14,7 @@ import org.toitlang.intellij.psi.visitor.ToitVisitor;
 import org.toitlang.intellij.psi.scope.ToitScope;
 
 import javax.swing.*;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -61,15 +62,11 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
     public ToitScope getScope(ToitScope scope) {
         ToitScope structureScope = new ToitScope();
         populateScope(structureScope);
+        var baseClass = getBaseClass(scope);
+        if (baseClass != null) {
+            structureScope = ToitScope.chain(structureScope,baseClass.getScope(scope));
+        }
 
-        var parents = childrenOfType(ToitType.class).stream()
-                .filter(ToitType::isExtendsType).collect(Collectors.toList());
-
-        for (ToitType parentType : parents) {
-            ToitStructure parent = parentType.resolve(scope);
-            if (parent != null)
-                structureScope = structureScope.chain(parent.getScope(scope));
-        };
         return structureScope;
     }
 
@@ -112,5 +109,17 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
     @Override
     protected @NotNull Icon getElementTypeIcon() {
         return isAbstract()?AllIcons.Nodes.AbstractClass:AllIcons.Nodes.Class;
+    }
+
+    public ToitStructure getBaseClass(ToitScope scope) {
+        var extendsTypes = childrenOfType(ToitType.class).stream()
+                .filter(ToitType::isExtendsType).collect(Collectors.toList());
+
+        for (ToitType extendsType : extendsTypes) {
+            ToitStructure base = extendsType.resolve(scope);
+            if (base != null) return base;
+        }
+
+        return null;
     }
 }

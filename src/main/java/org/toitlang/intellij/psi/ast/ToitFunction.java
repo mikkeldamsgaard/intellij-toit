@@ -11,6 +11,7 @@ import com.intellij.util.IncorrectOperationException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.psi.ToitFile;
+import org.toitlang.intellij.psi.scope.ToitScope;
 import org.toitlang.intellij.psi.stub.ToitFunctionStub;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
@@ -109,7 +110,7 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
     @Override
     protected @NotNull Icon getElementTypeIcon() {
         if (getParent() instanceof ToitFile) return AllIcons.Nodes.Function;
-        return isAbstract()? AllIcons.Nodes.AbstractMethod:AllIcons.Nodes.Method;
+        return isAbstract() ? AllIcons.Nodes.AbstractMethod : AllIcons.Nodes.Method;
     }
 
     public boolean isConstructor() {
@@ -138,4 +139,9 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
         return childrenOfType(ToitParameterName.class);
     }
 
+    public ToitScope getParameterScope() {
+        ToitScope scope = new ToitScope();
+        getParameters().forEach(p -> scope.add(p.getNameIdentifier().getName(), p));
+        return scope;
+    }
 }

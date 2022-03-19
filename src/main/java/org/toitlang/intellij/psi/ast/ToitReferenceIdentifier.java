@@ -51,7 +51,7 @@ public class ToitReferenceIdentifier extends ToitIdentifier {
 
     public ReferenceCalculation calculateReference(ToitFileScope toitFileScope) {
         ToitScope scope = ToitSdkFiles.coreClosure(getProject());
-        scope = scope.chain(toitFileScope.getToitScope());
+        scope = ToitScope.chain(toitFileScope.getToitScope(), scope);
 
         var calc = new ReferenceCalculation();
         calc.setReference(this);

@@ -6,13 +6,18 @@ import org.toitlang.intellij.psi.ast.*;
 import org.toitlang.intellij.psi.visitor.ToitVisitableElement;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ToitLocalScopeCalculator extends ToitVisitor {
     private final ToitReferenceIdentifier origin;
-    private ToitScope scope;
+    private final ToitScope globalScope;
+    private final List<ToitScope> localScopes;
 
     public ToitLocalScopeCalculator(ToitReferenceIdentifier origin, ToitScope scope) {
         this.origin = origin;
-        this.scope = scope;
+        this.globalScope = scope;
+        this.localScopes = new ArrayList<>();
     }
 
     public static ToitScope calculate(ToitReferenceIdentifier origin, ToitScope parentScope) {
@@ -21,16 +26,19 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
 
     private ToitScope calculate() {
         origin.accept(this);
-        return scope;
+        localScopes.add(globalScope);
+        return ToitScope.chain(localScopes.toArray(new ToitScope[0]));
     }
 
     public void visitElement(@NotNull PsiElement element) {
         if (element.getParent() instanceof ToitBlock) {
+            ToitScope scope = new ToitScope();
             var e = element.getPrevSibling();
             while (e != null) {
-                if (e instanceof ToitVariableDeclaration) addVariableDeclarationToScope((ToitVariableDeclaration) e);
+                if (e instanceof ToitVariableDeclaration) addVariableDeclarationToScope(scope, (ToitVariableDeclaration) e);
                 e = e.getPrevSibling();
             }
+            localScopes.add(scope);
         }
         if (!(element instanceof ToitVisitableElement)) return;
         element.getParent().accept(this);
@@ -38,51 +46,55 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
 
     @Override
     public void visit(ToitVariableDeclaration toitVariableDeclaration) {
-        addVariableDeclarationToScope(toitVariableDeclaration);
+        ToitScope scope = new ToitScope();
+        addVariableDeclarationToScope(scope, toitVariableDeclaration);
+        localScopes.add(scope);
         visitElement(toitVariableDeclaration);
     }
 
     @Override
     public void visit(ToitWhile toitWhile) {
-        processNesterVariableDeclarations(toitWhile);
+        processNestedVariableDeclarations(toitWhile);
     }
 
     @Override
     public void visit(ToitIf toitIf) {
-        processNesterVariableDeclarations(toitIf);
+        processNestedVariableDeclarations(toitIf);
     }
 
     @Override
     public void visit(ToitFor toitFor) {
-        processNesterVariableDeclarations(toitFor);
+        processNestedVariableDeclarations(toitFor);
     }
 
-    private void processNesterVariableDeclarations(ToitElement element) {
+    private void processNestedVariableDeclarations(ToitElement element) {
+        ToitScope scope = new ToitScope();
         for (var v : element.childrenOfType(ToitVariableDeclaration.class)) {
-            addVariableDeclarationToScope(v);
+            addVariableDeclarationToScope(scope,v);
         }
+        localScopes.add(scope);
         visitElement(element);
     }
 
 
     @Override
     public void visit(ToitStructure toitStructure) {
-        scope = scope.chain(toitStructure.getScope(scope));
+        localScopes.add(toitStructure.getScope(this.globalScope));
     }
 
     @Override
     public void visit(ToitFunction toitFunction) {
-        toitFunction.getParameters().forEach(p -> scope.add(p.getNameIdentifier().getName(), p));
+        localScopes.add(toitFunction.getParameterScope());
         visitElement(toitFunction);
     }
 
     @Override
     public void visit(ToitBlock toitBlock) {
-        toitBlock.getParameters().forEach(p -> scope.add(p.getNameIdentifier().getName(), p));
+        localScopes.add(toitBlock.getParameterScope());
         visitElement(toitBlock);
     }
 
-    private void addVariableDeclarationToScope(ToitVariableDeclaration toitVariableDeclaration) {
+    private static void addVariableDeclarationToScope(ToitScope scope, ToitVariableDeclaration toitVariableDeclaration) {
         scope.add(toitVariableDeclaration.getName(), toitVariableDeclaration);
     }
 }

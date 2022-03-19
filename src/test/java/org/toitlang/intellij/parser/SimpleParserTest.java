@@ -128,6 +128,7 @@ public class SimpleParserTest extends ParserTest {
 
     public final static String NEW_PARSER_TEST = "" +
             "import log\n" +
+            "import x\n" +
 
             "export *\n" +
             "export a\n" +
@@ -407,5 +408,32 @@ public class SimpleParserTest extends ParserTest {
         //checkError(p, "");
     }
 
+    public void testIndentPipe() {
+        var p = parseFile("tmp", "" +
+                "x := :: |\n" +
+                "     x\n" +
+                "      |\n" +
+                "    unresolved\n"
+        );
+        checkError(p, "");
+    }
 
+    public void testRedundantSemiColon() {
+        var p = parseFile("tmp", "" +
+                "x:\n" +
+                "  c1;c2\n" +
+                "  c3;\n"
+        );
+        checkError(p, "");
+    }
+
+    public void testNamedArgsOnNewline() {
+        var p = parseFile("tmp", "" +
+                "x:\n" +
+                "  c1\n" +
+                "    --j=1\n"+
+                "    --p=not f\n"
+        );
+        checkError(p, "");
+    }
 }

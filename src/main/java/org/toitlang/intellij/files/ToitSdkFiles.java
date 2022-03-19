@@ -60,7 +60,7 @@ public class ToitSdkFiles extends IndexableSetContributor {
                 }
             }
 
-            cache = new ToitScope(coreElements);
+            cache = ToitScope.fromMap(coreElements);
 
             coreMap.put(project,cache);
         }

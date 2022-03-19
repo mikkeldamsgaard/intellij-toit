@@ -54,7 +54,7 @@ public class ToitExpressionTypeEvaluator  extends ToitExpressionVisitor<Set<PsiE
     public Set<PsiElement> visit(ToitDerefExpression toitDerefExpression) {
         var prevType = ((ToitExpression)toitDerefExpression.getPrevSibling()).accept(this);
 
-        if (prevType == null) {
+        if (prevType == null || prevType.isEmpty()) {
             calc.setSoft(true);
             return null;
         }
@@ -104,7 +104,7 @@ public class ToitExpressionTypeEvaluator  extends ToitExpressionVisitor<Set<PsiE
 
                 private void processDeferredType(ToitType type) {
                     variants = null;
-                    if (type == null) {
+                    if (type == null || type.getName().equals("any")) {
                         calc.setSoft(true);
                         return;
                     }
@@ -131,12 +131,15 @@ public class ToitExpressionTypeEvaluator  extends ToitExpressionVisitor<Set<PsiE
                 String name = toitReferenceIdentifier.getName();
                 switch (name) {
                     case SUPER:
-                        var function = toitReferenceIdentifier.getParentOfType(ToitFunction.class);
-                        if (function != null && function.isConstructor()) calc.setSoft(true);
-
+                        var struct = toitReferenceIdentifier.getParentOfType(ToitStructure.class);
+                        if (struct != null) {
+                            var base = struct.getBaseClass(scope);
+                            if (base != null) res.add(base);
+                            return;
+                        }
                         break;
                     case THIS:
-                        var struct = toitReferenceIdentifier.getParentOfType(ToitStructure.class);
+                        struct = toitReferenceIdentifier.getParentOfType(ToitStructure.class);
                         if (struct != null) {
                             res.add(struct);
                             return;
@@ -148,13 +151,15 @@ public class ToitExpressionTypeEvaluator  extends ToitExpressionVisitor<Set<PsiE
                             if (block.getParentOfType(ToitExpression.class) != null) calc.setSoft(true);
                         }
                         break;
-                    case PRIMITIVE:
-                        calc.setSoft(true);
-                        break;
                 }
                 if (!calc.isSoft()) {
                     res.addAll(scope.resolve(name));
                 }
+            }
+
+            @Override
+            public void visit(ToitPrimitive toitPrimitive) {
+                calc.setSoft(true);
             }
         });
 

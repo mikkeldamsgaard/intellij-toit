@@ -27,7 +27,6 @@ public class ToitReferenceBase extends PsiReferenceBase<ToitReferenceIdentifier>
         ToitFile file = getElement().getParentOfType(ToitFile.class);
         file = (ToitFile) file.getOriginalFile();
         var fileScope = file.getToitFileScope();
-        System.out.println(fileScope);
         ReferenceCalculation calc = getElement().calculateReference(fileScope);
         return calc.getVariants();
     }
@@ -64,6 +63,7 @@ public class ToitReferenceBase extends PsiReferenceBase<ToitReferenceIdentifier>
     @Override
     public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
         ToitFile toitFile = getElement().getParentOfType(ToitFile.class);
+        if (toitFile == null) return new ResolveResult[0];
         toitFile = (ToitFile) toitFile.getOriginalFile();
         var fileScope = toitFile.getToitFileScope();
         ReferenceCalculation calc = getElement().calculateReference(fileScope);

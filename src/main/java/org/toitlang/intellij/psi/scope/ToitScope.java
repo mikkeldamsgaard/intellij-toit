@@ -9,10 +9,6 @@ import java.util.stream.Collectors;
 
 public class ToitScope {
     private final static ToitScope ROOT = new ToitScope() {
-        @Override
-        public boolean contains(String key) {
-            return false;
-        }
 
         @Override
         public @NotNull List<PsiElement> resolve(String key) {
@@ -20,46 +16,35 @@ public class ToitScope {
         }
 
         @Override
-        public void add(String key, PsiElement value) { }
+        public void add(String key, PsiElement value) {
+        }
 
         @Override
-        public Set<String> getAllKeys() {
-            return new HashSet<>();
+        public void add(String key, List<PsiElement> value) {
+        }
+
+        @Override
+        protected void addVariant(Set<PsiElement> variants) {
         }
     };
-
-    private ToitScope parent = ROOT;
+    private final static List<ToitScope> DEFAULT_PARENTS = Collections.singletonList(ROOT);
+    private final List<ToitScope> parents;
     Map<String, List<PsiElement>> local = new HashMap<>();
 
     public ToitScope() {
-    }
-
-    public ToitScope(Map<String, PsiElement> locals) {
-        locals.forEach((k,v)->local.computeIfAbsent(k, k_-> new ArrayList<>()).add(v));
+        this.parents = DEFAULT_PARENTS;
     }
 
     private ToitScope(ToitScope parent) {
-        this.parent = parent;
+        this.parents = Collections.singletonList(parent);
     }
 
-    private ToitScope(ToitScope parent, ToitScope locals) {
-        this(parent);
-        local = locals.local;
-    }
-
-    public ToitScope(ToitScope parent, String prefix, ToitScope scope) {
-        this(parent);
-        scope.getAllKeys().forEach(k -> local.put(prefix+"."+k, scope.resolve(k)));
+    private ToitScope(List<ToitScope> parents) {
+        this.parents = parents;
     }
 
     public ToitScope derive() {
         return new ToitScope(this);
-    }
-    public ToitScope chain(ToitScope local) {
-        return new ToitScope(this, local);
-    }
-    public ToitScope chainWithPrefix(String prefix, ToitScope scope) {
-        return new ToitScope(this, prefix, scope);
     }
 
     public void add(String key, PsiElement value) {
@@ -72,30 +57,48 @@ public class ToitScope {
         local.computeIfAbsent(key, k -> new ArrayList<>(1)).addAll(value);
     }
 
-    public boolean contains(String key) {
-        return local.containsKey(key) || parent.contains(key);
-    }
-
     public @NotNull List<PsiElement> resolve(String key) {
-        List<PsiElement> result = new ArrayList<>(parent.resolve(key));
+        List<PsiElement> result = new ArrayList<>();
         if (local.containsKey(key)) result.addAll(local.get(key));
+        for (ToitScope parent : parents) {
+            result.addAll(parent.resolve(key));
+        }
         return result;
     }
 
-    public Set<String> getAllKeys() {
-        Set<String> allKeys = parent.getAllKeys();
-        allKeys.addAll(local.keySet());
-        return allKeys;
+    protected void addVariant(Set<PsiElement> variants) {
+        variants.addAll(local.values().stream().flatMap(List::stream).collect(Collectors.toList()));
+        for (ToitScope parent : parents) {
+            parent.addVariant(variants);
+        }
     }
 
     public Object[] asVariant() {
         Set<PsiElement> result = new HashSet<>();
-        var iter = this;
-        do {
-            result.addAll(iter.local.values().stream().flatMap(List::stream).collect(Collectors.toList()));
-            iter = iter.parent;
-        } while (iter != ROOT);
-        return  result.toArray();
+        addVariant(result);
+        return result.toArray();
+    }
+
+    private boolean isRedundant() {
+        return local.isEmpty() && parents == DEFAULT_PARENTS;
+    }
+
+    @Override
+    public String toString() {
+        return "ToitScope{" +
+                "parent=" + parents +
+                ", local=" + local +
+                '}';
+    }
+
+    public static ToitScope fromMap(Map<String, PsiElement> locals) {
+        ToitScope toitScope = new ToitScope();
+        locals.forEach(toitScope::add);
+        return toitScope;
+    }
+
+    public static ToitScope chain(ToitScope... scopes) {
+        return new ToitScope(Arrays.asList(scopes).stream().filter(t -> !t.isRedundant()).collect(Collectors.toList()));
     }
 
 }
