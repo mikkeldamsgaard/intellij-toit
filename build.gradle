@@ -27,8 +27,9 @@ patchPluginXml {
       
       1.1: 
         - Bug fixes.
-        - Added package detection nd package.lock parsing
-        - Much better handling of import/export
+        - Added package detection and package.lock parsing
+        - Improved handling of import/export
+        - Improved referencing
       """
 }
 test {

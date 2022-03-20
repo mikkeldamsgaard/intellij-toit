@@ -14,7 +14,6 @@ import org.toitlang.intellij.psi.visitor.ToitVisitor;
 import org.toitlang.intellij.psi.scope.ToitScope;
 
 import javax.swing.*;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -59,33 +58,36 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
         return getNameIdentifier().getName();
     }
 
-    public ToitScope getScope(ToitScope scope) {
+    public ToitScope getScope(ToitScope scope, boolean staticOnly) {
         ToitScope structureScope = new ToitScope();
-        populateScope(structureScope);
-        var baseClass = getBaseClass(scope);
-        if (baseClass != null) {
-            structureScope = ToitScope.chain(structureScope,baseClass.getScope(scope));
+        populateScope(structureScope, staticOnly);
+        if (!staticOnly) {
+            var baseClass = getBaseClass(scope);
+            if (baseClass != null) {
+                structureScope = ToitScope.chain(structureScope, baseClass.getScope(scope, false));
+            }
         }
-
         return structureScope;
     }
 
-    public void populateScope(ToitScope scope) {
+    public void populateScope(ToitScope scope, boolean staticOnly) {
         childrenOfType(ToitBlock.class).forEach(b ->
                 b.acceptChildren(new ToitVisitor() {
                     @Override
                     public void visit(ToitVariableDeclaration toitVariableDeclaration) {
-                        scope.add(toitVariableDeclaration.getName(), toitVariableDeclaration);
+                        if (!staticOnly || toitVariableDeclaration.isStatic())
+                            scope.add(toitVariableDeclaration.getName(), toitVariableDeclaration);
                     }
 
                     @Override
                     public void visit(ToitFunction toitFunction) {
                         if (toitFunction.isConstructor()) {
-                         if (toitFunction.hasFactoryName()) {
-                             scope.add(toitFunction.getFactoryName(), toitFunction);
-                         }
+                            if (toitFunction.hasFactoryName()) {
+                                scope.add(toitFunction.getFactoryName(), toitFunction);
+                            }
                         } else {
-                            scope.add(toitFunction.getName(), toitFunction);
+                            if (!staticOnly || toitFunction.isStatic())
+                                scope.add(toitFunction.getName(), toitFunction);
                         }
                     }
 
@@ -108,7 +110,7 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
 
     @Override
     protected @NotNull Icon getElementTypeIcon() {
-        return isAbstract()?AllIcons.Nodes.AbstractClass:AllIcons.Nodes.Class;
+        return isAbstract() ? AllIcons.Nodes.AbstractClass : AllIcons.Nodes.Class;
     }
 
     public ToitStructure getBaseClass(ToitScope scope) {

@@ -7,7 +7,6 @@ import org.toitlang.intellij.psi.visitor.ToitVisitableElement;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class ToitLocalScopeCalculator extends ToitVisitor {
@@ -79,7 +78,7 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
 
     @Override
     public void visit(ToitStructure toitStructure) {
-        localScopes.add(toitStructure.getScope(this.globalScope));
+        localScopes.add(toitStructure.getScope(this.globalScope, false));
     }
 
     @Override

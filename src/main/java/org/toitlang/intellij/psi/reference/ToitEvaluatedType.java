@@ -132,7 +132,7 @@ public class ToitEvaluatedType {
                     ToitScope prevFileScope = prevType.getFile().getToitFileScope().getToitScope();
                     return resolveTypeOfNameInScope(name, prevFileScope, true);
                 } else {
-                    ToitScope scructureScope = prevType.getStructure().getScope(scope);
+                    ToitScope scructureScope = prevType.getStructure().getScope(scope, prevType.isStatic());
                     return resolveTypeOfNameInScope(name, scructureScope, false);
                 }
             }

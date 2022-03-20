@@ -1,13 +1,10 @@
 package org.toitlang.intellij.psi.reference;
 
 import com.intellij.psi.PsiElement;
-import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ast.ToitDerefExpression;
 import org.toitlang.intellij.psi.ast.ToitExpression;
 import org.toitlang.intellij.psi.ast.ToitReferenceIdentifier;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
-import org.toitlang.intellij.psi.scope.ToitLocalScopeCalculator;
-import org.toitlang.intellij.psi.scope.ToitScope;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -30,7 +27,7 @@ public class VariantsCalculator {
                 if (prevType.getFile() != null) {
                     variants.addAll(prevType.getFile().getToitFileScope().getToitScope().asVariant());
                 } else if (prevType.getStructure() != null) {
-                    variants.addAll(prevType.getStructure().getScope(scope.getScope()).asVariant());
+                    variants.addAll(prevType.getStructure().getScope(scope.getScope(), prevType.isStatic()).asVariant());
                 }
                 return null;
             }

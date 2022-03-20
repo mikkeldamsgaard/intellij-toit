@@ -90,6 +90,7 @@ public class ToitReference implements PsiPolyVariantReference {
 
     private EvaluationScope createEvaluationScope() {
         ToitFile file = (ToitFile) source.getContainingFile();
+        file = (ToitFile) file.getOriginalFile();
         ToitFileScope toitFileScope = file.getToitFileScope();
         ToitScope core = ToitSdkFiles.getCoreScope(source.getProject());
         ToitScope toitFileScopeScope = toitFileScope.getToitScope();
@@ -127,6 +128,8 @@ public class ToitReference implements PsiPolyVariantReference {
             }
         } else if (sType == ToitTypes.IMPORT_SHOW_IDENTIFIER || sType == ToitTypes.EXPORT_IDENTIFIER) {
             destinations.addAll(scope.resolve(name));
+        } else if (sType == ToitTypes.BREAK_CONTINUE_LABEL_IDENTIFIER) {
+            soft = true;
         } else if (sType == ToitTypes.IMPORT_IDENTIFIER) {
             var importDecl = source.getParentOfType(ToitImportDeclaration.class);
             var imports = importDecl.childrenOfType(ToitReferenceIdentifier.class).stream().filter(ToitReferenceIdentifier::isImport).collect(Collectors.toList());
@@ -150,7 +153,7 @@ public class ToitReference implements PsiPolyVariantReference {
                     } else if (prevType.getFile() != null) {
                         destinations.addAll(prevType.getFile().getToitFileScope().getToitScope().resolve(name));
                     } else if (prevType.getStructure() != null) {
-                        destinations.addAll(prevType.getStructure().getScope(scope.getScope()).resolve(name));
+                        destinations.addAll(prevType.getStructure().getScope(scope.getScope(), prevType.isStatic()).resolve(name));
                     }
                     return null;
                 }

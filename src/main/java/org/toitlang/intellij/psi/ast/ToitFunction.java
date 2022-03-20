@@ -46,7 +46,7 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
         if (stub != null) return stub.getName();
 
         var functionName = getFunctionName();
-        if (functionName == null) return null;
+        if (functionName == null) return "";
         return functionName.getName();
     }
 
@@ -70,6 +70,10 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
         return null;
     }
 
+    public boolean isStatic() {
+        return hasToken(STATIC);
+    }
+
     private ASTNode getStatic() {
         return firstChildToken(STATIC);
     }
@@ -80,10 +84,9 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
 
     public void semanticErrorCheck(ProblemsHolder holder) {
         boolean hasBody = !childrenOfType(ToitBlock.class).isEmpty();
-        boolean isStatic = hasToken(STATIC);
 
         if (getParent() instanceof ToitFile) {
-            if (isStatic)
+            if (isStatic())
                 holder.registerProblem(this, getRelativeRangeInParent(getStatic()), "Top level functions cannot be static");
             if (!hasBody) holder.registerProblem(getFunctionName(), "Missing body");
         } else {
@@ -96,7 +99,7 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
             }
 
             if (parent.isInterface()) {
-                if (hasBody && !isStatic && getFunctionName() != null)
+                if (hasBody && !isStatic() && getFunctionName() != null)
                     holder.registerProblem(getFunctionName(), "Only static interface methods may have a body");
             }
         }
@@ -144,4 +147,5 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
         getParameters().forEach(p -> scope.add(p.getNameIdentifier().getName(), p));
         return scope;
     }
+
 }
