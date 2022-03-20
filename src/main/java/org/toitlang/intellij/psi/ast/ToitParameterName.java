@@ -8,6 +8,7 @@ import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.util.IncorrectOperationException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 public class ToitParameterName extends ToitElement implements PsiNameIdentifierOwner {
@@ -33,9 +34,12 @@ public class ToitParameterName extends ToitElement implements PsiNameIdentifierO
 
   public ToitType getType() {
     var next = getNextSibling();
-    if (next instanceof ToitType) {
-      var toitType = (ToitType)next;
-      if (toitType.isVariableType()) return toitType;
+    if (next != null && next.getNode().getElementType() == ToitTypes.SLASH) {
+      next = next.getNextSibling();
+      if (next instanceof ToitType) {
+        var toitType = (ToitType)next;
+        if (toitType.isVariableType()) return toitType;
+      }
     }
     return null;
   }

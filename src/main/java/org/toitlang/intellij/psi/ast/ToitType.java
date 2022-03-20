@@ -2,8 +2,10 @@
 package org.toitlang.intellij.psi.ast;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
+import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 import org.toitlang.intellij.psi.scope.ToitScope;
 
@@ -28,10 +30,21 @@ public class ToitType extends ToitElement {
     visitor.visit(this);
   }
 
-  public boolean isReturnType() { return getNode().getElementType() == RETURN_TYPE; }
-  public boolean isImplementsType() { return getNode().getElementType() == IMPLEMENTS_TYPE; }
-  public boolean isExtendsType() { return getNode().getElementType() == EXTENDS_TYPE; }
-  public boolean isVariableType() { return getNode().getElementType() == VARIABLE_TYPE; }
+  public boolean isReturnType() {
+    return getNode().getElementType() == RETURN_TYPE;
+  }
+
+  public boolean isImplementsType() {
+    return getNode().getElementType() == IMPLEMENTS_TYPE;
+  }
+
+  public boolean isExtendsType() {
+    return getNode().getElementType() == EXTENDS_TYPE;
+  }
+
+  public boolean isVariableType() {
+    return getNode().getElementType() == VARIABLE_TYPE;
+  }
 
   @Override
   public String getName() {
@@ -41,9 +54,24 @@ public class ToitType extends ToitElement {
   }
 
   public ToitStructure resolve(ToitScope scope) {
-    var refs =childrenOfType(ToitReferenceIdentifier.class);
-    var ref = refs.get(refs.size()-1).getReference().resolve();
-    if (ref instanceof ToitStructure) return (ToitStructure) ref;
+    var refs = childrenOfType(ToitReferenceIdentifier.class);
+    if (refs.size() == 1) {
+      return firstStructureInScope(scope, refs.get(0).getName());
+    } else if (refs.size() == 2) {
+      for (PsiElement fileRef : scope.resolve(refs.get(0).getName())) {
+        if (fileRef instanceof ToitFile) {
+          ToitFile toitFile = (ToitFile) fileRef;
+          return firstStructureInScope(toitFile.getToitFileScope().getToitScope(), refs.get(1).getName());
+        }
+      }
+    }
+    return null;
+  }
+
+  private ToitStructure firstStructureInScope(ToitScope scope, String name) {
+    for (PsiElement elementRef : scope.resolve(name)) {
+      if (elementRef instanceof ToitStructure) return (ToitStructure) elementRef;
+    }
     return null;
   }
 }

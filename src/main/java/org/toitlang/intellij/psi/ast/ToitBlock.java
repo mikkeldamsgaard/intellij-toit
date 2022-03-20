@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.scope.ToitScope;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
+import java.util.Collections;
 import java.util.List;
 
 public class ToitBlock extends ToitElement {
@@ -25,7 +26,11 @@ public class ToitBlock extends ToitElement {
 
     public ToitScope getParameterScope() {
         ToitScope scope = new ToitScope();
-        getParameters().forEach(p -> scope.add(p.getNameIdentifier().getName(), p));
+        var parameters = getParameters();
+        parameters.forEach(p -> scope.add(p.getNameIdentifier().getName(), p));
+        if (parameters.isEmpty()) {
+            scope.add("it", Collections.emptyList());
+        }
         return scope;
     }
 }

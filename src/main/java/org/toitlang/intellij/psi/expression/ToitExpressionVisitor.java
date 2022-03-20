@@ -3,97 +3,99 @@ package org.toitlang.intellij.psi.expression;
 import org.toitlang.intellij.psi.ast.*;
 
 public class ToitExpressionVisitor<T> {
-    public T visit(ToitShiftExpression toitShiftExpression) { return null; }
+    public T visit(ToitShiftExpression toitShiftExpression) { return visitExpression(toitShiftExpression); }
 
     public T visit(ToitUnaryExpression toitUnaryExpression) {
-        return null;
+        return visitExpression(toitUnaryExpression);
     }
 
     public T visit(ToitRelationalExpression toitRelationalExpression) {
-        return null;
+        return visitExpression(toitRelationalExpression);
     }
 
     public T visit(ToitPostfixExpression toitPostfixExpression) {
-        return null;
+        return visitExpression(toitPostfixExpression);
     }
 
     public T visit(ToitDerefExpression toitDerefExpression) {
-        return null;
+        return visitExpression(toitDerefExpression);
     }
 
     public T visit(ToitAdditiveExpression toitAdditiveExpression) {
-        return null;
+        return visitExpression(toitAdditiveExpression);
     }
 
     public T visit(ToitAssignmentExpression toitAssignmentExpression) {
-        return null;
+        return visitExpression(toitAssignmentExpression);
     }
 
     public T visit(ToitEqualityExpression toitEqualityExpression) {
-        return null;
+        return visitExpression(toitEqualityExpression);
     }
 
     public T visit(ToitElvisExpression toitElvisExpression) {
-        return null;
+        return visitExpression(toitElvisExpression);
     }
 
     public T visit(ToitBitXOrExpression toitBitXOrExpression) {
-        return null;
+        return visitExpression(toitBitXOrExpression);
     }
 
     public T visit(ToitBitOrExpression toitBitOrExpression) {
-        return null;
+        return visitExpression(toitBitOrExpression);
     }
 
     public T visit(ToitAndExpression toitAndExpression) {
-        return null;
+        return visitExpression(toitAndExpression);
     }
 
     public T visit(ToitIndexingExpression toitIndexingExpression) {
-        return null;
+        return visitExpression(toitIndexingExpression);
     }
 
     public T visit(ToitOrExpression toitOrExpression) {
-        return null;
+        return visitExpression(toitOrExpression);
     }
 
     public T visit(ToitSetLiteral toitSetLiteral) {
-        return null;
+        return visitExpression(toitSetLiteral);
     }
 
     public T visit(ToitListLiteral toitListLiteral) {
-        return null;
+        return visitExpression(toitListLiteral);
     }
 
     public T visit(ToitNotExpression toitNotExpression) {
-        return null;
+        return visitExpression(toitNotExpression);
     }
 
     public T visit(ToitMultiplicativeExpression toitMultiplicativeExpression) {
-        return null;
+        return visitExpression(toitMultiplicativeExpression);
     }
 
     public T visit(ToitMapLiteral toitMapLiteral) {
-        return null;
+        return visitExpression(toitMapLiteral);
     }
 
     public T visit(ToitCallExpression toitCallExpression) {
-        return null;
+        return visitExpression(toitCallExpression);
     }
 
     public T visit(ToitBitAndExpression toitBitAndExpression) {
-        return null;
+        return visitExpression(toitBitAndExpression);
     }
 
     public T visit(ToitPrimaryExpression toitPrimaryExpression) {
-        return null;
+        return visitExpression(toitPrimaryExpression);
     }
 
     public T visit(ToitTopLevelExpression toitTopLevelExpression) {
-        return null;
+        return visitExpression(toitTopLevelExpression);
     }
 
     public T visit(ToitSimpleLiteral toitSimpleLiteral) {
-        return null;
+        return visitExpression(toitSimpleLiteral);
     }
+    
+    public T visitExpression(ToitExpression expression ) { return null; }
 }

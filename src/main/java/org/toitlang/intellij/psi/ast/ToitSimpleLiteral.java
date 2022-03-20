@@ -26,4 +26,8 @@ public class ToitSimpleLiteral extends ToitExpression {
   public boolean isFloat() {
     return getNode().getFirstChildNode().getElementType() == FLOAT;
   }
+
+  public boolean isBoolean() {
+    return getNode().getFirstChildNode().getElementType() == BOOLEAN;
+  }
 }

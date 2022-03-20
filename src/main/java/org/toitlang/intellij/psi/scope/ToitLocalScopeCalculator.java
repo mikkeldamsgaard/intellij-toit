@@ -7,6 +7,7 @@ import org.toitlang.intellij.psi.visitor.ToitVisitableElement;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ToitLocalScopeCalculator extends ToitVisitor {
@@ -21,12 +22,11 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
     }
 
     public static ToitScope calculate(ToitReferenceIdentifier origin, ToitScope parentScope) {
-        return new ToitLocalScopeCalculator(origin,parentScope.derive()).calculate();
+        return new ToitLocalScopeCalculator(origin,parentScope).calculate();
     }
 
     private ToitScope calculate() {
         origin.accept(this);
-        localScopes.add(globalScope);
         return ToitScope.chain(localScopes.toArray(new ToitScope[0]));
     }
 
@@ -91,6 +91,21 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
     @Override
     public void visit(ToitBlock toitBlock) {
         localScopes.add(toitBlock.getParameterScope());
+
+        if (toitBlock.getParent() instanceof ToitFunction) {
+            ToitStructure structure = toitBlock.getParentOfType(ToitStructure.class);
+            if (structure != null) {
+                ToitScope superThis = new ToitScope();
+                superThis.add("this", structure);
+
+                ToitStructure baseClass = structure.getBaseClass(globalScope);
+                if (baseClass != null) {
+                    superThis.add("super", baseClass);
+                }
+
+                localScopes.add(superThis);
+            }
+        }
         visitElement(toitBlock);
     }
 

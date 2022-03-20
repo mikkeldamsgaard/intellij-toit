@@ -7,7 +7,7 @@ import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ast.*;
-import org.toitlang.intellij.psi.reference.ToitReferenceBase;
+import org.toitlang.intellij.psi.reference.ToitReference;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 public class ToitAnnotationHighlighter implements Annotator {
@@ -40,7 +40,7 @@ public class ToitAnnotationHighlighter implements Annotator {
                 if (toitReferenceIdentifier.isTypeName()) {
                     applyHighlight(holder, toitReferenceIdentifier, ToitSyntaxHighlighter.CLASS_REFERENCE);
                 } else if (toitReferenceIdentifier.isReference()) {
-                    ToitReferenceBase reference = toitReferenceIdentifier.getReference();
+                    ToitReference reference = toitReferenceIdentifier.getReference();
                     PsiElement ref = reference.resolve();
                     if (ref == null) {
                         String name = toitReferenceIdentifier.getName();

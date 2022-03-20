@@ -61,6 +61,7 @@ public class ToitScope {
         List<PsiElement> result = new ArrayList<>();
         if (local.containsKey(key)) result.addAll(local.get(key));
         for (ToitScope parent : parents) {
+            if (!result.isEmpty()) break; // This needs to be more sophisticated, but for now, we break when the closest scope resolves the name. It will work in most cases
             result.addAll(parent.resolve(key));
         }
         return result;
@@ -73,10 +74,10 @@ public class ToitScope {
         }
     }
 
-    public Object[] asVariant() {
+    public Collection<PsiElement> asVariant() {
         Set<PsiElement> result = new HashSet<>();
         addVariant(result);
-        return result.toArray();
+        return result;
     }
 
     private boolean isRedundant() {
@@ -98,7 +99,7 @@ public class ToitScope {
     }
 
     public static ToitScope chain(ToitScope... scopes) {
-        return new ToitScope(Arrays.asList(scopes).stream().filter(t -> !t.isRedundant()).collect(Collectors.toList()));
+        return new ToitScope(Arrays.stream(scopes).filter(t -> !t.isRedundant()).collect(Collectors.toList()));
     }
 
 }

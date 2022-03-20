@@ -7,7 +7,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.indexing.IndexableSetContributor;
 import org.jetbrains.annotations.NotNull;
-import org.toitlang.intellij.model.IToitPrimaryLanguageElement;
 import org.toitlang.intellij.ui.ToitApplicationSettings;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.ui.ToitNotifier;
@@ -38,7 +37,7 @@ public class ToitSdkFiles extends IndexableSetContributor {
         return null;
     }
 
-    public static ToitScope coreClosure(Project project) {
+    public static ToitScope getCoreScope(Project project) {
         var cache = coreMap.get(project);
         if (cache == null) {
             var root = getSdkRoot(project);

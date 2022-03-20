@@ -6,6 +6,8 @@ import com.intellij.lang.PsiElementExternalizer;
 import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
+import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
+import org.toitlang.intellij.psi.scope.ToitScope;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 import java.util.ArrayList;
@@ -31,5 +33,9 @@ public abstract class ToitExpression extends ToitElement {
             .map(e -> e.accept(expressionVisitor))
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
-  };
+  }
+
+  public ToitEvaluatedType getType(ToitScope scope) {
+    return ToitEvaluatedType.evaluate(this, scope);
+  }
 }
