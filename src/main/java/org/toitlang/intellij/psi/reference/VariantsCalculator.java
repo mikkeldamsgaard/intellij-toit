@@ -20,14 +20,18 @@ public class VariantsCalculator {
     }
 
     private VariantsCalculator build() {
-        source.getExpressionParent().accept(new ToitExpressionVisitor<>() {
+        if (source == null) return this;
+        ToitExpression expressionParent = source.getExpressionParent();
+        if (expressionParent == null) return this;
+
+        expressionParent.accept(new ToitExpressionVisitor<>() {
             @Override
             public Object visit(ToitDerefExpression toitDerefExpression) {
                 var prevType = ((ToitExpression)toitDerefExpression.getPrevSibling()).getType(scope.getScope());
                 if (prevType.getFile() != null) {
                     variants.addAll(prevType.getFile().getToitFileScope().getToitScope().asVariant());
                 } else if (prevType.getStructure() != null) {
-                    variants.addAll(prevType.getStructure().getScope(scope.getScope(), prevType.isStatic()).asVariant());
+                    variants.addAll(prevType.getStructure().getScope(prevType.isStatic()).asVariant());
                 }
                 return null;
             }
@@ -38,6 +42,7 @@ public class VariantsCalculator {
                 return null;
             }
         });
+
         return this;
     }
 

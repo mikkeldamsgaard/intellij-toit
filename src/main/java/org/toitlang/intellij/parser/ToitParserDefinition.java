@@ -27,7 +27,7 @@ public class ToitParserDefinition implements ParserDefinition {
 
     @Override
     public @NotNull Lexer createLexer(Project project) {
-        return new ToitLexerAdapter();
+        return new ToitLexerAdapter(true);
     }
 
     @Override

@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.ToitLanguage;
 import org.toitlang.intellij.psi.ToitPsiCreator;
 import org.toitlang.intellij.psi.ast.ToitVariableDeclaration;
+import org.toitlang.intellij.psi.stub.indecies.ToitIndexKeys;
 
 import java.io.IOException;
 
@@ -43,7 +44,7 @@ public class ToitVariableDeclarationElementType extends IStubElementType<ToitVar
 
     @Override
     public void indexStub(@NotNull ToitVariableDeclarationStub stub, @NotNull IndexSink sink) {
-
+        sink.occurrence(ToitIndexKeys.VARIABLE_SHORT_NAME, stub.getName());
     }
 
     @Override

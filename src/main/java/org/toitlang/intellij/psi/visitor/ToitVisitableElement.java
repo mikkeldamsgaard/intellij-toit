@@ -3,9 +3,11 @@ package org.toitlang.intellij.psi.visitor;
 import com.intellij.extapi.psi.StubBasedPsiElementBase;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElementVisitor;
+import com.intellij.psi.PsiInvalidElementAccessException;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.stubs.StubElement;
 import org.jetbrains.annotations.NotNull;
+import org.toitlang.intellij.psi.ToitFile;
 
 public abstract class ToitVisitableElement<T extends StubElement> extends StubBasedPsiElementBase<T> {
     public ToitVisitableElement(@NotNull ASTNode node) {
@@ -26,4 +28,8 @@ public abstract class ToitVisitableElement<T extends StubElement> extends StubBa
     }
 
     protected abstract void accept(ToitVisitor visitor);
+
+    public ToitFile getToitFile() {
+        return (ToitFile)getContainingFile().getOriginalFile();
+    }
 }

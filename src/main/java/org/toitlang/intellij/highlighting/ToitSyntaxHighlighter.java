@@ -52,7 +52,7 @@ public class ToitSyntaxHighlighter extends SyntaxHighlighterBase {
     @NotNull
     @Override
     public Lexer getHighlightingLexer() {
-        return new ToitLexerAdapter();
+        return new ToitLexerAdapter(false);
     }
 
     @Override

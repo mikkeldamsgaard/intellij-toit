@@ -58,13 +58,13 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
         return getNameIdentifier().getName();
     }
 
-    public ToitScope getScope(ToitScope scope, boolean staticOnly) {
+    public ToitScope getScope(boolean staticOnly) {
         ToitScope structureScope = new ToitScope();
         populateScope(structureScope, staticOnly);
         if (!staticOnly) {
-            var baseClass = getBaseClass(scope);
+            var baseClass = getBaseClass();
             if (baseClass != null) {
-                structureScope = ToitScope.chain(structureScope, baseClass.getScope(scope, false));
+                structureScope = ToitScope.chain(structureScope, baseClass.getScope(false));
             }
         }
         return structureScope;
@@ -85,7 +85,7 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
                             if (toitFunction.hasFactoryName()) {
                                 scope.add(toitFunction.getFactoryName(), toitFunction);
                             }
-                        } else {
+                        } else if (!toitFunction.isOperator()) {
                             if (!staticOnly || toitFunction.isStatic())
                                 scope.add(toitFunction.getName(), toitFunction);
                         }
@@ -113,12 +113,13 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
         return isAbstract() ? AllIcons.Nodes.AbstractClass : AllIcons.Nodes.Class;
     }
 
-    public ToitStructure getBaseClass(ToitScope scope) {
+    public ToitStructure getBaseClass() {
         var extendsTypes = childrenOfType(ToitType.class).stream()
                 .filter(ToitType::isExtendsType).collect(Collectors.toList());
 
+        var structScope = getToitFile().getToitFileScope().getToitScope();
         for (ToitType extendsType : extendsTypes) {
-            ToitStructure base = extendsType.resolve(scope);
+            ToitStructure base = extendsType.resolve(structScope);
             if (base != null) return base;
         }
 

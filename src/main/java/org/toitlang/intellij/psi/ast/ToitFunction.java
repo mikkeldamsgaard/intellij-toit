@@ -43,8 +43,9 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
     @Override
     public String getName() {
         var stub = getStub();
-        if (stub != null) return stub.getName();
+        if (stub != null && stub.getName() != null) return stub.getName();
 
+        if (isConstructor() && hasFactoryName()) return getFactoryName();
         var functionName = getFunctionName();
         if (functionName == null) return "";
         return functionName.getName();
@@ -91,16 +92,20 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
             if (!hasBody) holder.registerProblem(getFunctionName(), "Missing body");
         } else {
             ToitStructure parent = getParentOfType(ToitStructure.class);
+            ToitNameableIdentifier functionName = getFunctionName();
+            if (functionName == null) return;
             if (parent.isClass()) {
                 boolean isAbstractClass = parent.isAbstract();
                 if (isAbstract() && !isAbstractClass)
                     holder.registerProblem(this, getRelativeRangeInParent(getAbstract()), "Abstract functions not allowed in non-abstract class");
-                if (!isAbstract() && !hasBody) holder.registerProblem(getFunctionName(), "Missing body");
+                if (!isAbstract() && !hasBody) {
+                    holder.registerProblem(functionName, "Missing body");
+                }
             }
 
             if (parent.isInterface()) {
-                if (hasBody && !isStatic() && getFunctionName() != null)
-                    holder.registerProblem(getFunctionName(), "Only static interface methods may have a body");
+                if (hasBody && !isStatic())
+                    holder.registerProblem(functionName, "Only static interface methods may have a body");
             }
         }
     }
@@ -119,6 +124,13 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
     public boolean isConstructor() {
         for (ToitPseudoKeyword toitPseudoKeyword : childrenOfType(ToitPseudoKeyword.class)) {
             if ("constructor".equals(toitPseudoKeyword.getName())) return true;
+        }
+        return false;
+    }
+
+    public boolean isOperator() {
+        for (ToitPseudoKeyword toitPseudoKeyword : childrenOfType(ToitPseudoKeyword.class)) {
+            if ("operator".equals(toitPseudoKeyword.getName())) return true;
         }
         return false;
     }

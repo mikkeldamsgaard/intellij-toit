@@ -78,9 +78,7 @@ public class ToitReference implements PsiPolyVariantReference {
 
     @Override
     public boolean isReferenceTo(@NotNull PsiElement element) {
-        if (element.textMatches(getElement()))
-            return getElement().getManager().areElementsEquivalent(resolve(), element);
-        return false;
+        return getElement().getManager().areElementsEquivalent(resolve(), element);
     }
 
     @Override
@@ -89,8 +87,7 @@ public class ToitReference implements PsiPolyVariantReference {
     }
 
     private EvaluationScope createEvaluationScope() {
-        ToitFile file = (ToitFile) source.getContainingFile();
-        file = (ToitFile) file.getOriginalFile();
+        ToitFile file = source.getToitFile();
         ToitFileScope toitFileScope = file.getToitFileScope();
         ToitScope core = ToitSdkFiles.getCoreScope(source.getProject());
         ToitScope toitFileScopeScope = toitFileScope.getToitScope();
@@ -153,7 +150,7 @@ public class ToitReference implements PsiPolyVariantReference {
                     } else if (prevType.getFile() != null) {
                         destinations.addAll(prevType.getFile().getToitFileScope().getToitScope().resolve(name));
                     } else if (prevType.getStructure() != null) {
-                        destinations.addAll(prevType.getStructure().getScope(scope.getScope(), prevType.isStatic()).resolve(name));
+                        destinations.addAll(prevType.getStructure().getScope(prevType.isStatic()).resolve(name));
                     }
                     return null;
                 }

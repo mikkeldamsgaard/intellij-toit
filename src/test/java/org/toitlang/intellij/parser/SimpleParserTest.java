@@ -436,4 +436,20 @@ public class SimpleParserTest extends ParserTest {
         );
         checkError(p, "");
     }
+
+    public void testEndsWithComment() {
+        var p = parseFile("tmp", "" +
+                "x:\n" +
+                "  //a\n"
+        );
+        checkError(p, "");
+    }
+
+    public void testOperatorParseError() {
+        var p = parseFile("tmp", "" +
+                "class x:\n" +
+                "  operator\n"
+        );
+        //checkError(p, "");
+    }
 }

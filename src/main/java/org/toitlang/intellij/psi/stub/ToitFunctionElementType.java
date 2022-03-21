@@ -11,6 +11,7 @@ import org.toitlang.intellij.ToitLanguage;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitPsiCreator;
 import org.toitlang.intellij.psi.ast.ToitFunction;
+import org.toitlang.intellij.psi.stub.indecies.ToitIndexKeys;
 
 import java.io.IOException;
 
@@ -46,9 +47,7 @@ public class ToitFunctionElementType extends IStubElementType<ToitFunctionStub, 
 
     @Override
     public void indexStub(@NotNull ToitFunctionStub stub, @NotNull IndexSink sink) {
-        ToitFile file = stub.getParentStubOfType(ToitFile.class);
-        if (file == null)
-            throw new RuntimeException();
+        sink.occurrence(ToitIndexKeys.FUNCTION_SHORT_NAME, stub.getName());
     }
 
     @Override

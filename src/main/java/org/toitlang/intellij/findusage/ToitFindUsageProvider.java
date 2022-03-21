@@ -19,7 +19,6 @@ import static org.toitlang.intellij.psi.ToitTypes.*;
 
 public class ToitFindUsageProvider implements FindUsagesProvider {
     private ToitNameableIdentifier getNamedIdentifier(PsiElement element) {
-        //if (element instanceof ToitNameableIdentifier) return (ToitNameableIdentifier) element;
         if (element instanceof PsiNameIdentifierOwner) {
             var psiNameIdentifier = ((PsiNameIdentifierOwner)element).getNameIdentifier();
             return (ToitNameableIdentifier) psiNameIdentifier;
@@ -29,7 +28,6 @@ public class ToitFindUsageProvider implements FindUsagesProvider {
 
     @Override
     public boolean canFindUsagesFor(@NotNull PsiElement psiElement) {
-        //return psiElement instanceof ToitNameableIdentifier || psiElement instanceof PsiNameIdentifierOwner;
         return getNamedIdentifier(psiElement) != null;
     }
 
@@ -41,6 +39,7 @@ public class ToitFindUsageProvider implements FindUsagesProvider {
     @Override
     public @Nls @NotNull String getType(@NotNull PsiElement element) {
         ToitNameableIdentifier ne = getNamedIdentifier(element);
+        if (ne == null) return "unknown";
         return ne.getFindUsageTypeName();
     }
 
@@ -59,7 +58,7 @@ public class ToitFindUsageProvider implements FindUsagesProvider {
     @Override
     public @Nullable WordsScanner getWordsScanner() {
         return new DefaultWordsScanner(
-                new ToitLexerAdapter(),
+                new ToitLexerAdapter(false),
                 TokenSet.create(
                         STRUCTURE_IDENTIFIER,
                         FUNCTION_IDENTIFIER,

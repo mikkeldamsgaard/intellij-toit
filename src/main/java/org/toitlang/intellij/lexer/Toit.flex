@@ -27,12 +27,16 @@ import com.intellij.lexer.FlexLexer;
     return handleEof();
 %eofval}
 %{
-   int yyline;
+            boolean trackIndents;
+            int yyline;
             int yycolumn;
 
             Stack<Integer> indentStack = new Stack<>();
 
+            public void setTrackIndents(boolean trackIndents) { this.trackIndents = trackIndents; }
+
             public int getIndenStackSize() { return indentStack.size(); }
+
             IElementType indentOut() {
                 indentStack.pop();
                 return ToitTypes.DEDENT;
@@ -49,6 +53,8 @@ import com.intellij.lexer.FlexLexer;
 
             IElementType handleIndent() {
                yypushback(1);
+               if (!trackIndents) return indentIgnore();
+
                if (indentStack.isEmpty()) {
                   if (yycolumn > 0) {
                       // No indents recorded and non-space in first column. Record indent and return to normal mode
@@ -73,6 +79,8 @@ import com.intellij.lexer.FlexLexer;
             };
 
             IElementType handleEof() {
+                if (!trackIndents) return null;
+
                 if (yystate() != INDENT_TRACKING) {
                     yybegin(INDENT_TRACKING);
                     return ToitTypes.NEWLINE;
@@ -156,12 +164,6 @@ IndentifierContinue = [\w_]
 Identifer = {IndentifierStart}{IndentifierContinue}*
 
 ///* string literals */
-//StringLiteral = {QuotedString} | {TripleQuotedString}
-//QuotedString = \"([^\\\"\r\n]|{EscapeSequence})*\"
-//ThreeQuotes = (\"\"\")
-//OneOrTwoQuotes = (\"[^\\\"]) | (\"\\[^]) | (\"\"[^\\\"]) | (\"\"\\[^])
-//TripleQuoteStringCharacter = [^\\\"] | {EscapeSequence} | {OneOrTwoQuotes}
-//TripleQuotedString = {ThreeQuotes} {TripleQuoteStringCharacter}* {ThreeQuotes}?
 
 EscapeSequence = \\[^\r\n]
 
@@ -210,7 +212,7 @@ Spacing=[\ \t]
  {WhiteSpace}                                    { return TokenType.WHITE_SPACE; }
  {TraditionalComment}                            { return ToitTypes.COMMENT; }
  {DocComment}                                    { return ToitTypes.COMMENT; }
- {EndOfLineCommentPrefix}  / {LineTerminator}    { return ToitTypes.COMMENT; }
+ {EndOfLineCommentPrefix}                        { return ToitTypes.COMMENT; }
 }
 
 <NORMAL, INLINE_DELIMITED_STRING_EXPRESSION> {
@@ -312,7 +314,7 @@ Spacing=[\ \t]
 
 <NORMAL, INLINE_STRING_EXPRESSION, INLINE_DELIMITED_STRING_EXPRESSION> {
  {Identifer}                                     { return ToitTypes.IDENTIFIER; }
- "."                                             { return ToitTypes.DOT; }
+ "." / {Identifer}                               { return ToitTypes.DOT; }
 }
 
 <NORMAL> {
@@ -331,7 +333,7 @@ Spacing=[\ \t]
 
 <INLINE_STRING_EXPRESSION> {
   "["                                            { startDelimitedStringExpression(BRACKET); return ToitTypes.LBRACKET; }
-  "." [^:jletter:]                               { yypushback(2); resumeStringState();}
+//  "." [^:jletter:]                               { yypushback(2); resumeStringState();}
   [^]                                            { yypushback(1); resumeStringState();}
 }
 
@@ -350,6 +352,7 @@ Spacing=[\ \t]
  "$"                                             { yybegin(INLINE_STRING_EXPRESSION); return ToitTypes.STRING_PART; }
  {EscapeSequence}                                { /* advance to next character */ }
  [^\\\"$]                                        { /* advance to next character */ }
+ "\\"[\r\n]                                      { /* advance to next character */ }
 }
 
 [^]                                              { return TokenType.BAD_CHARACTER; }

@@ -1,0 +1,8 @@
+Features:
+  - Figure out how to enable completion on parse failures.
+  - Infer type of assignments from right hand side
+  - Complete parameter names in calls
+  - Cache resolves
+
+Observation list:
+   - import .impl as impl ....

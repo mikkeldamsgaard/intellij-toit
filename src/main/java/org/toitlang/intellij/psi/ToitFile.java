@@ -51,7 +51,15 @@ public class ToitFile extends PsiFileBase implements IStructureViewable {
 
     @Override
     public @NlsSafe @Nullable String getPresentableText() {
-        return getName();
+        return super.getName();
+    }
+
+
+    @Override
+    public @NotNull String getName() {
+        String fileName = super.getName();
+        if (fileName.endsWith(".toit")) fileName = fileName.substring(0,fileName.lastIndexOf(".toit"));
+        return fileName;
     }
 
     @Override

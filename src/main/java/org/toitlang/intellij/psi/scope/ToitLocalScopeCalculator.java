@@ -78,7 +78,7 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
 
     @Override
     public void visit(ToitStructure toitStructure) {
-        localScopes.add(toitStructure.getScope(this.globalScope, false));
+        localScopes.add(toitStructure.getScope(false));
     }
 
     @Override
@@ -97,7 +97,7 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
                 ToitScope superThis = new ToitScope();
                 superThis.add("this", structure);
 
-                ToitStructure baseClass = structure.getBaseClass(globalScope);
+                ToitStructure baseClass = structure.getBaseClass();
                 if (baseClass != null) {
                     superThis.add("super", baseClass);
                 }
