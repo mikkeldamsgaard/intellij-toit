@@ -79,17 +79,32 @@ import com.intellij.lexer.FlexLexer;
             };
 
             IElementType handleEof() {
-                if (!trackIndents) return null;
-
-                if (yystate() != INDENT_TRACKING) {
-                    yybegin(INDENT_TRACKING);
-                    return ToitTypes.NEWLINE;
+                if (!trackIndents) {
+                    switch (yystate()) {
+                        case YYINITIAL:
+                        case NORMAL:
+                            return null;
+                        default:
+                            yybegin(NORMAL);
+                            return TokenType.BAD_CHARACTER;
+                    }
                 } else {
-                    if (indentStack.isEmpty()) return null;
-                    indentStack.pop();
-                    return ToitTypes.DEDENT;
+                    switch (yystate()) {
+                        case NORMAL:
+                        case YYINITIAL:
+                            yybegin(INDENT_TRACKING);
+                            return ToitTypes.NEWLINE;
+                        case INDENT_TRACKING:
+                            if (indentStack.isEmpty()) return null;
+                            indentStack.pop();
+                            return ToitTypes.DEDENT;
+                        default:
+                            yybegin(NORMAL);
+                            return TokenType.BAD_CHARACTER;
+                    }
                 }
             }
+
             @Data
             @AllArgsConstructor
             class StringType {
@@ -351,8 +366,9 @@ Spacing=[\ \t]
  "$(" {Format}?                                  { startDelimitedStringExpression(PAREN); return ToitTypes.STRING_PART; }
  "$"                                             { yybegin(INLINE_STRING_EXPRESSION); return ToitTypes.STRING_PART; }
  {EscapeSequence}                                { /* advance to next character */ }
- [^\\\"$]                                        { /* advance to next character */ }
- "\\"[\r\n]                                      { /* advance to next character */ }
+// [^\\\"$]                                        { /* advance to next character */ }
+// "\\"[\r\n]                                      { /* advance to next character */ }
+ [^]                                             { /* advance to next character */ }
 }
 
 [^]                                              { return TokenType.BAD_CHARACTER; }

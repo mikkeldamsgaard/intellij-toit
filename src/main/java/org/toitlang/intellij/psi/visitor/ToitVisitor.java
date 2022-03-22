@@ -91,4 +91,8 @@ public class ToitVisitor extends PsiElementVisitor {
     public void visit(ToitAssert toitAssert) {
         visitElement(toitAssert);
     }
+
+    public void visit(ToitRecover toitRecover) {
+        visitElement(toitRecover);
+    }
 }

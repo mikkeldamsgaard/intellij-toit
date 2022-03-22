@@ -7,7 +7,9 @@ import com.intellij.psi.PsiInvalidElementAccessException;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.stubs.StubElement;
 import org.jetbrains.annotations.NotNull;
+import org.toitlang.intellij.files.ToitSdkFiles;
 import org.toitlang.intellij.psi.ToitFile;
+import org.toitlang.intellij.psi.scope.ToitScope;
 
 public abstract class ToitVisitableElement<T extends StubElement> extends StubBasedPsiElementBase<T> {
     public ToitVisitableElement(@NotNull ASTNode node) {
@@ -31,5 +33,9 @@ public abstract class ToitVisitableElement<T extends StubElement> extends StubBa
 
     public ToitFile getToitFile() {
         return (ToitFile)getContainingFile().getOriginalFile();
+    }
+
+    public ToitScope getToitResolveScope() {
+        return ToitScope.chain(getToitFile().getToitFileScope().getToitScope(), ToitSdkFiles.getCoreScope(getProject()));
     }
 }

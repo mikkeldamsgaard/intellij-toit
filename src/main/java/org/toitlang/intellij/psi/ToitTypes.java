@@ -175,4 +175,6 @@ public interface ToitTypes {
 
   IElementType OPERATOR = new ToitElementType("OPERATOR", ToitOperator::new);
   IElementType SIMPLE_LITERAL = new ToitElementType("SIMPLE_LITERAL", ToitSimpleLiteral::new);
+
+  IElementType RECOVER = new ToitElementType("RECOVER", ToitRecover::new);
 }

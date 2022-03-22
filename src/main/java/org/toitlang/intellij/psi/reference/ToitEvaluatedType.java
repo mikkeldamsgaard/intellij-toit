@@ -4,6 +4,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import lombok.*;
 import org.jetbrains.annotations.NotNull;
+import org.toitlang.intellij.files.ToitSdkFiles;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ast.*;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
@@ -78,7 +79,7 @@ public class ToitEvaluatedType {
                         return;
                     }
 
-                    ToitStructure toitStructure = type.resolve(type.getToitFile().getToitFileScope().getToitScope());
+                    ToitStructure toitStructure = type.resolve();
 
                     if (toitStructure == null) {
                         return;

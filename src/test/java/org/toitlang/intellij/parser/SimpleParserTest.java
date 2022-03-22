@@ -452,4 +452,13 @@ public class SimpleParserTest extends ParserTest {
         );
         //checkError(p, "");
     }
+
+    public void testLexerWeirdnessError() {
+        var p = parseFile("tmp", "" +
+                "main:\n" +
+                "            \"\"\"\\"
+        );
+        //checkError(p, "");
+    }
+
 }

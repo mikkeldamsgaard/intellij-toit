@@ -53,12 +53,12 @@ public class ToitType extends ToitElement {
             .collect(Collectors.joining("."));
   }
 
-  public ToitStructure resolve(ToitScope scope) {
+  public ToitStructure resolve() {
     var refs = childrenOfType(ToitReferenceIdentifier.class);
     if (refs.size() == 1) {
-      return firstStructureInScope(scope, refs.get(0).getName());
+      return firstStructureInScope(getToitResolveScope(), refs.get(0).getName());
     } else if (refs.size() == 2) {
-      for (PsiElement fileRef : scope.resolve(refs.get(0).getName())) {
+      for (PsiElement fileRef : getToitResolveScope().resolve(refs.get(0).getName())) {
         if (fileRef instanceof ToitFile) {
           ToitFile toitFile = (ToitFile) fileRef;
           return firstStructureInScope(toitFile.getToitFileScope().getToitScope(), refs.get(1).getName());

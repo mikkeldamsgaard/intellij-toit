@@ -9,6 +9,7 @@ import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.lexer.ToitLexerAdapter;
+import org.toitlang.intellij.lexer.ToitRestartableLexerAdapter;
 import org.toitlang.intellij.psi.ToitTypes;
 
 import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAttributesKey;
@@ -52,7 +53,7 @@ public class ToitSyntaxHighlighter extends SyntaxHighlighterBase {
     @NotNull
     @Override
     public Lexer getHighlightingLexer() {
-        return new ToitLexerAdapter(false);
+        return new ToitRestartableLexerAdapter();
     }
 
     @Override

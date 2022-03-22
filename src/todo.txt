@@ -1,5 +1,11 @@
+  - Reference completion outside expressions
+      - import list
+      - types
+      - extends
+      - implements
+
+
 Features:
-  - Figure out how to enable completion on parse failures.
   - Infer type of assignments from right hand side
   - Complete parameter names in calls
   - Cache resolves

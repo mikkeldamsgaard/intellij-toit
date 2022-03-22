@@ -55,7 +55,9 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
         var stub = getStub();
         if (stub != null) return stub.getName();
 
-        return getNameIdentifier().getName();
+        ToitNameableIdentifier nameIdentifier = getNameIdentifier();
+        if (nameIdentifier == null) return "";
+        return nameIdentifier.getName();
     }
 
     public ToitScope getScope(boolean staticOnly) {
@@ -117,9 +119,9 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
         var extendsTypes = childrenOfType(ToitType.class).stream()
                 .filter(ToitType::isExtendsType).collect(Collectors.toList());
 
-        var structScope = getToitFile().getToitFileScope().getToitScope();
+        var structScope = getToitResolveScope();
         for (ToitType extendsType : extendsTypes) {
-            ToitStructure base = extendsType.resolve(structScope);
+            ToitStructure base = extendsType.resolve();
             if (base != null) return base;
         }
 
