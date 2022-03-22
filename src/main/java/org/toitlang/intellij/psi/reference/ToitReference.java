@@ -139,7 +139,6 @@ public class ToitReference implements PsiPolyVariantReference {
                 List<PsiElement> resolved = scope.resolve(last.getName());
                 destinations.addAll(resolved);
             }
-            // Todo: add to variants
         } else if (sType == ToitTypes.REFERENCE_IDENTIFIER) {
             source.getExpressionParent().accept(new ToitExpressionVisitor<>() {
                 @Override

@@ -1,14 +1,15 @@
-  - Reference completion outside expressions
-      - import list
-      - types
-      - extends
-      - implements
-
-
 Features:
-  - Infer type of assignments from right hand side
+Near future
+  - Infer type of assignments from right-hand side
   - Complete parameter names in calls
+
+Later
+  - Inspections
+  - Quick Fix
+  - Stubs
   - Cache resolves
+
+
 
 Observation list:
    - import .impl as impl ....

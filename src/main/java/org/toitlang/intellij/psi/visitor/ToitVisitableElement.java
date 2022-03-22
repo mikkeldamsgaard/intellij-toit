@@ -30,12 +30,4 @@ public abstract class ToitVisitableElement<T extends StubElement> extends StubBa
     }
 
     protected abstract void accept(ToitVisitor visitor);
-
-    public ToitFile getToitFile() {
-        return (ToitFile)getContainingFile().getOriginalFile();
-    }
-
-    public ToitScope getToitResolveScope() {
-        return ToitScope.chain(getToitFile().getToitFileScope().getToitScope(), ToitSdkFiles.getCoreScope(getProject()));
-    }
 }

@@ -6,11 +6,13 @@ import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.tree.TokenSet;
 import org.jetbrains.annotations.NotNull;
+import org.toitlang.intellij.files.ToitSdkFiles;
+import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitPsiHelper;
 import org.toitlang.intellij.psi.ToitTypes;
+import org.toitlang.intellij.psi.scope.ToitScope;
 import org.toitlang.intellij.psi.visitor.ToitVisitableElement;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public abstract class ToitBaseStubableElement<T extends StubElement> extends ToitVisitableElement<T> {
@@ -37,19 +39,34 @@ public abstract class ToitBaseStubableElement<T extends StubElement> extends Toi
         return null;
     }
 
-    public final <T> List<T> childrenOfType(Class<T> clazz) {
+    public final <V> List<V> childrenOfType(Class<V> clazz) {
         return ToitPsiHelper.childrenOfType(this, clazz);
     }
 
-    public final <T> T getParentOfType(Class<T> clazz) {
+    public final <V> V getParentOfType(Class<V> clazz) {
         var p = getParent();
         while (p != null && !clazz.isInstance(p)) p = p.getParent();
+        return clazz.cast(p);
+    }
+
+    public final <V> V getPrevSiblingOfType(Class<V> clazz) {
+        var p = getPrevSibling();
+        while (p != null && !clazz.isInstance(p)) p = p.getPrevSibling();
         return clazz.cast(p);
     }
 
     protected static TextRange getRelativeRangeInParent(ASTNode node) {
         return new TextRange(node.getStartOffsetInParent(), node.getStartOffsetInParent() + node.getTextLength());
     }
+
+    public ToitFile getToitFile() {
+        return (ToitFile)getContainingFile().getOriginalFile();
+    }
+
+    public ToitScope getToitResolveScope() {
+        return ToitScope.chain(getToitFile().getToitFileScope().getToitScope(), ToitSdkFiles.getCoreScope(getProject()));
+    }
+
 
     @Override
     public String toString() {

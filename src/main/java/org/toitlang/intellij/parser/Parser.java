@@ -75,7 +75,7 @@ public class Parser {
 
             if (is(STAR)) consumeAllowNewlines();
             else {
-                if (!identifier(IMPORT_SHOW_IDENTIFIER)) return importPart.drop();
+                if (!identifier(IMPORT_SHOW_IDENTIFIER)) return importPart.propagateError();
 
                 while (isIdentifier() && !atBeginningOfStatement()) {
                     identifier(IMPORT_SHOW_IDENTIFIER);
@@ -140,8 +140,8 @@ public class Parser {
         }
     }
 
-    private boolean variableDeclarationOrExpression() {
-        if (!isIdentifier()) return expression(true);
+    private boolean variableDeclarationOrExpression(boolean allowBlock) {
+        if (!isIdentifier()) return expression(allowBlock);
 
         var m = mark(null);
         consumeAllowNewlines();
@@ -149,17 +149,21 @@ public class Parser {
             consumeAllowNewlines();
             if (!typeName(false, VARIABLE_TYPE)) {
                 m.rollback();
-                return expression(true);
+                return expression(allowBlock);
             }
             if (is(QUESTION)) consumeAllowNewlines();
         }
 
+        // IntelliJ thinks it is funny to insert a text before calling the parser at various points in the source.
+        // This does kind of wreck this look ahead, so try to detect it
+        typeName(false, VARIABLE_TYPE);
+
         if (is(CONST_DECLARE) || is(DECLARE)) {
             m.rollback();
-            return variableDeclaration(true, true);
+            return variableDeclaration(allowBlock, true);
         } else {
             m.rollback();
-            return expression(true);
+            return expression(allowBlock);
         }
 
     }
@@ -170,7 +174,7 @@ public class Parser {
 
         if (is(STATIC)) consumeAllowNewlines();
 
-        if (!identifier(VARIABLE_IDENTIFIER)) return assignment.drop();
+        if (!identifier(VARIABLE_IDENTIFIER)) return assignment.propagateError();
 
         if (is(SLASH)) {
             consumeAllowNewlines();
@@ -253,7 +257,7 @@ public class Parser {
             if (is(LBRACKET)) {
                 // [name]
                 consumeAllowNewlines();
-                if (!parameterName()) return function.drop();
+                if (!parameterName()) return function.propagateError();
 
                 if (!is(RBRACKET)) return function.error("Missing ']' for block parameter'");
                 consumeAllowNewlines();
@@ -262,7 +266,7 @@ public class Parser {
                 if (!typeName(false, RETURN_TYPE)) return function.error("Expected return type name");
                 if (is(QUESTION)) consumeAllowNewlines();
             } else {
-                if (!parameterName()) return function.drop();
+                if (!parameterName()) return function.propagateError();
 
                 if (is(SLASH)) { // Type
                     consumeAllowNewlines();
@@ -353,7 +357,7 @@ public class Parser {
             }
         } else {
             // Single line
-            if (!elementParser.produce()) return block.drop();
+            if (!elementParser.produce()) return block.propagateError();
         }
 
         return block.done();
@@ -418,7 +422,7 @@ public class Parser {
                 consumeAllowNewlines();
                 empty.done();
             } else {
-                if (!variableDeclarationOrExpression()) return false;
+                if (!variableDeclarationOrExpression(true)) return false;
             }
             if (is(SEMICOLON)) {
                 consumeAllowNewlines();
@@ -433,11 +437,11 @@ public class Parser {
     private boolean tryStatement() {
         var try_ = mark(TRY_STATEMENT);
         consumeAllowNewlines();
-        if (!block(false, this::functionStatement)) return try_.drop();
+        if (!block(false, this::functionStatement)) return try_.propagateError();
 
         if (!is(FINALLY)) return try_.error("Missing finally for try");
         consumeAllowNewlines();
-        if (!block(true, this::functionStatement)) return try_.drop();
+        if (!block(true, this::functionStatement)) return try_.propagateError();
 
         return try_.done();
     }
@@ -447,23 +451,21 @@ public class Parser {
         consumeAllowNewlines();
 
         if (!is(SEMICOLON)) {
-            if (!tryRule(() -> variableDeclaration(true, true))) {
-                if (!expression(false)) return for_.drop();
-            }
+            if (!variableDeclarationOrExpression(true)) return for_.propagateError();
         }
         if (!is(SEMICOLON)) return for_.error("Expected ;");
         consumeAllowNewlines();
 
         if (!is(SEMICOLON)) {
-            if (!expression(false)) return for_.drop();
+            if (!expression(false)) return for_.propagateError();
         }
         if (!is(SEMICOLON)) return for_.error("Expected ;");
         consumeAllowNewlines();
 
         if (!is(COLON)) {
-            if (!expression(false)) return for_.drop();
+            if (!expression(false)) return for_.propagateError();
         }
-        if (!block(false, this::functionStatement)) return for_.drop();
+        if (!block(false, this::functionStatement)) return for_.propagateError();
 
         return for_.done();
     }
@@ -479,17 +481,16 @@ public class Parser {
         var return_ = mark(RETURN_STATEMENT);
         consumeAllowNewlines();
         if (atStatementTerminator(true)) return return_.done();
-        if (!expression(true)) return return_.drop();
+        if (!expression(true)) return return_.propagateError();
         return return_.done();
     }
 
     private boolean ifStatement() {
         var if_ = mark(IF_STATEMENT);
         consumeAllowNewlines();
-        if (!tryRule(() -> variableDeclaration(false, true))) {
-            if (!expression(false)) return if_.error("Expected expression for if");
-        }
-        if (!block(false, this::functionStatement)) return if_.drop();
+        if (!variableDeclarationOrExpression(false)) return if_.error("Expected expression for if");
+
+        if (!block(false, this::functionStatement)) return if_.propagateError();
 
         boolean last = false;
         while (!last && is(ELSE)) {
@@ -499,7 +500,7 @@ public class Parser {
                 if (!expression(false)) return if_.error("Expected expression for else if");
             } else last = true;
 
-            if (!block(false, this::functionStatement)) return if_.drop();
+            if (!block(false, this::functionStatement)) return if_.propagateError();
         }
         return if_.done();
     }
@@ -507,10 +508,9 @@ public class Parser {
     private boolean whileStatement() {
         var while_ = mark(WHILE_STATEMENT);
         consumeAllowNewlines();
-        if (!tryRule(() -> variableDeclaration(false, true))) {
-            if (!expression(false)) return while_.error("Expected expression");
-        }
-        if (!block(false, this::functionStatement)) return while_.drop();
+        if (!variableDeclarationOrExpression(false)) return while_.error("Expected expression");
+
+        if (!block(false, this::functionStatement)) return while_.propagateError();
         return while_.done();
     }
 
@@ -540,7 +540,7 @@ public class Parser {
                 typeName(false, IMPLEMENTS_TYPE);
             }
         }
-        if (!block(false, elementParser)) return interface_.drop();
+        if (!block(false, elementParser)) return interface_.propagateError();
         return interface_.done();
     }
 
@@ -1045,13 +1045,6 @@ public class Parser {
         return res;
     }
 
-
-    private boolean drop(Marker... markers) {
-        for (Marker marker : markers) {
-            marker.drop();
-        }
-        return false;
-    }
 
     public boolean isAllowingNewlines(TokenSet set) {
         var m = mark(null);
