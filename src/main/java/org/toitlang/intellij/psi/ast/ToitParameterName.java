@@ -11,6 +11,8 @@ import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
+import java.util.List;
+
 public class ToitParameterName extends ToitElement implements PsiNameIdentifierOwner {
 
   public ToitParameterName(@NotNull ASTNode node) {
@@ -23,8 +25,19 @@ public class ToitParameterName extends ToitElement implements PsiNameIdentifierO
   }
 
   @Override
-  public @NotNull ToitNameableIdentifier getNameIdentifier() {
-    return childrenOfType(ToitNameableIdentifier.class).get(0);
+  public ToitNameableIdentifier getNameIdentifier() {
+    List<ToitNameableIdentifier> toitNameableIdentifiers = childrenOfType(ToitNameableIdentifier.class);
+    if (toitNameableIdentifiers.size() > 0) {
+      return toitNameableIdentifiers.get(0);
+    }
+    return null;
+  }
+
+  @Override
+  public String getName() {
+    ToitNameableIdentifier nameableIdentifier = getNameIdentifier();
+    if (nameableIdentifier == null) return "__UnknownToit__";
+    return nameableIdentifier.getName();
   }
 
   @Override

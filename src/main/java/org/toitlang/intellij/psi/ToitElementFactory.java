@@ -47,7 +47,7 @@ public class ToitElementFactory {
     public static ToitNameableIdentifier createSimpleParameterIdentifier(Project project, String name) {
         final ToitFile file = createFile(project, String.format("f %s", name));
         var tf = (ToitFunction)file.getFirstChild();
-        return (ToitNameableIdentifier) tf.getFirstChild().getNextSibling();
+        return (ToitNameableIdentifier) tf.getFirstChild().getNextSibling().getNextSibling();
     }
 
 

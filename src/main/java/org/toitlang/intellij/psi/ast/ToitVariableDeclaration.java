@@ -40,6 +40,7 @@ public class ToitVariableDeclaration extends ToitPrimaryLanguageElement<ToitVari
         for (ToitType toitType : childrenOfType(ToitType.class)) {
             return toitType;
         }
+
         return null;
     }
 

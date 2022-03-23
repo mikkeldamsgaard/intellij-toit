@@ -1,6 +1,10 @@
+Bugs
+ - Completion of packages
+ - Better string token termination handling (newline in normal strings should drop a bad token)
+ - After literals, do not add variants
+
 Features:
 Near future
-  - Infer type of assignments from right-hand side
   - Complete parameter names in calls
 
 Later

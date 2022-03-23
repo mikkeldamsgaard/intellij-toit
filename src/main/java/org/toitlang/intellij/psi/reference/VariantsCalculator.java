@@ -1,13 +1,11 @@
 package org.toitlang.intellij.psi.reference;
 
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
 import org.toitlang.intellij.ToitFileType;
-import org.toitlang.intellij.ToitLanguage;
 import org.toitlang.intellij.files.ToitSdkFiles;
+import org.toitlang.intellij.model.IToitPrimaryLanguageElement;
 import org.toitlang.intellij.psi.ToitFile;
-import org.toitlang.intellij.psi.ToitTokenType;
 import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.ast.*;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
@@ -40,15 +38,19 @@ public class VariantsCalculator {
                     var prevType = ((ToitExpression) toitDerefExpression.getPrevSibling()).getType(scope.getScope());
                     if (prevType.getFile() != null) {
                         variants.addAll(prevType.getFile().getToitFileScope().getToitScope().asVariant());
+                        if (isTypeSelectingRelationalExpression(toitDerefExpression)) filterVariants(ToitStructure.class, ToitFile.class);
                     } else if (prevType.getStructure() != null) {
                         variants.addAll(prevType.getStructure().getScope(prevType.isStatic()).asVariant());
+                        if (isTypeSelectingRelationalExpression(toitDerefExpression)) variants.clear();
                     }
+
                     return null;
                 }
 
                 @Override
                 public Object visitExpression(ToitExpression expression) {
                     variants.addAll(scope.asVariant());
+                    if (isTypeSelectingRelationalExpression(expression)) filterVariants(ToitFile.class, ToitStructure.class);
                     return null;
                 }
             });
@@ -125,6 +127,26 @@ public class VariantsCalculator {
             }
         }
         return this;
+    }
+
+    private boolean isTypeSelectingRelationalExpression(ToitExpression expression) {
+        return expression.getParent() instanceof ToitRelationalExpression &&
+                ((ToitRelationalExpression)expression.getParent()).isTypeSelectingOperator();
+    }
+
+    @SuppressWarnings("rawtypes")
+    private void filterVariants(Class... classes) {
+        for (Iterator<Object> iterator = variants.iterator(); iterator.hasNext(); ) {
+            Object next = iterator.next();
+            boolean found = false;
+            for (Class clazz : classes) {
+                if (clazz.isInstance(next)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)iterator.remove();
+        }
     }
 
     private Object[] getVariants() {

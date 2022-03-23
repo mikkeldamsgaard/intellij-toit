@@ -22,9 +22,11 @@ public class ToitEvaluatedType {
     private final ToitStructure structure;
     private final boolean isStatic;
 
-    private final static ToitEvaluatedType UNRESOLVED = new ToitEvaluatedType(null,null,false);
+    private final static ToitEvaluatedType UNRESOLVED = new ToitEvaluatedType(null, null, false);
 
-    public boolean isUnresolved() { return file == null && structure == null; }
+    public boolean isUnresolved() {
+        return file == null && structure == null;
+    }
 
     private final static String LIST_CLASS_NAME = "List";
     private final static String INT_CLASS_NAME = "int";
@@ -39,6 +41,9 @@ public class ToitEvaluatedType {
     private final static String IT = "it";
     private final static String PRIMITIVE = "#primitive";
 
+    private ToitEvaluatedType nonStatic() {
+        return new ToitEvaluatedType(file, structure, false);
+    }
 
     private static ToitEvaluatedType resolveTypeOfNameInScope(String name, ToitScope scope, boolean isStatic) {
         var resolved = scope.resolve(name);
@@ -59,13 +64,25 @@ public class ToitEvaluatedType {
                 @Override
                 public void visit(ToitFunction toitFunction) {
                     // Use the return type (declared or inferred) to resolve
-                    processDeferredType(toitFunction.getType());
+                    ToitType toitType = toitFunction.getType();
+                    if (toitType != null) processDeferredType(toitType);
+
+                    if (toitFunction.isConstructor()) {
+                        // Factory constructor
+                        ToitStructure structure = toitFunction.getParentOfType(ToitStructure.class);
+                        if (structure != null) types.add(new ToitEvaluatedType(null, structure, false));
+                    }
                 }
 
                 @Override
                 public void visit(ToitVariableDeclaration toitVariableDeclaration) {
-                    // Use the variables type (declared or inferred) to resolve
-                    processDeferredType(toitVariableDeclaration.getType());
+                    var toitType = toitVariableDeclaration.getType();
+                    if (toitType != null) processDeferredType(toitType);
+
+                    for (ToitExpression toitExpression : toitVariableDeclaration.childrenOfType(ToitExpression.class)) {
+                        var type = toitExpression.getType(toitVariableDeclaration.getToitResolveScope());
+                        types.add(type);
+                    }
                 }
 
                 @Override
@@ -95,7 +112,7 @@ public class ToitEvaluatedType {
     }
 
 
-    public static ToitEvaluatedType evaluate(ToitExpression expression,ToitScope scope) {
+    public static ToitEvaluatedType evaluate(ToitExpression expression, ToitScope scope) {
         return expression.accept(new ToitExpressionVisitor<>() {
             private List<ToitEvaluatedType> recurse(ToitExpression expression) {
                 return expression.acceptChildren(this);
@@ -105,7 +122,7 @@ public class ToitEvaluatedType {
                 var recursed = recurse(expression);
                 if (recursed.isEmpty()) return UNRESOLVED;
                 if (recursed.size() > 1) {
-                    System.err.println("Multiple recurses::: "+recursed);
+                    System.err.println("Multiple recurses::: " + recursed);
                 }
                 var result = recursed.get(0);
                 if (result == null) return UNRESOLVED;
@@ -156,7 +173,14 @@ public class ToitEvaluatedType {
 
             @Override
             public ToitEvaluatedType visit(ToitAssignmentExpression toitAssignmentExpression) {
-                return evaluate((ToitExpression)toitAssignmentExpression.getLastChild(),scope);
+                return evaluate((ToitExpression) toitAssignmentExpression.getLastChild(), scope);
+            }
+
+            @Override
+            public ToitEvaluatedType visit(ToitCallExpression toitCallExpression) {
+                var expressions = toitCallExpression.childrenOfType(ToitExpression.class);
+                if (expressions.isEmpty()) return ToitEvaluatedType.UNRESOLVED;
+                return expressions.get(0).getType(scope);
             }
 
             @Override
@@ -190,7 +214,14 @@ public class ToitEvaluatedType {
 
             @Override
             public ToitEvaluatedType visit(ToitRelationalExpression toitRelationalExpression) {
-                return resolveToStruct(scope, FLOAT_CLASS_NAME);
+                if (toitRelationalExpression.isAs()) {
+                    var subExpressions = toitRelationalExpression.childrenOfType(ToitExpression.class);
+                    if (subExpressions.isEmpty()) return UNRESOLVED;
+                    var evaluatedType = subExpressions.get(subExpressions.size() - 1).accept(this);
+                    if (evaluatedType.getStructure() != null) return evaluatedType.nonStatic();
+                    return evaluatedType;
+                }
+                return resolveToStruct(scope, BOOL_CLASS_NAME);
             }
 
             @Override
@@ -208,7 +239,9 @@ public class ToitEvaluatedType {
                 return UNRESOLVED;
             }
 
-            // Todo: Binary expression, call expression
+
+            // Todo: Binary expression
         });
     }
+
 }

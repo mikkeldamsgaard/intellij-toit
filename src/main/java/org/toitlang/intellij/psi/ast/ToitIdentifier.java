@@ -20,7 +20,7 @@ public abstract class ToitIdentifier extends ToitElement {
   @Override
   public @NotNull  String getName() {
     if (name == null) name = getText();
-
+    if (name == null) name = "__UnknownToit__";
     return name;
   }
 

@@ -152,11 +152,11 @@ public class Parser {
                 return expression(allowBlock);
             }
             if (is(QUESTION)) consumeAllowNewlines();
-        }
 
-        // IntelliJ thinks it is funny to insert a text before calling the parser at various points in the source.
-        // This does kind of wreck this look ahead, so try to detect it
-        typeName(false, VARIABLE_TYPE);
+            // IntelliJ thinks it is funny to insert a text before calling the parser at various points in the source.
+            // This does kind of wreck this look ahead, so try to detect it
+            typeName(false, VARIABLE_TYPE);
+        }
 
         if (is(CONST_DECLARE) || is(DECLARE)) {
             m.rollback();
@@ -752,9 +752,7 @@ public class Parser {
         if (atStatementTerminator(allowBlock)) return expr.collapse();
         if (isAllowingNewlines(operatorSet)) {
             while (isAllowingNewlines(operatorSet)) {
-                var oper = mark(OPERATOR);
-                consumeAllowNewlines();
-                oper.done();
+                operator();
                 if (rightHandFullExpression) {
                     if (!expression(allowBlock)) return expr.drop();
                 } else {
@@ -764,6 +762,7 @@ public class Parser {
             return expr.done();
         } else return expr.collapse();
     }
+
 
     private final static TokenSet POSTFIX_OPERATORS = TokenSet.create(LBRACKET, PLUS_PLUS, MINUS_MINUS, DOT);
 
@@ -800,9 +799,7 @@ public class Parser {
         }
 
         if (is(DOT_DOT)) {
-            var oper = mark(OPERATOR);
-            consumeAllowNewlines();
-            oper.done();
+            operator();
 
             if (!is(RBRACKET)) {
                 if (!expression(allowBlock)) return indexer.propagateError();
@@ -975,16 +972,20 @@ public class Parser {
     private boolean assignmentOperator() {
         var assignmentOperator = mark(OPERATOR);
         if (is(DECLARE) || is(CONST_DECLARE)) {
-            consumeAllowNewlines();
-            return assignmentOperator.done();
+            consumeAllowNewlines(assignmentOperator);
+            return true;
         }
         return assignmentOperator.collapse();
     }
 
+    private void operator() {
+        consumeAllowNewlines(mark(OPERATOR));
+    }
+
     private boolean identifier(IElementType elementType) {
+        if (!isIdentifier()) return false;
         var i = mark(elementType);
-        if (!isIdentifier()) return i.error("Expected identifier");
-        consumeAllowNewlines(i, elementType);
+        consumeAllowNewlines(i);
         return true;
     }
 
@@ -1153,18 +1154,18 @@ public class Parser {
     }
 
     boolean consume(boolean allowNewLines, Marker mark, IElementType doneType) {
-        if (allowNewLines) consumeAllowNewlines(mark, doneType);
-        else consume(mark, doneType);
+        if (allowNewLines) consumeAllowNewlines(mark);
+        else consume(mark);
         return true;
     }
 
     void consume() {
-        consume(null, null);
+        consume(null);
     }
 
     private static final TokenSet DETACH_TOKENS = TokenSet.create(TokenType.WHITE_SPACE, INDENT, DEDENT, NEWLINE);
 
-    void consume(Marker mark, IElementType doneType) {
+    void consume(Marker mark) {
         // Detect if we are at begging of line and increment line number
         if (isNewLine()) {
             currentLineNo++;
@@ -1185,11 +1186,11 @@ public class Parser {
     }
 
     void consumeAllowNewlines() {
-        consumeAllowNewlines(null, null);
+        consumeAllowNewlines(null);
     }
 
-    void consumeAllowNewlines(Marker mark, IElementType doneType) {
-        if (!isNewLine()) consume(mark, doneType);
+    void consumeAllowNewlines(Marker mark) {
+        if (!isNewLine()) consume(mark);
         while (!builder.eof()) {
             if (isNewLine()) consume();
             else if (isIndent()) {

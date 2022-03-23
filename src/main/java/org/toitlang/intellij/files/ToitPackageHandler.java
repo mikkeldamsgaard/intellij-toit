@@ -71,6 +71,7 @@ public class ToitPackageHandler {
     private static VirtualFile findPackageLockFile(@NotNull Project project, VirtualFile virtualFile) {
         if (virtualFile == null) return null;
         virtualFile = virtualFile.getParent();
+        if (virtualFile == null) return null;
         VirtualFile packageFile = virtualFile.findFileByRelativePath("package.yaml");
         VirtualFile lockFile = virtualFile.findFileByRelativePath("package.lock");
 

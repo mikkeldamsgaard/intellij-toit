@@ -14,7 +14,7 @@ public class ReferenceErrorInspector extends LocalInspectionTool {
         return new ToitVisitor() {
             @Override
             public void visit(ToitReferenceIdentifier toitReferenceIdentifier) {
-                if (!toitReferenceIdentifier.getReference().isSoft() && toitReferenceIdentifier.getReference().resolve() == null) {
+                if (!toitReferenceIdentifier.getReference().isSoft() && toitReferenceIdentifier.getReference().resolve() == null && !"".equals(toitReferenceIdentifier.getText())) {
                     holder.registerProblem(toitReferenceIdentifier, "Unresolved reference: "+toitReferenceIdentifier.getText());
                 }
             }
