@@ -3,8 +3,8 @@ package org.toitlang.intellij.psi.reference;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.tree.IElementType;
 import org.toitlang.intellij.ToitFileType;
+import org.toitlang.intellij.files.ToitPackageHandler;
 import org.toitlang.intellij.files.ToitSdkFiles;
-import org.toitlang.intellij.model.IToitPrimaryLanguageElement;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.ast.*;
@@ -18,6 +18,7 @@ public class VariantsCalculator {
     private final ToitReferenceIdentifier source;
     private final Set<Object> variants;
     private final EvaluationScope scope;
+
     private VariantsCalculator(ToitReferenceIdentifier source, EvaluationScope evaluationScope) {
         this.source = source;
         scope = evaluationScope;
@@ -38,10 +39,12 @@ public class VariantsCalculator {
                     var prevType = ((ToitExpression) toitDerefExpression.getPrevSibling()).getType(scope.getScope());
                     if (prevType.getFile() != null) {
                         variants.addAll(prevType.getFile().getToitFileScope().getToitScope().asVariant());
-                        if (isTypeSelectingRelationalExpression(toitDerefExpression)) filterVariants(ToitStructure.class, ToitFile.class);
+                        if (isTypeSelectingRelationalExpression(toitDerefExpression))
+                            filterVariants(ToitStructure.class, ToitFile.class);
                     } else if (prevType.getStructure() != null) {
                         variants.addAll(prevType.getStructure().getScope(prevType.isStatic()).asVariant());
                         if (isTypeSelectingRelationalExpression(toitDerefExpression)) variants.clear();
+
                     }
 
                     return null;
@@ -50,7 +53,9 @@ public class VariantsCalculator {
                 @Override
                 public Object visitExpression(ToitExpression expression) {
                     variants.addAll(scope.asVariant());
-                    if (isTypeSelectingRelationalExpression(expression)) filterVariants(ToitFile.class, ToitStructure.class);
+                    if (isTypeSelectingRelationalExpression(expression))
+                        filterVariants(ToitFile.class, ToitStructure.class);
+                    if (isInCodeBlockWithoutParameters(expression)) variants.add("it");
                     return null;
                 }
             });
@@ -90,7 +95,7 @@ public class VariantsCalculator {
         } else if (sType == ToitTypes.IMPORT_IDENTIFIER) {
             ToitImportDeclaration import_ = source.getParentOfType(ToitImportDeclaration.class);
             List<ToitReferenceIdentifier> path = new ArrayList<>();
-            for (var tr: import_.childrenOfType(ToitReferenceIdentifier.class)) {
+            for (var tr : import_.childrenOfType(ToitReferenceIdentifier.class)) {
                 if (tr == source) break;
                 if (tr.getNode().getElementType() == ToitTypes.IMPORT_IDENTIFIER) path.add(tr);
             }
@@ -115,23 +120,42 @@ public class VariantsCalculator {
                 }
 
                 if (curDir != null) {
-                    VirtualFile[] children = curDir.getChildren();
-                    if (children != null) {
-                        for (VirtualFile child : children) {
-                            if (child.isDirectory()) variants.add(child.getName());
-                            else if (Objects.equals(child.getExtension(), ToitFileType.INSTANCE.getDefaultExtension()))
-                                variants.add(child.getNameWithoutExtension());
-                        }
-                    }
+                    addImportVariantInDir(curDir);
                 }
+            }
+
+            // Packages
+            if (path.isEmpty()) {
+                variants.addAll(ToitPackageHandler.listPrefixes(source.getToitFile()));
+            } else {
+               VirtualFile packageSourceDir = ToitPackageHandler.listVariantsForPackage(source.getToitFile(),
+                        path.stream().map(ToitReferenceIdentifier::getText).collect(Collectors.toList()));
+               if (packageSourceDir != null) addImportVariantInDir(packageSourceDir);
             }
         }
         return this;
     }
 
+    private void addImportVariantInDir(VirtualFile curDir) {
+        VirtualFile[] children = curDir.getChildren();
+        if (children != null) {
+            for (VirtualFile child : children) {
+                if (child.isDirectory()) variants.add(child.getName());
+                else if (Objects.equals(child.getExtension(), ToitFileType.INSTANCE.getDefaultExtension()))
+                    variants.add(child.getNameWithoutExtension());
+            }
+        }
+    }
+
     private boolean isTypeSelectingRelationalExpression(ToitExpression expression) {
         return expression.getParent() instanceof ToitRelationalExpression &&
-                ((ToitRelationalExpression)expression.getParent()).isTypeSelectingOperator();
+                ((ToitRelationalExpression) expression.getParent()).isTypeSelectingOperator();
+    }
+
+    private boolean isInCodeBlockWithoutParameters(ToitExpression expression) {
+        ToitBlock block = expression.getParentOfType(ToitBlock.class);
+        if (block.getParent() instanceof ToitFunction || block.getParent() instanceof ToitStructure) return false;
+        return block.childrenOfType(ToitParameterName.class).isEmpty();
     }
 
     @SuppressWarnings("rawtypes")
@@ -145,7 +169,7 @@ public class VariantsCalculator {
                     break;
                 }
             }
-            if (!found)iterator.remove();
+            if (!found) iterator.remove();
         }
     }
 

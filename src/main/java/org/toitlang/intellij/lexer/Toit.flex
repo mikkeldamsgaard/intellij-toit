@@ -223,6 +223,7 @@ Spacing=[\ \t]
   {NotWhiteSpace} { var res = handleIndent(); if (res != null) return res; }
   {LineTerminator} { return TokenType.WHITE_SPACE;  } // Totally blank lines are treated as whitespace
 }
+
 <YYINITIAL, INDENT_TRACKING, NORMAL, INLINE_DELIMITED_STRING_EXPRESSION> {
  {WhiteSpace}                                    { return TokenType.WHITE_SPACE; }
  {TraditionalComment}                            { return ToitTypes.COMMENT; }
@@ -319,7 +320,6 @@ Spacing=[\ \t]
 
  "#primitive"                                    { return ToitTypes.PRIMITIVE; }
 
-
  {LineTerminator}                                { yybegin(INDENT_TRACKING); return ToitTypes.NEWLINE; }
 
 // Strings
@@ -360,15 +360,16 @@ Spacing=[\ \t]
 
 <STRING_PARSING> {
  "\""                                            { exitStringState(); return ToitTypes.STRING_END; }
+// {LineTerminator}                                { return TokenType.BAD_CHARACTER; }
 }
 
 <STRING_PARSING, TRIPLE_STRING_PARSING> {
  "$(" {Format}?                                  { startDelimitedStringExpression(PAREN); return ToitTypes.STRING_PART; }
  "$"                                             { yybegin(INLINE_STRING_EXPRESSION); return ToitTypes.STRING_PART; }
  {EscapeSequence}                                { /* advance to next character */ }
-// [^\\\"$]                                        { /* advance to next character */ }
-// "\\"[\r\n]                                      { /* advance to next character */ }
  [^]                                             { /* advance to next character */ }
 }
 
-[^]                                              { return TokenType.BAD_CHARACTER; }
+<NORMAL, INLINE_DELIMITED_STRING_EXPRESSION> {
+ [^]                                            { return TokenType.BAD_CHARACTER; }
+}

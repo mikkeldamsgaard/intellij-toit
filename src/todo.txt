@@ -1,11 +1,10 @@
 Bugs
- - Completion of packages
- - Better string token termination handling (newline in normal strings should drop a bad token)
- - After literals, do not add variants
+ - shows do not rename
 
 Features:
 Near future
   - Complete parameter names in calls
+  - Annotate newlines in single quoted strings
 
 Later
   - Inspections
@@ -15,5 +14,7 @@ Later
 
 
 
+
 Observation list:
    - import .impl as impl ....
+   - After literals, do not add variants

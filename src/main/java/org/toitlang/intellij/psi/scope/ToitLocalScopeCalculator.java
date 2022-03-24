@@ -10,18 +10,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ToitLocalScopeCalculator extends ToitVisitor {
-    private final ToitReferenceIdentifier origin;
-    private final ToitScope globalScope;
+    private final ToitVisitableElement origin;
     private final List<ToitScope> localScopes;
 
-    public ToitLocalScopeCalculator(ToitReferenceIdentifier origin, ToitScope scope) {
+    public ToitLocalScopeCalculator(ToitVisitableElement origin) {
         this.origin = origin;
-        this.globalScope = scope;
         this.localScopes = new ArrayList<>();
     }
 
-    public static ToitScope calculate(ToitReferenceIdentifier origin, ToitScope parentScope) {
-        return new ToitLocalScopeCalculator(origin,parentScope).calculate();
+    public static ToitScope calculate(ToitVisitableElement origin) {
+        return new ToitLocalScopeCalculator(origin).calculate();
     }
 
     private ToitScope calculate() {

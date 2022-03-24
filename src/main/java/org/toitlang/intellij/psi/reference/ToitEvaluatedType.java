@@ -4,7 +4,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import lombok.*;
 import org.jetbrains.annotations.NotNull;
-import org.toitlang.intellij.files.ToitSdkFiles;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ast.*;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
@@ -80,7 +79,7 @@ public class ToitEvaluatedType {
                     if (toitType != null) processDeferredType(toitType);
 
                     for (ToitExpression toitExpression : toitVariableDeclaration.childrenOfType(ToitExpression.class)) {
-                        var type = toitExpression.getType(toitVariableDeclaration.getToitResolveScope());
+                        var type = toitExpression.getType(toitVariableDeclaration.getLocalToitResolveScope());
                         types.add(type);
                     }
                 }
@@ -124,7 +123,7 @@ public class ToitEvaluatedType {
                 if (recursed.size() > 1) {
                     System.err.println("Multiple recurses::: " + recursed);
                 }
-                var result = recursed.get(0);
+                var result = recursed.get(recursed.size()-1);
                 if (result == null) return UNRESOLVED;
                 return result;
             }
@@ -168,7 +167,9 @@ public class ToitEvaluatedType {
 
             @Override
             public ToitEvaluatedType visit(ToitTopLevelExpression toitTopLevelExpression) {
-                return singularRecurse(toitTopLevelExpression);
+                var recursed = recurse(toitTopLevelExpression);
+                if (recursed.isEmpty()) return UNRESOLVED;
+                return recursed.get(recursed.size()-1); // Return the value of the last expression.
             }
 
             @Override

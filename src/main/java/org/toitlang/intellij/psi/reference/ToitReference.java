@@ -91,7 +91,7 @@ public class ToitReference implements PsiPolyVariantReference {
         ToitFileScope toitFileScope = file.getToitFileScope();
         ToitScope core = ToitSdkFiles.getCoreScope(source.getProject());
         ToitScope toitFileScopeScope = toitFileScope.getToitScope();
-        ToitScope localScope = ToitLocalScopeCalculator.calculate(source, toitFileScopeScope);
+        ToitScope localScope = ToitLocalScopeCalculator.calculate(source);
         var scope = ToitScope.chain(localScope, toitFileScopeScope, core);
 
         return new EvaluationScope(scope, toitFileScope);

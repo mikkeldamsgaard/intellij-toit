@@ -10,6 +10,7 @@ import org.toitlang.intellij.files.ToitSdkFiles;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitPsiHelper;
 import org.toitlang.intellij.psi.ToitTypes;
+import org.toitlang.intellij.psi.scope.ToitLocalScopeCalculator;
 import org.toitlang.intellij.psi.scope.ToitScope;
 import org.toitlang.intellij.psi.visitor.ToitVisitableElement;
 
@@ -67,6 +68,9 @@ public abstract class ToitBaseStubableElement<T extends StubElement> extends Toi
         return ToitScope.chain(getToitFile().getToitFileScope().getToitScope(), ToitSdkFiles.getCoreScope(getProject()));
     }
 
+    public ToitScope getLocalToitResolveScope() {
+        return ToitScope.chain(ToitLocalScopeCalculator.calculate(this), getToitResolveScope());
+    }
 
     @Override
     public String toString() {

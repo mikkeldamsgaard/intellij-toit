@@ -1,9 +1,8 @@
 package org.toitlang.intellij.parser;
 
-import com.google.common.base.Charsets;
+import org.toitlang.intellij.lexer.ToitLexerAdapter;
+import org.toitlang.intellij.lexer.ToitRestartableLexerAdapter;
 
-import java.io.FileInputStream;
-import java.io.IOException;
 
 public class SimpleParserTest extends ParserTest {
     public static final String PARSION_RETURN_WiTH_METHOD_CALL = "" +
@@ -460,5 +459,4 @@ public class SimpleParserTest extends ParserTest {
         );
         //checkError(p, "");
     }
-
 }
