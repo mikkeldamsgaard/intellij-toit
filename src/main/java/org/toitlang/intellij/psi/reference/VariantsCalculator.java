@@ -14,6 +14,8 @@ import org.toitlang.intellij.psi.scope.ToitScope;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.toitlang.intellij.psi.reference.ToitEvaluatedType.resolveTypeOfNameInScope;
+
 public class VariantsCalculator {
     private final ToitReferenceIdentifier source;
     private final Set<Object> variants;
@@ -36,15 +38,20 @@ public class VariantsCalculator {
             expressionParent.accept(new ToitExpressionVisitor<>() {
                 @Override
                 public Object visit(ToitDerefExpression toitDerefExpression) {
-                    var prevType = ((ToitExpression) toitDerefExpression.getPrevSibling()).getType(scope.getScope());
-                    if (prevType.getFile() != null) {
-                        variants.addAll(prevType.getFile().getToitFileScope().getToitScope().asVariant());
-                        if (isTypeSelectingRelationalExpression(toitDerefExpression))
-                            filterVariants(ToitStructure.class, ToitFile.class);
-                    } else if (prevType.getStructure() != null) {
-                        variants.addAll(prevType.getStructure().getScope(prevType.isStatic()).asVariant());
-                        if (isTypeSelectingRelationalExpression(toitDerefExpression)) variants.clear();
+                    var postfixEvaluatedType =
+                            ToitPostfixExpressionTypeEvaluatedType
+                                    .calculate(toitDerefExpression.getParentOfType(ToitPostfixExpression.class));
+                    var prev = postfixEvaluatedType.getTypeForPreviousChild(toitDerefExpression);
 
+                    if (prev != null && !prev.isUnresolved()) {
+                        if (prev.getFile() != null) {
+                            variants.addAll(prev.getFile().getToitFileScope().getToitScope().asVariant());
+                            if (isTypeSelectingRelationalExpression(toitDerefExpression))
+                                filterVariants(ToitStructure.class, ToitFile.class);
+                        } else if (prev.getStructure() != null) {
+                            variants.addAll(prev.getStructure().getScope(prev.isStatic()).asVariant());
+                            if (isTypeSelectingRelationalExpression(toitDerefExpression)) variants.clear();
+                        }
                     }
 
                     return null;
@@ -154,6 +161,7 @@ public class VariantsCalculator {
 
     private boolean isInCodeBlockWithoutParameters(ToitExpression expression) {
         ToitBlock block = expression.getParentOfType(ToitBlock.class);
+        if (block == null) return false;
         if (block.getParent() instanceof ToitFunction || block.getParent() instanceof ToitStructure) return false;
         return block.childrenOfType(ToitParameterName.class).isEmpty();
     }

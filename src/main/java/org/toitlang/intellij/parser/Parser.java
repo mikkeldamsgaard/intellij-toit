@@ -641,6 +641,8 @@ public class Parser {
                     newLineArgumentsIndentLevel = currentIndentLevel;
                 }
             }
+            if (currentTokenIsAttached && !is(COLON) && !is(COLON_COLON))
+                return errorInParameterParsing("Argument expected", expr, lookahead);
 
             if (!areArgumentsOnNewLines && currentIsAtBeginningOfLine) break;
 
@@ -675,6 +677,11 @@ public class Parser {
             lookahead.rollback();
             return expr.collapse();
         }
+    }
+
+    private boolean errorInParameterParsing(String error, Marker expr, Marker lookahead) {
+        lookahead.drop();
+        return expr.error(error);
     }
 
     private boolean errorInParameterParsing(String error, Marker expr, Marker lookahead, Marker namedArgument) {
@@ -767,19 +774,24 @@ public class Parser {
     private final static TokenSet POSTFIX_OPERATORS = TokenSet.create(LBRACKET, PLUS_PLUS, MINUS_MINUS, DOT);
 
     private boolean postfixExpression(boolean allowBlock) {
-        if (!unaryExpression(allowBlock)) return false;
+        var m = mark(POSTFIX_EXPRESSION);
+        if (!unaryExpression(allowBlock)) return m.drop();
+        boolean empty = true;
         while (currentTokenIsAttached && is(POSTFIX_OPERATORS)) {
+            empty = false;
             if (is(LBRACKET)) {
                 if (!indexing(allowBlock)) return false;
             } else if (is(DOT)) {
                 if (!deref()) return false;
             } else if (is(PLUS_PLUS) || is(MINUS_MINUS)) {
-                var m = mark(POSTFIX_EXPRESSION);
+                var incr = mark(POSTFIX_INCREMENT_EXPRESSION);
                 consumeAllowNewlines();
-                m.done();
+                incr.done();
+            } else {
+                return m.error("Invalid postfix operator");
             }
         }
-        return true;
+        return empty?m.collapse():m.done();
     }
 
     private boolean deref() {
@@ -1083,7 +1095,7 @@ public class Parser {
         return builder.eof() || currentIsAtBeginningOfLine && currentIndentLevel <= currentBlockIndentLevel();
     }
 
-    private final static TokenSet STATEMENT_TERMINATORS = TokenSet.create(RPAREN, RBRACKET, RCURLY, COMMA, QUESTION, DOT_DOT, SEMICOLON);
+    private final static TokenSet STATEMENT_TERMINATORS = TokenSet.create(RPAREN, RBRACKET, RCURLY, COMMA, QUESTION, DOT_DOT, SEMICOLON, STRING_END, STRING_PART);
 
     private boolean atStatementTerminator(boolean allowBlock) {
         return atBeginningOfStatement() || STATEMENT_TERMINATORS.contains(tokenType()) || !allowBlock && is(COLON);

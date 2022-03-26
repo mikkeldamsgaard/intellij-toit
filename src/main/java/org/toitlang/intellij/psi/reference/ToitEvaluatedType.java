@@ -21,7 +21,7 @@ public class ToitEvaluatedType {
     private final ToitStructure structure;
     private final boolean isStatic;
 
-    private final static ToitEvaluatedType UNRESOLVED = new ToitEvaluatedType(null, null, false);
+    public final static ToitEvaluatedType UNRESOLVED = new ToitEvaluatedType(null, null, false);
 
     public boolean isUnresolved() {
         return file == null && structure == null;
@@ -44,7 +44,7 @@ public class ToitEvaluatedType {
         return new ToitEvaluatedType(file, structure, false);
     }
 
-    private static ToitEvaluatedType resolveTypeOfNameInScope(String name, ToitScope scope, boolean isStatic) {
+    public static ToitEvaluatedType resolveTypeOfNameInScope(String name, ToitScope scope, boolean isStatic) {
         var resolved = scope.resolve(name);
         if (resolved.isEmpty()) return new ToitEvaluatedType(null, null, isStatic);
         List<ToitEvaluatedType> types = new ArrayList<>();
@@ -80,7 +80,7 @@ public class ToitEvaluatedType {
 
                     for (ToitExpression toitExpression : toitVariableDeclaration.childrenOfType(ToitExpression.class)) {
                         var type = toitExpression.getType(toitVariableDeclaration.getLocalToitResolveScope());
-                        types.add(type);
+                        types.add(type.nonStatic());
                     }
                 }
 
@@ -138,20 +138,8 @@ public class ToitEvaluatedType {
             }
 
             @Override
-            public ToitEvaluatedType visit(ToitDerefExpression toitDerefExpression) {
-                var prevType = ((ToitExpression) toitDerefExpression.getPrevSibling()).getType(scope);
-
-                String name = toitDerefExpression.childrenOfType(ToitReferenceIdentifier.class).get(0).getName();
-
-                if (prevType.isUnresolved()) {
-                    return UNRESOLVED;
-                } else if (prevType.getFile() != null) {
-                    ToitScope prevFileScope = prevType.getFile().getToitFileScope().getToitScope();
-                    return resolveTypeOfNameInScope(name, prevFileScope, true);
-                } else {
-                    ToitScope scructureScope = prevType.getStructure().getScope(prevType.isStatic());
-                    return resolveTypeOfNameInScope(name, scructureScope, false);
-                }
+            public ToitEvaluatedType visit(ToitPostfixExpression toitPostfixExpression) {
+                return ToitPostfixExpressionTypeEvaluatedType.calculate(toitPostfixExpression).getLast();
             }
 
             @Override
@@ -245,4 +233,9 @@ public class ToitEvaluatedType {
         });
     }
 
+    public PsiElement getPsiElement() {
+        if (structure != null) return structure;
+        if (file != null) return file;
+        throw new RuntimeException("Called getPsiElement on unresolved type");
+    }
 }

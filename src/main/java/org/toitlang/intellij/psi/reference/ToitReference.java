@@ -120,7 +120,7 @@ public class ToitReference implements PsiPolyVariantReference {
                 if ("none".equals(name) || "any".equals(name)) {
                     soft = true;
                 } else {
-                    destinations.addAll(scope.resolve(name));
+                    destinations.addAll(source.getToitResolveScope().resolve(name));
                 }
             }
         } else if (sType == ToitTypes.IMPORT_SHOW_IDENTIFIER || sType == ToitTypes.EXPORT_IDENTIFIER) {
@@ -143,13 +143,17 @@ public class ToitReference implements PsiPolyVariantReference {
             source.getExpressionParent().accept(new ToitExpressionVisitor<>() {
                 @Override
                 public Object visit(ToitDerefExpression toitDerefExpression) {
-                    var prevType = ((ToitExpression) toitDerefExpression.getPrevSibling()).getType(scope.getScope());
-                    if (prevType.isUnresolved()) {
+                    var postfixEvaluatedType =
+                            ToitPostfixExpressionTypeEvaluatedType
+                                    .calculate(toitDerefExpression.getParentOfType(ToitPostfixExpression.class));
+                    var prev = postfixEvaluatedType.getTypeForPreviousChild(toitDerefExpression);
+
+                    if (prev.isUnresolved()) {
                         soft= true;
-                    } else if (prevType.getFile() != null) {
-                        destinations.addAll(prevType.getFile().getToitFileScope().getToitScope().resolve(name));
-                    } else if (prevType.getStructure() != null) {
-                        destinations.addAll(prevType.getStructure().getScope(prevType.isStatic()).resolve(name));
+                    } else if (prev.getFile() != null) {
+                        destinations.addAll(prev.getFile().getToitFileScope().getToitScope().resolve(name));
+                    } else if (prev.getStructure() != null) {
+                        destinations.addAll(prev.getStructure().getScope(prev.isStatic()).resolve(name));
                     }
                     return null;
                 }

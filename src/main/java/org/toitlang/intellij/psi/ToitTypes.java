@@ -152,6 +152,7 @@ public interface ToitTypes {
   IElementType DEREF_EXPRESSION = new ToitElementType("DEREF_EXPRESSION", ToitDerefExpression::new);
   IElementType UNARY_EXPRESSION = new ToitElementType("UNARY_EXPRESSION", ToitUnaryExpression::new);
   IElementType POSTFIX_EXPRESSION = new ToitElementType("POSTFIX_EXPRESSION", ToitPostfixExpression::new);
+  IElementType POSTFIX_INCREMENT_EXPRESSION = new ToitElementType("POSTFIX_EXPRESSION", ToitPostfixIncrementExpression::new);
 
   IElementType LIST_LITERAL = new ToitElementType("LIST_LITERAL", ToitListLiteral::new);
   IElementType SET_LITERAL = new ToitElementType("SET_LITERAL", ToitSetLiteral::new);

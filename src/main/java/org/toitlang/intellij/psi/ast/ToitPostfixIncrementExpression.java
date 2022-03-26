@@ -5,9 +5,9 @@ import com.intellij.lang.ASTNode;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 
-public class ToitPostfixExpression extends ToitExpression {
+public class ToitPostfixIncrementExpression extends ToitExpression {
 
-  public ToitPostfixExpression(@NotNull ASTNode node) {
+  public ToitPostfixIncrementExpression(@NotNull ASTNode node) {
     super(node);
   }
 
@@ -15,6 +15,4 @@ public class ToitPostfixExpression extends ToitExpression {
   public <T> T accept(ToitExpressionVisitor<T> expressionVisitor) {
     return expressionVisitor.visit(this);
   }
-
-
 }

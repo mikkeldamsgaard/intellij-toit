@@ -175,7 +175,7 @@ DocComment = "/**" ( {TraditionalComment} | [^*] | (\*+ [^/]) )* \*+ "/"
 
 /* identifiers */
 IndentifierStart = [\w_--\d]
-IndentifierContinue = [\w_]
+IndentifierContinue = [\w_] | - [^>-]
 Identifer = {IndentifierStart}{IndentifierContinue}*
 
 ///* string literals */

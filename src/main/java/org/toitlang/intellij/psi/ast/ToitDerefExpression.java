@@ -16,4 +16,18 @@ public class ToitDerefExpression extends ToitExpression {
   public <T> T accept(ToitExpressionVisitor<T> expressionVisitor) {
     return expressionVisitor.visit(this);
   }
+
+  public ToitReferenceIdentifier getToitReferenceIdentifier() {
+    for (ToitReferenceIdentifier toitReferenceIdentifier : childrenOfType(ToitReferenceIdentifier.class)) {
+      return toitReferenceIdentifier;
+    }
+    return null;
+  }
+
+  @Override
+  public String getName() {
+    var ref = getToitReferenceIdentifier();
+    if (ref != null) return ref.getName();
+    return null;
+  }
 }

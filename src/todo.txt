@@ -4,7 +4,7 @@ Bugs
 Features:
 Near future
   - Complete parameter names in calls
-  - Annotate newlines in single quoted strings
+  - Inspection error for: newlines in single quoted strings
 
 Later
   - Inspections
@@ -17,4 +17,3 @@ Later
 
 Observation list:
    - import .impl as impl ....
-   - After literals, do not add variants

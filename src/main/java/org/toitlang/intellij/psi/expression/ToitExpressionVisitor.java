@@ -96,6 +96,11 @@ public class ToitExpressionVisitor<T> {
     public T visit(ToitSimpleLiteral toitSimpleLiteral) {
         return visitExpression(toitSimpleLiteral);
     }
-    
+
+    public T visit(ToitPostfixIncrementExpression toitPostfixIncrementExpression) {
+        return visitExpression(toitPostfixIncrementExpression);
+    }
+
     public T visitExpression(ToitExpression expression ) { return null; }
+
 }
