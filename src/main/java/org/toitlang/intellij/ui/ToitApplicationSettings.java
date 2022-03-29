@@ -64,7 +64,7 @@ public class ToitApplicationSettings implements Configurable {
     }
 
     public static boolean isSdkValid(String sdkRoot) {
-        return new File(sdkRoot+"/core/numbers.toit").exists();
+        return new File(sdkRoot+"/lib/core/numbers.toit").exists();
     }
 
 

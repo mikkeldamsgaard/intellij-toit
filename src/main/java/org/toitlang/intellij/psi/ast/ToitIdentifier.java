@@ -2,6 +2,7 @@
 package org.toitlang.intellij.psi.ast;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
@@ -33,4 +34,6 @@ public abstract class ToitIdentifier extends ToitElement {
   public boolean isTypeName() { return getNode().getElementType() == ToitTypes.TYPE_IDENTIFIER; }
   public boolean isReference() { return getNode().getElementType() == ToitTypes.REFERENCE_IDENTIFIER; }
   public boolean isFactoryName() { return getNode().getElementType() == ToitTypes.FACTORY_IDENTIFIER; }
+
+  public abstract PsiElement setName(String name);
 }

@@ -37,7 +37,7 @@ public class ToitFile extends PsiFileBase implements IStructureViewable {
 
     @Override
     public String toString() {
-        return "Toit File: " + getVirtualFile().getPath();
+        return "Toit File: " + getOriginalFile().getVirtualFile().getPath();
     }
 
 

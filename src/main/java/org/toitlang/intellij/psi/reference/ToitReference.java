@@ -15,6 +15,7 @@ import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 import org.toitlang.intellij.psi.scope.ToitFileScope;
 import org.toitlang.intellij.psi.scope.ToitLocalScopeCalculator;
 import org.toitlang.intellij.psi.scope.ToitScope;
+import org.toitlang.intellij.psi.visitor.ToitVisitableElement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +34,9 @@ public class ToitReference implements PsiPolyVariantReference {
         soft = false;
     }
 
+    public List<PsiElement> getDependencies() {
+        return dependencies;
+    }
 
     @Override
     public Object @NotNull [] getVariants() {
@@ -140,42 +144,52 @@ public class ToitReference implements PsiPolyVariantReference {
                 destinations.addAll(resolved);
             }
         } else if (sType == ToitTypes.REFERENCE_IDENTIFIER) {
-            source.getExpressionParent().accept(new ToitExpressionVisitor<>() {
-                @Override
-                public Object visit(ToitDerefExpression toitDerefExpression) {
-                    var postfixEvaluatedType =
-                            ToitPostfixExpressionTypeEvaluatedType
-                                    .calculate(toitDerefExpression.getParentOfType(ToitPostfixExpression.class));
-                    var prev = postfixEvaluatedType.getTypeForPreviousChild(toitDerefExpression);
+            var expressionParent = source.getExpressionParent();
+            if (expressionParent == null) {
+                // This is construction parameters
+                var structure = source.getParentOfType(ToitStructure.class);
+                if (structure != null) {
+                    var resolved = structure.getScope(false).resolve(name);
+                    destinations.addAll(resolved.stream()
+                        .filter(ref -> ref instanceof ToitVariableDeclaration)
+                        .collect(Collectors.toList()));
+                }
+            } else {
+                expressionParent.accept(new ToitExpressionVisitor<>() {
+                    @Override
+                    public Object visit(ToitDerefExpression toitDerefExpression) {
+                        var postfixEvaluatedType =
+                                ToitPostfixExpressionTypeEvaluatedType
+                                        .calculate(toitDerefExpression.getParentOfType(ToitPostfixExpression.class));
+                        var prev = postfixEvaluatedType.getTypeForPreviousChild(toitDerefExpression);
 
-                    if (prev.isUnresolved()) {
-                        soft= true;
-                    } else if (prev.getFile() != null) {
-                        destinations.addAll(prev.getFile().getToitFileScope().getToitScope().resolve(name));
-                    } else if (prev.getStructure() != null) {
-                        destinations.addAll(prev.getStructure().getScope(prev.isStatic()).resolve(name));
+                        if (prev == null || prev.isUnresolved()) {
+                            soft = true;
+                        } else if (prev.getFile() != null) {
+                            destinations.addAll(prev.getFile().getToitFileScope().getToitScope().resolve(name));
+                        } else if (prev.getStructure() != null) {
+                            destinations.addAll(prev.getStructure().getScope(prev.isStatic()).resolve(name));
+                        }
+                        return null;
                     }
-                    return null;
-                }
 
-                @Override
-                public Object visitExpression(ToitExpression expression) {
-                    destinations.addAll(scope.resolve(name));
-                    if (name.equals("it")) soft = true;
-                    return null;
-                }
-
-                @Override
-                public Object visit(ToitPrimaryExpression toitPrimaryExpression) {
-                    if (!toitPrimaryExpression.childrenOfType(ToitPrimitive.class).isEmpty()) {
-                        soft = true;
+                    @Override
+                    public Object visitExpression(ToitExpression expression) {
+                        destinations.addAll(scope.resolve(name));
+                        if (name.equals("it")) soft = true;
+                        return null;
                     }
-                    return visitExpression(toitPrimaryExpression);
-                }
-            });
+
+                    @Override
+                    public Object visit(ToitPrimaryExpression toitPrimaryExpression) {
+                        if (!toitPrimaryExpression.childrenOfType(ToitPrimitive.class).isEmpty()) {
+                            soft = true;
+                        }
+                        return visitExpression(toitPrimaryExpression);
+                    }
+                });
+            }
         }
-
-
 
         return this;
     }

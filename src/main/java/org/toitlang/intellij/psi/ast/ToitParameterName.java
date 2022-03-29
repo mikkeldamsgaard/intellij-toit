@@ -25,8 +25,12 @@ public class ToitParameterName extends ToitElement implements PsiNameIdentifierO
   }
 
   @Override
-  public ToitNameableIdentifier getNameIdentifier() {
+  public ToitIdentifier getNameIdentifier() {
     List<ToitNameableIdentifier> toitNameableIdentifiers = childrenOfType(ToitNameableIdentifier.class);
+    if (toitNameableIdentifiers.size() > 0) {
+      return toitNameableIdentifiers.get(0);
+    }
+    List<ToitReferenceIdentifier> toitReferenceIdentifiers = childrenOfType(ToitReferenceIdentifier.class);
     if (toitNameableIdentifiers.size() > 0) {
       return toitNameableIdentifiers.get(0);
     }
@@ -35,14 +39,16 @@ public class ToitParameterName extends ToitElement implements PsiNameIdentifierO
 
   @Override
   public String getName() {
-    ToitNameableIdentifier nameableIdentifier = getNameIdentifier();
-    if (nameableIdentifier == null) return "__UnknownToit__";
-    return nameableIdentifier.getName();
+    ToitIdentifier identifier = getNameIdentifier();
+    if (identifier == null) return "__UnknownToit__";
+    return identifier.getName();
   }
 
   @Override
   public PsiElement setName(@NlsSafe @NotNull String name) throws IncorrectOperationException {
-    return getNameIdentifier().setName(name);
+    ToitIdentifier nameIdentifier = getNameIdentifier();
+    if (nameIdentifier == null) return this;
+    return nameIdentifier.setName(name);
   }
 
   public ToitType getType() {

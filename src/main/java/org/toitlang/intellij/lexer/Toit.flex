@@ -7,8 +7,8 @@ import com.intellij.psi.TokenType;
 import java.util.Stack;
 import com.intellij.lexer.FlexLexer;
 
+@SuppressWarnings("ALL")
 %%
-
 %class ToitLexer
 %implements FlexLexer
 %unicode
@@ -169,13 +169,13 @@ LineTerminator = \r|\n|\r\n
 InputCharacter = [^\r\n]
 
 /* comments */
-TraditionalComment = "/*" ( [^*] | (\*+ [^/]) )* \*+ "/"
+TraditionalComment = "/*" ([^*]* \*+ [^*/])* [^*]* \*+ "/"
+DocComment = "/**" ( {TraditionalComment} | [^*]* | (\*+ [^*/]))* \*+ "/"
 EndOfLineCommentPrefix = "//" {InputCharacter}*
-DocComment = "/**" ( {TraditionalComment} | [^*] | (\*+ [^/]) )* \*+ "/"
 
 /* identifiers */
 IndentifierStart = [\w_--\d]
-IndentifierContinue = [\w_] | - [^>-]
+IndentifierContinue = [\w_]
 Identifer = {IndentifierStart}{IndentifierContinue}*
 
 ///* string literals */
@@ -325,7 +325,7 @@ Spacing=[\ \t]
 // Strings
  "\"\"\""                                        { pushStringType(TRIPLE_STRING_PARSING); return ToitTypes.STRING_START; }
  "\""                                            { pushStringType(STRING_PARSING); return ToitTypes.STRING_START; }
- }
+}
 
 <NORMAL, INLINE_STRING_EXPRESSION, INLINE_DELIMITED_STRING_EXPRESSION> {
  {Identifer}                                     { return ToitTypes.IDENTIFIER; }

@@ -45,6 +45,7 @@ public interface ToitTypes {
   IElementType HASH = new ToitTokenType("HASH");
   IElementType HAT = new ToitTokenType("HAT");
   IElementType IDENTIFIER = new ToitTokenType("IDENTIFIER");
+  IElementType PARAMETER_NAME_TOKEN = new ToitTokenType("PARAMETER_NAME_TOKEN");
   IElementType IF = new ToitTokenType("IF");
   IElementType IMPORT = new ToitTokenType("IMPORT");
   IElementType INDENT = new ToitTokenType("INDENT");

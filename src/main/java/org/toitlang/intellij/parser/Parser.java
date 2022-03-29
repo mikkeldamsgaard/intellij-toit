@@ -15,6 +15,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.function.Function;
 
+@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 public class Parser {
     private final IElementType root;
     private final PsiBuilder builder;
@@ -83,6 +84,8 @@ public class Parser {
             }
         }
 
+        if (!atBeginningOfStatement()) return importPart.error("Expected new line");
+
         importPart.done();
         return true;
     }
@@ -100,6 +103,7 @@ public class Parser {
             export.error("Expected * or identifier");
             return false;
         }
+        if (!atBeginningOfStatement()) return export.error("Expected new line");
 
         export.done();
         return true;
@@ -289,19 +293,25 @@ public class Parser {
     }
 
     private boolean parameterName() {
+        boolean isDot = false;
         var parameter = mark(PARAMETER_NAME);
         if (is(MINUS_MINUS)) {
             consume();
-            if (is(DOT) && currentTokenIsAttached) consume();
+            if (is(DOT) && currentTokenIsAttached) {
+                isDot = true;
+                consume();
+            }
             if (!(isIdentifier() && currentTokenIsAttached)) return parameter.error("Named parameter format error");
         } else {
             if (is(DOT)) {
+                isDot = true;
                 consume();
                 if (!(isIdentifier() && currentTokenIsAttached)) return parameter.error("Field parameter format error");
             } else if (!isIdentifier())
                 return parameter.error("Expected parameter name, got " + tokenType());
         }
-        identifier(NAMED_PARAMETER_IDENTIFIER);
+        identifier(isDot?REFERENCE_IDENTIFIER:NAMED_PARAMETER_IDENTIFIER);
+
         return parameter.done();
     }
 
@@ -642,7 +652,7 @@ public class Parser {
                 }
             }
             if (currentTokenIsAttached && !is(COLON) && !is(COLON_COLON))
-                return errorInParameterParsing("Argument expected", expr, lookahead);
+                return errorInParameterParsing(expr, lookahead);
 
             if (!areArgumentsOnNewLines && currentIsAtBeginningOfLine) break;
 
@@ -679,9 +689,9 @@ public class Parser {
         }
     }
 
-    private boolean errorInParameterParsing(String error, Marker expr, Marker lookahead) {
+    private boolean errorInParameterParsing(Marker expr, Marker lookahead) {
         lookahead.drop();
-        return expr.error(error);
+        return expr.error("Argument expected");
     }
 
     private boolean errorInParameterParsing(String error, Marker expr, Marker lookahead, Marker namedArgument) {
@@ -780,9 +790,9 @@ public class Parser {
         while (currentTokenIsAttached && is(POSTFIX_OPERATORS)) {
             empty = false;
             if (is(LBRACKET)) {
-                if (!indexing(allowBlock)) return false;
+                if (!indexing(allowBlock)) return m.propagateError();
             } else if (is(DOT)) {
-                if (!deref()) return false;
+                if (!deref()) return m.propagateError();
             } else if (is(PLUS_PLUS) || is(MINUS_MINUS)) {
                 var incr = mark(POSTFIX_INCREMENT_EXPRESSION);
                 consumeAllowNewlines();

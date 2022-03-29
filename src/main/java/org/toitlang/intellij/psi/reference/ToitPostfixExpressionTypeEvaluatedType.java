@@ -41,7 +41,7 @@ public class ToitPostfixExpressionTypeEvaluatedType {
 
         for (ToitExpression child : toitPostfixExpression.childrenOfType(ToitExpression.class)) {
             if (prev == null) {
-                prev = child.getType(toitPostfixExpression.getToitResolveScope());
+                prev = child.getType(toitPostfixExpression.getLocalToitResolveScope());
                 result.addType(child, prev);
                 continue;
             }
@@ -54,11 +54,11 @@ public class ToitPostfixExpressionTypeEvaluatedType {
                         String name = toitDerefExpression.getName();
                         if (name == null) return ToitEvaluatedType.UNRESOLVED;
                         if (fPrev.getFile() != null) {
-                            ToitScope prevFileScope = fPrev.getFile().getToitFileScope().getToitScope();
-                            return resolveTypeOfNameInScope(name, prevFileScope, true);
+                            ToitScope prevFileScope = fPrev.getFile().getToitFileScope().getExportedScope();
+                            return resolveTypeOfNameInScope(name, prevFileScope);
                         } else {
                             ToitScope scructureScope = fPrev.getStructure().getScope(fPrev.isStatic());
-                            return resolveTypeOfNameInScope(name, scructureScope, false);
+                            return resolveTypeOfNameInScope(name, scructureScope);
                         }
                     }
 

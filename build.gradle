@@ -23,6 +23,9 @@ intellij {
 }
 patchPluginXml {
     changeNotes = """
+<ul>
+<li>All dotted expression now resolves it type correctly</li>
+</ul>
       """
 }
 test {

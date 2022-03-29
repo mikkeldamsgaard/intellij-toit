@@ -44,9 +44,9 @@ public class ToitEvaluatedType {
         return new ToitEvaluatedType(file, structure, false);
     }
 
-    public static ToitEvaluatedType resolveTypeOfNameInScope(String name, ToitScope scope, boolean isStatic) {
+    public static ToitEvaluatedType resolveTypeOfNameInScope(String name, ToitScope scope) {
         var resolved = scope.resolve(name);
-        if (resolved.isEmpty()) return new ToitEvaluatedType(null, null, isStatic);
+        if (resolved.isEmpty()) return new ToitEvaluatedType(null, null, false);
         List<ToitEvaluatedType> types = new ArrayList<>();
         for (PsiElement resolvedElement : resolved) {
             resolvedElement.accept(new ToitVisitor() {
@@ -57,7 +57,7 @@ public class ToitEvaluatedType {
 
                 @Override
                 public void visit(ToitStructure toitStructure) {
-                    types.add(new ToitEvaluatedType(null, toitStructure, isStatic));
+                    types.add(new ToitEvaluatedType(null, toitStructure, true));
                 }
 
                 @Override
@@ -146,11 +146,11 @@ public class ToitEvaluatedType {
             public ToitEvaluatedType visit(ToitPrimaryExpression toitPrimaryExpression) {
                 var referenceIdentifiers = toitPrimaryExpression.childrenOfType(ToitReferenceIdentifier.class);
                 if (referenceIdentifiers.isEmpty()) {
-                    return singularRecurse(toitPrimaryExpression);
+                    return singularRecurse(toitPrimaryExpression).nonStatic();
                 }
 
                 var toitReferenceIdentifier = referenceIdentifiers.get(0);
-                return resolveTypeOfNameInScope(toitReferenceIdentifier.getName(), scope, false);
+                return resolveTypeOfNameInScope(toitReferenceIdentifier.getName(), scope);
             }
 
             @Override

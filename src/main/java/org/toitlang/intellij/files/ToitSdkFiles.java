@@ -24,7 +24,7 @@ public class ToitSdkFiles extends IndexableSetContributor {
         if (sdkRoot == null || !ToitApplicationSettings.isSdkValid(sdkRoot)) {
             return null;
         }
-        return LocalFileSystem.getInstance().findFileByIoFile(new File(sdkRoot));
+        return LocalFileSystem.getInstance().findFileByIoFile(new File(sdkRoot+"/lib"));
     }
 
     public static ToitFile findLibraryFile(@NotNull Project project, List<String> filesToFind) {

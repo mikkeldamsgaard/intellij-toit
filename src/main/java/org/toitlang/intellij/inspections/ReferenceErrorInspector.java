@@ -2,6 +2,7 @@ package org.toitlang.intellij.inspections;
 
 import com.intellij.codeInspection.LocalInspectionTool;
 import com.intellij.codeInspection.LocalInspectionToolSession;
+import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiElementVisitor;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +16,7 @@ public class ReferenceErrorInspector extends LocalInspectionTool {
             @Override
             public void visit(ToitReferenceIdentifier toitReferenceIdentifier) {
                 if (!toitReferenceIdentifier.getReference().isSoft() && toitReferenceIdentifier.getReference().resolve() == null && !"".equals(toitReferenceIdentifier.getText())) {
-                    holder.registerProblem(toitReferenceIdentifier, "Unresolved reference: "+toitReferenceIdentifier.getText());
+                    holder.registerProblem(toitReferenceIdentifier, "Unresolved reference: "+toitReferenceIdentifier.getText(), ProblemHighlightType.ERROR);
                 }
             }
         };

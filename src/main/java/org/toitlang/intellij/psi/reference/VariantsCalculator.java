@@ -14,8 +14,6 @@ import org.toitlang.intellij.psi.scope.ToitScope;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.toitlang.intellij.psi.reference.ToitEvaluatedType.resolveTypeOfNameInScope;
-
 public class VariantsCalculator {
     private final ToitReferenceIdentifier source;
     private final Set<Object> variants;
@@ -45,7 +43,7 @@ public class VariantsCalculator {
 
                     if (prev != null && !prev.isUnresolved()) {
                         if (prev.getFile() != null) {
-                            variants.addAll(prev.getFile().getToitFileScope().getToitScope().asVariant());
+                            variants.addAll(prev.getFile().getToitFileScope().getExportedScope().asVariant());
                             if (isTypeSelectingRelationalExpression(toitDerefExpression))
                                 filterVariants(ToitStructure.class, ToitFile.class);
                         } else if (prev.getStructure() != null) {
@@ -108,7 +106,7 @@ public class VariantsCalculator {
             }
 
             var prevReferenceIdent = source.getPrevSiblingOfType(ToitReferenceIdentifier.class);
-            VirtualFile curDir = null;
+            VirtualFile curDir;
             if (import_.getPrefixDots() != 0) {
                 int prefixDots = import_.getPrefixDots();
                 curDir = source.getToitFile().getVirtualFile();

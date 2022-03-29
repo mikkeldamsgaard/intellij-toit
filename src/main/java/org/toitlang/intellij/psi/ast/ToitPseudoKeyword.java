@@ -20,4 +20,9 @@ public class ToitPseudoKeyword extends ToitIdentifier {
   protected void accept(ToitVisitor visitor) {
     visitor.visit(this);
   }
+
+  @Override
+  public PsiElement setName(String name) {
+    throw new RuntimeException("Can not set name of a pseudo keyword");
+  }
 }

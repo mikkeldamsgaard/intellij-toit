@@ -127,4 +127,15 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
 
         return null;
     }
+
+    public ToitFunction getDefaultConstructor() {
+        ToitBlock block = firstChildOfType(ToitBlock.class);
+        if (block == null) return null;
+
+        var functions = block.childrenOfType(ToitFunction.class);
+        for (ToitFunction function : functions) {
+            if (function.isConstructor() && !function.hasFactoryName()) return function;
+        }
+        return null;
+    }
 }
