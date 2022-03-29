@@ -24,7 +24,10 @@ intellij {
 patchPluginXml {
     changeNotes = """
 <ul>
-<li>All dotted expression now resolves it type correctly</li>
+<li>All dotted expressions now resolves their types correctly</li>
+<li>Added completion to field initializors in constructors</li>
+<li>Added completion for various keywords</li>
+<li>Added basic support for show parameters</li>
 </ul>
       """
 }
