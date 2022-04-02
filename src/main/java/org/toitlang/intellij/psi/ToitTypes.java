@@ -168,6 +168,7 @@ public interface ToitTypes {
   IElementType EMPTY_STATEMENT = new ToitElementType("PRIMITIVE_STATEMENT", ToitEmptyStatement::new);
   IElementType FOR_STATEMENT = new ToitElementType("FOR_STATEMENT", ToitFor::new);
   IElementType TRY_STATEMENT = new ToitElementType("TRY_STATEMENT", ToitTry::new);
+  IElementType BREAK_CONTINUE_STATEMENT = new ToitElementType("BREAK_CONTINUE_STATEMENT", ToitBreakContinue::new);
 
   IElementType CLASS_DECLARATION = new ToitStructureElementType(StructureType.CLASS);
   IElementType INTERFACE_DECLARATION = new ToitStructureElementType(StructureType.INTERFACE);

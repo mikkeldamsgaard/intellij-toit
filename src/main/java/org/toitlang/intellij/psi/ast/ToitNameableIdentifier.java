@@ -40,10 +40,10 @@ public class ToitNameableIdentifier extends ToitIdentifier {
   }
 
   public PsiElement setName(@NlsSafe @NotNull String name) throws IncorrectOperationException {
-    if (getNode().getElementType() == ToitTypes.FUNCTION_IDENTIFIER)
-      return replace(ToitElementFactory.createFunctionIdentifier(getProject(),name));
-    else if (getNode().getElementType() == ToitTypes.STRUCTURE_IDENTIFIER)
+    if (getNode().getElementType() == ToitTypes.STRUCTURE_IDENTIFIER)
       return replace(ToitElementFactory.createStructureIdentifier(getProject(),name));
+    else if (getNode().getElementType() == ToitTypes.FUNCTION_IDENTIFIER)
+      return replace(ToitElementFactory.createFunctionIdentifier(getProject(),name));
     else if (getNode().getElementType() == ToitTypes.IMPORT_AS_IDENTIFIER)
       return replace(ToitElementFactory.createImportAsIdentifier(getProject(),name));
     else if (getNode().getElementType() == ToitTypes.FACTORY_IDENTIFIER)

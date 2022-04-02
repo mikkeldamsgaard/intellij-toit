@@ -57,7 +57,8 @@ public class ToitEvaluatedType {
 
                 @Override
                 public void visit(ToitStructure toitStructure) {
-                    types.add(new ToitEvaluatedType(null, toitStructure, true));
+                    boolean _static = !THIS.equals(name) && !SUPER.equals(name);
+                    types.add(new ToitEvaluatedType(null, toitStructure, _static));
                 }
 
                 @Override

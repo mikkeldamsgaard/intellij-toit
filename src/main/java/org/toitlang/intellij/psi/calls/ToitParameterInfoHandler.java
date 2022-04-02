@@ -99,7 +99,8 @@ public class ToitParameterInfoHandler implements ParameterInfoHandler<ToitExpres
             if (call == null) return null;
             ToitExpression functionalExpression = call.firstChildOfType(ToitExpression.class);
             if (functionalExpression != null) {
-                functionName = functionalExpression.lastChildOfType(ToitReferenceIdentifier.class);
+                var refs = functionalExpression.getDescendentsOfType(ToitReferenceIdentifier.class);
+                if (!refs.isEmpty()) functionName = refs.get(refs.size()-1);
             }
         }
 

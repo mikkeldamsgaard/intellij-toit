@@ -11,6 +11,7 @@ import com.intellij.util.IncorrectOperationException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.model.IToitPrimaryLanguageElement;
+import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.structureview.IStructureViewable;
 import org.toitlang.intellij.psi.stub.ToitStubElement;
 
@@ -63,4 +64,7 @@ public abstract class ToitPrimaryLanguageElement<S extends PsiElement, T extends
     @NotNull
     protected abstract Icon getElementTypeIcon();
 
+    public boolean isTopLevel() {
+        return getParent() instanceof ToitFile;
+    }
 }

@@ -1,22 +1,21 @@
-Bugs
- - shows do not rename
- - "a +- b" should not parse. Unary operators requires no space
+Top:
+  - Call resolves to correct overloaded function
+  - Inspections
+     - Type
+     - Missing implementations of abstract classes/interfaces
 
-Features:
+  - show params enhancement
+
 Near future
-  - Inspection error for: newlines in single quoted strings
-  - completion contributor.
-     - break/continue/return
-     - if/for/whilte/try
   - quick fix for missing reference (import)
   - Add predefined indentifier from token.h
   - Handle 'import net\nimport net.udp as net'
 
 Later
-  - Inspections
   - Quick Fix
   - Stubs
   - Cache resolves
+  - Refactor completion contributor to not use extend in the constructor
 
 
 

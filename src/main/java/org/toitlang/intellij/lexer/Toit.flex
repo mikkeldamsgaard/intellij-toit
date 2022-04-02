@@ -320,13 +320,15 @@ Spacing=[\ \t]
 
  "#primitive"                                    { return ToitTypes.PRIMITIVE; }
 
- {LineTerminator}                                { yybegin(INDENT_TRACKING); return ToitTypes.NEWLINE; }
 
 // Strings
  "\"\"\""                                        { pushStringType(TRIPLE_STRING_PARSING); return ToitTypes.STRING_START; }
  "\""                                            { pushStringType(STRING_PARSING); return ToitTypes.STRING_START; }
 }
 
+<NORMAL> {
+ {LineTerminator}                                { yybegin(INDENT_TRACKING); return ToitTypes.NEWLINE; }
+}
 <NORMAL, INLINE_STRING_EXPRESSION, INLINE_DELIMITED_STRING_EXPRESSION> {
  {Identifer}                                     { return ToitTypes.IDENTIFIER; }
  "." / {Identifer}                               { return ToitTypes.DOT; }
@@ -344,6 +346,8 @@ Spacing=[\ \t]
  ")"                                             { if(!shouldExitInlineState(PAREN)) return ToitTypes.RPAREN; }
  "["                                             { inlineDelimitedCountOpen(BRACKET); return ToitTypes.LBRACKET; }
  "]"                                             { shouldExitInlineState(BRACKET); return ToitTypes.RBRACKET;}
+ {LineTerminator}                                { return ToitTypes.NEWLINE; }
+
 }
 
 <INLINE_STRING_EXPRESSION> {

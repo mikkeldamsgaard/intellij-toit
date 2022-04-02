@@ -418,13 +418,7 @@ public class Parser {
             } else if (is(FOR)) {
                 if (!forStatement()) return false;
             } else if (is(BREAK) || is(CONTINUE)) {
-                consumeAllowNewlines();
-                if (is(DOT) && currentTokenIsAttached) {
-                    consumeAllowNewlines();
-                    if (!identifier(BREAK_CONTINUE_LABEL_IDENTIFIER)) return false;
-                    tryRule(() -> expression(true));
-                }
-
+                if (!breakContinueStatement()) return false;
             } else if (is(TRY)) {
                 if (!tryStatement()) return false;
             } else if (is(SEMICOLON)) {
@@ -442,6 +436,17 @@ public class Parser {
             break;
         }
         return true;
+    }
+
+    private boolean breakContinueStatement() {
+        var breakContinue = mark(BREAK_CONTINUE_STATEMENT);
+        consumeAllowNewlines();
+        if (is(DOT) && currentTokenIsAttached) {
+            consumeAllowNewlines();
+            if (!identifier(BREAK_CONTINUE_LABEL_IDENTIFIER)) return breakContinue.propagateError();
+            tryRule(() -> expression(true));
+        }
+        return breakContinue.done();
     }
 
     private boolean tryStatement() {
@@ -839,6 +844,7 @@ public class Parser {
         var unary = mark(UNARY_EXPRESSION);
         if (is(UNARY_OPERATORS)) {
             consumeAllowNewlines();
+            if (!currentTokenIsAttached) return unary.error("Space between the unary operator and the next expression is not allowed");
             if (!primaryExpression(allowBlock)) return unary.error("Expected expression after unary operator");
             return unary.done();
         } else {
