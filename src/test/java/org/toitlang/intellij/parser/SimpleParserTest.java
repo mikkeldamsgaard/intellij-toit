@@ -1,5 +1,6 @@
 package org.toitlang.intellij.parser;
 
+import junit.framework.AssertionFailedError;
 import org.toitlang.intellij.lexer.ToitLexerAdapter;
 import org.toitlang.intellij.lexer.ToitRestartableLexerAdapter;
 
@@ -458,6 +459,21 @@ public class SimpleParserTest extends ParserTest {
                 "            \"\"\"\\"
         );
         //checkError(p, "");
+    }
+
+    public void testUnaryWithSpace() {
+        var p = parseFile("tmp", "" +
+                "main: a := a +- 1\n"
+        );
+
+        boolean gotException = false;
+        try {
+            checkError(p, "");
+        } catch (AssertionFailedError e) {
+            gotException = true;
+        }
+        if (!gotException) fail("Expected parse error");
+
     }
 
 }

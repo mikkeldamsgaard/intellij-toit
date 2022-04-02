@@ -20,10 +20,18 @@ public class ToitReferenceIdentifier extends ToitIdentifier {
     }
 
     public PsiElement setName(String newElementName) {
-        if (getNode().getElementType() == ToitTypes.REFERENCE_IDENTIFIER)
-            return replace(ToitElementFactory.createReferenceIdentifier(getProject(),newElementName));
+        if (getNode().getElementType() == ToitTypes.IMPORT_SHOW_IDENTIFIER)
+            return replace(ToitElementFactory.createImportShowIdentifier(getProject(), newElementName));
+        else if (getNode().getElementType() == ToitTypes.EXPORT_IDENTIFIER)
+            return replace(ToitElementFactory.createExportIdentifier(getProject(), newElementName));
+        else if (getNode().getElementType() == ToitTypes.IMPORT_IDENTIFIER)
+            return replace(ToitElementFactory.createImportIdentifier(getProject(), newElementName));
         else if (getNode().getElementType() == ToitTypes.TYPE_IDENTIFIER)
-            return replace(ToitElementFactory.createTypeIdentifier(getProject(),newElementName));
+            return replace(ToitElementFactory.createTypeIdentifier(getProject(), newElementName));
+        else if (getNode().getElementType() == ToitTypes.REFERENCE_IDENTIFIER)
+            return replace(ToitElementFactory.createReferenceIdentifier(getProject(), newElementName));
+        else if (getNode().getElementType() == ToitTypes.BREAK_CONTINUE_LABEL_IDENTIFIER)
+            return replace(ToitElementFactory.createBreakContinueLabelIdentifier(getProject(), newElementName));
 
         return null;
     }

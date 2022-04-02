@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'org.toitlang'
-version '1.2'
+version '1.3'
 
 repositories {
     mavenCentral()
@@ -24,7 +24,12 @@ intellij {
 patchPluginXml {
     changeNotes = """
 <ul>
-<li>All dotted expression now resolves it type correctly</li>
+<li>"this" and "super" now correctly resolves to the referenced structure as an instance</li>
+<li>Keyword completiong now shows up in correct color in completion list</li>
+<li>class/monitor/interface/abstract completions no longer show up in namedparameter completion</li>
+<li>Fixed an error where unary operators were not parsed correctly. Before "a +- b" parsed, now it does not</li>
+<li>Rename now works on all resolved references</li>
+<li>Added more keyword completions (break/continue/return/if/for/while/try/finally)</li>
 </ul>
       """
 }

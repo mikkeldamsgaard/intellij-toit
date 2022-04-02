@@ -71,6 +71,10 @@
         <localInspection level="ERROR" enabledByDefault="true" displayName="Reference errors"
                          groupName="Mandatory checks"
                          implementationClass="org.toitlang.intellij.inspections.ReferenceErrorInspector"/>
+        <localInspection level="ERROR" enabledByDefault="true" displayName="Reference errors"
+                         groupName="Mandatory checks"
+                         implementationClass="org.toitlang.intellij.inspections.StringErrorInspector"/>
+
 
         <completion.contributor language="Toit"
                                 implementationClass="org.toitlang.intellij.completion.ToitCompletionContributor"/>

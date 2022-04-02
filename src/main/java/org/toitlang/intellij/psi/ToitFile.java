@@ -4,9 +4,11 @@ import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.util.NlsSafe;
 import com.intellij.psi.FileViewProvider;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.CachedValue;
 import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
+import com.intellij.util.IncorrectOperationException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.ToitFileType;
@@ -15,6 +17,7 @@ import org.toitlang.intellij.psi.scope.ToitFileScope;
 import org.toitlang.intellij.structureview.IStructureViewable;
 
 import javax.swing.*;
+import java.io.IOException;
 import java.util.List;
 
 public class ToitFile extends PsiFileBase implements IStructureViewable {
@@ -70,5 +73,21 @@ public class ToitFile extends PsiFileBase implements IStructureViewable {
     @Override
     public List<IStructureViewable> getStructureChildren() {
         return childrenOfType(IStructureViewable.class);
+    }
+
+    @Override
+    public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
+        if (getVirtualFile().getNameWithoutExtension().equals(getVirtualFile().getParent().getNameWithoutExtension())) {
+            try {
+                getVirtualFile().getParent().rename(this,name);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (!name.endsWith(ToitFileType.INSTANCE.getDefaultExtension()))
+            name = name + "." + ToitFileType.INSTANCE.getDefaultExtension();
+        
+        return super.setName(name);
     }
 }

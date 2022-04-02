@@ -8,35 +8,20 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.util.ProcessingContext;
 import org.jetbrains.annotations.NotNull;
+import org.toitlang.intellij.highlighting.ToitSyntaxHighlighter;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitPsiHelper;
 import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.ast.*;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static com.intellij.patterns.PlatformPatterns.psiElement;
-import static com.intellij.patterns.StandardPatterns.or;
 
 public class ToitCompletionContributor extends CompletionContributor {
     public ToitCompletionContributor() {
-
-        extend(CompletionType.BASIC,
-                PlatformPatterns.psiElement()
-                        .inside(ToitBlock.class)
-                        .and(or(
-                                psiElement().inside(ToitFunction.class),
-                                psiElement().inside(ToitVariableDeclaration.class)))
-                        .and(psiElement().withParent(ToitBlock.class)),
-                new CompletionProvider<>() {
-                    @Override
-                    protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
-                        result.addElement(LookupElementBuilder.create("return"));
-                        result.addElement(LookupElementBuilder.create("continue"));
-                        result.addElement(LookupElementBuilder.create("break"));
-                    }
-                });
 
         extend(CompletionType.BASIC,
                 PlatformPatterns.psiElement().withAncestor(2, StandardPatterns.instanceOf(ToitNamedArgument.class)),
@@ -56,22 +41,6 @@ public class ToitCompletionContributor extends CompletionContributor {
 
         extend(CompletionType.BASIC,
                 PlatformPatterns.psiElement()
-                        .withParent(ToitNameableIdentifier.class)
-                        .withSuperParent(2, ToitFunction.class),
-                new CompletionProvider<>() {
-                    @Override
-                    protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
-                        if (parameters.getPosition().getParent().getPrevSibling() == null) {
-                            ToitStructure structure = ((ToitNameableIdentifier) parameters.getPosition().getParent()).getParentOfType(ToitStructure.class);
-                            if (structure != null && !structure.isInterface())
-                                result.addElement(LookupElementBuilder.create("constructor"));
-                        }
-                    }
-                }
-        );
-
-        extend(CompletionType.BASIC,
-                PlatformPatterns.psiElement()
                         .withParent(ToitRecover.class)
                         .withSuperParent(2, ToitFile.class)
                 ,
@@ -83,8 +52,8 @@ public class ToitCompletionContributor extends CompletionContributor {
                             ToitStructure toitStructure = (ToitStructure)recover.getPrevSibling();
                             if (!(toitStructure.isClass() || toitStructure.isInterface() || toitStructure.isMonitor())) return;
                             if (toitStructure.getNameIdentifier() == null) return;
-                            result.addElement(LookupElementBuilder.create("extends"));
-                            result.addElement(LookupElementBuilder.create("implements"));
+                            result.addElement(keywordElement("extends"));
+                            result.addElement(keywordElement("implements"));
                         }
                     }
                 }
@@ -101,35 +70,76 @@ public class ToitCompletionContributor extends CompletionContributor {
         completeConstructionParameters(toitElm, result);
         completeImportExportKeywords(toitElm, result);
         completeShowKeyword(toitElm, result);
-        completeAbstractClassInterfaceMontiro(toitElm, result);
-        completeAbstractClass(toitElm, result);
+        completeAbstractClassInterfaceMonitor(toitElm, result);
+        completeClassAfterAbstract(toitElm, result);
+        completeBreakContinueReturnAndControls(toitElm, result);
+        completeFinally(toitElm, result);
+        completeConstructorAbstractStaticInStructureBlock(toitElm, result);
+    }
+
+    private void completeConstructorAbstractStaticInStructureBlock(IToitElement toitElm, CompletionResultSet result) {
+        var toitStructure = toitElm.getParentChain(ToitStructure.class, List.of(ToitBlock.class, ToitFunction.class));
+        if (toitStructure == null) return;
+
+        if (toitStructure.isAbstract()) {
+            result.addElement(keywordElement("abstract "));
+        }
+
+        result.addElement(keywordElement("static "));
+        result.addElement(keywordElement("constructor"));
+    }
+
+    private void completeFinally(IToitElement toitElm, CompletionResultSet result) {
+        if (!(toitElm instanceof ToitRecover)) return;
+        if (!(toitElm.getParent() instanceof ToitBlock)) return;
+        if (!(toitElm.getPrevSibling() instanceof ToitTry)) return;
+        result.addElement(keywordElement("finally: "));
+    }
+
+    private void completeBreakContinueReturnAndControls(IToitElement toitElm, CompletionResultSet result) {
+        var toitBlock = toitElm.getParentChain(ToitBlock.class, List.of(ToitTopLevelExpression.class, ToitPrimaryExpression.class));
+        if (toitBlock == null) return;
+
+        if (toitBlock.getParentOfType(ToitFor.class) != null || toitBlock.getParentOfType(ToitWhile.class) != null) {
+            result.addElement(keywordElement("break"));
+            result.addElement(keywordElement("continue"));
+        }
+
+        if (!(toitBlock.getParent() instanceof ToitStructure)) {
+            result.addElement(keywordElement("return"));
+            result.addElement(keywordElement("for "));
+            result.addElement(keywordElement("if "));
+            result.addElement(keywordElement("while "));
+            result.addElement(keywordElement("try:"));
+        }
     }
 
     private static final TokenSet CLAZZ = TokenSet.create(ToitTypes.CLASS);
-    private void completeAbstractClass(IToitElement toitElm, CompletionResultSet result) {
+    private void completeClassAfterAbstract(IToitElement toitElm, CompletionResultSet result) {
         if (!(toitElm instanceof ToitRecover)) return;
         var structure = toitElm.getPrevSiblingOfType(ToitStructure.class);
         if (structure == null) return;
         if (!structure.isAbstract() || structure.hasToken(CLAZZ)) return;
-        result.addElement(LookupElementBuilder.create("class "));
+        result.addElement(keywordElement("class "));
     }
 
-    private void completeAbstractClassInterfaceMontiro(IToitElement toitElm, CompletionResultSet result) {
+    private void completeAbstractClassInterfaceMonitor(IToitElement toitElm, CompletionResultSet result) {
         ToitFunction toitFunction = toitElm.getParentWithIntermediaries(ToitFunction.class, ToitNameableIdentifier.class);
         if (toitFunction == null) return;
+        if (!toitFunction.isTopLevel()) return;
         PsiElement nextSibling = toitFunction.getNextSibling();
         if (nextSibling instanceof ToitStructure || nextSibling instanceof ToitFunction || nextSibling instanceof ToitVariableDeclaration) {
-            result.addElement(LookupElementBuilder.create("class "));
-            result.addElement(LookupElementBuilder.create("abstract "));
-            result.addElement(LookupElementBuilder.create("interface "));
-            result.addElement(LookupElementBuilder.create("monitor "));
+            result.addElement(keywordElement("class "));
+            result.addElement(keywordElement("abstract "));
+            result.addElement(keywordElement("interface "));
+            result.addElement(keywordElement("monitor "));
         }
     }
 
     private void completeShowKeyword(IToitElement position, CompletionResultSet result) {
         if (position instanceof ToitRecover) {
             if (position.getPrevSibling() instanceof ToitImportDeclaration) {
-                result.addElement(LookupElementBuilder.create("show "));
+                result.addElement(keywordElement("show "));
             }
         }
     }
@@ -139,8 +149,8 @@ public class ToitCompletionContributor extends CompletionContributor {
         if (toitFunction == null) return;
         if (position.getPrevSibling() != null) return;
         if (toitFunction.getPrevSibling() instanceof ToitImportDeclaration || toitFunction.getPrevSibling() instanceof ToitExportDeclaration) {
-            result.addElement(LookupElementBuilder.create("import "));
-            result.addElement(LookupElementBuilder.create("export "));
+            result.addElement(keywordElement("import "));
+            result.addElement(keywordElement("export "));
         }
     }
 
@@ -158,4 +168,12 @@ public class ToitCompletionContributor extends CompletionContributor {
                 .filter(v -> !existingParameters.contains(v.getName()))
                 .forEach(v -> result.addElement(LookupElementBuilder.create(v)));
     }
+
+
+
+    private LookupElementBuilder keywordElement(String keyword) {
+        return LookupElementBuilder.create(keyword)
+                .withItemTextForeground(ToitSyntaxHighlighter.KEYWORD.getDefaultAttributes().getForegroundColor());
+    }
+
 }

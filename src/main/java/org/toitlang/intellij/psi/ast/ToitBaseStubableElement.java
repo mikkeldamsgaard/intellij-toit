@@ -142,5 +142,17 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
         return getParentWithIntermediaries(vClass, List.of(p1,p2));
     }
 
+    @Override
+    public <V> V getParentChain(Class<V> top, List<Class<? extends IToitElement>> classes) {
+        int cur = classes.size()-1;
+        PsiElement elm = getParent();
+        while (cur>=0) {
+            if (!classes.get(cur).isInstance(elm)) return null;
+            cur--;
+            elm = elm.getParent();
+        }
 
+        if (!top.isInstance(elm)) return null;
+        return top.cast(elm);
+    }
 }
