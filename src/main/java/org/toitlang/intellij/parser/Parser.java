@@ -310,7 +310,7 @@ public class Parser {
             } else if (!isIdentifier())
                 return parameter.error("Expected parameter name, got " + tokenType());
         }
-        identifier(isDot?REFERENCE_IDENTIFIER:NAMED_PARAMETER_IDENTIFIER);
+        identifier(isDot ? REFERENCE_IDENTIFIER : NAMED_PARAMETER_IDENTIFIER);
 
         return parameter.done();
     }
@@ -632,6 +632,10 @@ public class Parser {
         }
     }
 
+    /**
+     * CallExpression ::= AssignmentExpression ( NamedArgument | Expression )*
+     * NamedArgument ::= '--' Name ( '=' Expression )?
+     */
     private boolean callExpression(boolean allowBlock) {
         var expr = mark(CALL_EXPRESSION);
         int lhsIndentLevel = currentIndentLevel;
@@ -772,17 +776,21 @@ public class Parser {
         //if (!nextPrecedenceLevel.apply(allowBlock)) return expr.drop();
         if (!nextPrecedenceLevel.apply(allowBlock)) return expr.drop();
         if (atStatementTerminator(allowBlock)) return expr.collapse();
-        if (isAllowingNewlines(operatorSet)) {
-            while (isAllowingNewlines(operatorSet)) {
-                operator();
-                if (rightHandFullExpression) {
-                    if (!expression(allowBlock)) return expr.drop();
-                } else {
-                    if (!nextPrecedenceLevel.apply(allowBlock)) return expr.drop();
-                }
+
+        boolean anyConsumed = false;
+        while (isAllowingNewlines(operatorSet)) {
+            if (!operatorMinusNotAttached()) break;
+
+            if (rightHandFullExpression) {
+                if (!expression(allowBlock)) return expr.drop();
+            } else {
+                if (!nextPrecedenceLevel.apply(allowBlock)) return expr.drop();
             }
-            return expr.done();
-        } else return expr.collapse();
+            anyConsumed = true;
+        }
+
+        if (anyConsumed) return expr.done();
+        else return expr.collapse();
     }
 
 
@@ -806,7 +814,7 @@ public class Parser {
                 return m.error("Invalid postfix operator");
             }
         }
-        return empty?m.collapse():m.done();
+        return empty ? m.collapse() : m.done();
     }
 
     private boolean deref() {
@@ -844,7 +852,8 @@ public class Parser {
         var unary = mark(UNARY_EXPRESSION);
         if (is(UNARY_OPERATORS)) {
             consumeAllowNewlines();
-            if (!currentTokenIsAttached) return unary.error("Space between the unary operator and the next expression is not allowed");
+            if (!currentTokenIsAttached)
+                return unary.error("Space between the unary operator and the next expression is not allowed");
             if (!primaryExpression(allowBlock)) return unary.error("Expected expression after unary operator");
             return unary.done();
         } else {
@@ -1004,6 +1013,21 @@ public class Parser {
             return true;
         }
         return assignmentOperator.collapse();
+    }
+
+    private boolean operatorMinusNotAttached() {
+        boolean isMinus = is(MINUS); // Minus is the only operator that is both infix and unary
+        Marker minusMarker = isMinus?mark(RECOVER):null;
+
+        operator();
+
+        if (isMinus && currentTokenIsAttached) {
+            minusMarker.rollback();
+            return false;
+        }
+
+        if (minusMarker != null) minusMarker.drop();
+        return true;
     }
 
     private void operator() {

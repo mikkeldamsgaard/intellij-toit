@@ -13,19 +13,34 @@ import org.toitlang.intellij.psi.visitor.ToitVisitor;
 import java.util.*;
 
 @Getter
-@ToString
 @EqualsAndHashCode
 @AllArgsConstructor
 public class ToitEvaluatedType {
     private final ToitFile file;
     private final ToitStructure structure;
     private final boolean isStatic;
+    private final boolean estimated;
+    public final static ToitEvaluatedType UNRESOLVED = new ToitEvaluatedType(null, null, false, false);
 
-    public final static ToitEvaluatedType UNRESOLVED = new ToitEvaluatedType(null, null, false);
+    @Override
+    public String toString() {
+        if (file != null) return "module "+file.getVirtualFile().getNameWithoutExtension();
+        if (structure != null) return structure.getName();
+        return "any";
+    }
+
+    private ToitEvaluatedType nonStatic() {
+        return new ToitEvaluatedType(file, structure, false, estimated);
+    }
+    private ToitEvaluatedType estimated() {
+        return new ToitEvaluatedType(file, structure, isStatic, true);
+    }
 
     public boolean isUnresolved() {
         return file == null && structure == null;
     }
+
+
 
     private final static String LIST_CLASS_NAME = "List";
     private final static String INT_CLASS_NAME = "int";
@@ -40,48 +55,46 @@ public class ToitEvaluatedType {
     private final static String IT = "it";
     private final static String PRIMITIVE = "#primitive";
 
-    private ToitEvaluatedType nonStatic() {
-        return new ToitEvaluatedType(file, structure, false);
-    }
-
     public static ToitEvaluatedType resolveTypeOfNameInScope(String name, ToitScope scope) {
         var resolved = scope.resolve(name);
-        if (resolved.isEmpty()) return new ToitEvaluatedType(null, null, false);
+        if (resolved.isEmpty()) return UNRESOLVED;
         List<ToitEvaluatedType> types = new ArrayList<>();
         for (PsiElement resolvedElement : resolved) {
             resolvedElement.accept(new ToitVisitor() {
                 @Override
                 public void visitFile(@NotNull PsiFile file) {
-                    types.add(new ToitEvaluatedType((ToitFile) file, null, false));
+                    types.add(new ToitEvaluatedType((ToitFile) file, null, false, false));
                 }
 
                 @Override
                 public void visit(ToitStructure toitStructure) {
                     boolean _static = !THIS.equals(name) && !SUPER.equals(name);
-                    types.add(new ToitEvaluatedType(null, toitStructure, _static));
+                    types.add(new ToitEvaluatedType(null, toitStructure, _static, false));
                 }
 
                 @Override
                 public void visit(ToitFunction toitFunction) {
                     // Use the return type (declared or inferred) to resolve
                     ToitType toitType = toitFunction.getType();
-                    if (toitType != null) processDeferredType(toitType);
-
-                    if (toitFunction.isConstructor()) {
+                    if (toitType != null) {
+                        processDeferredType(toitType);
+                    } else if (toitFunction.isConstructor()) {
                         // Factory constructor
                         ToitStructure structure = toitFunction.getParentOfType(ToitStructure.class);
-                        if (structure != null) types.add(new ToitEvaluatedType(null, structure, false));
+                        if (structure != null) types.add(new ToitEvaluatedType(null, structure, false, false));
                     }
                 }
 
                 @Override
                 public void visit(ToitVariableDeclaration toitVariableDeclaration) {
                     var toitType = toitVariableDeclaration.getType();
-                    if (toitType != null) processDeferredType(toitType);
-
-                    for (ToitExpression toitExpression : toitVariableDeclaration.childrenOfType(ToitExpression.class)) {
-                        var type = toitExpression.getType(toitVariableDeclaration.getLocalToitResolveScope());
-                        types.add(type.nonStatic());
+                    if (toitType != null) {
+                        processDeferredType(toitType);
+                    } else {
+                        for (ToitExpression toitExpression : toitVariableDeclaration.getChildrenOfType(ToitExpression.class)) {
+                            var type = toitExpression.getType(toitVariableDeclaration.getLocalToitResolveScope());
+                            types.add(type.nonStatic().estimated());
+                        }
                     }
                 }
 
@@ -102,7 +115,7 @@ public class ToitEvaluatedType {
                         return;
                     }
 
-                    types.add(new ToitEvaluatedType(null, toitStructure, false));
+                    types.add(new ToitEvaluatedType(null, toitStructure, false, false));
                 }
             });
         }
@@ -133,7 +146,7 @@ public class ToitEvaluatedType {
                 List<PsiElement> resolved = scope.resolve(name);
                 for (PsiElement psiElement : resolved) {
                     if (psiElement instanceof ToitStructure)
-                        return new ToitEvaluatedType(null, (ToitStructure) psiElement, false);
+                        return new ToitEvaluatedType(null, (ToitStructure) psiElement, false, false);
                 }
                 return UNRESOLVED;
             }
@@ -145,7 +158,7 @@ public class ToitEvaluatedType {
 
             @Override
             public ToitEvaluatedType visit(ToitPrimaryExpression toitPrimaryExpression) {
-                var referenceIdentifiers = toitPrimaryExpression.childrenOfType(ToitReferenceIdentifier.class);
+                var referenceIdentifiers = toitPrimaryExpression.getChildrenOfType(ToitReferenceIdentifier.class);
                 if (referenceIdentifiers.isEmpty()) {
                     return singularRecurse(toitPrimaryExpression).nonStatic();
                 }
@@ -168,7 +181,7 @@ public class ToitEvaluatedType {
 
             @Override
             public ToitEvaluatedType visit(ToitCallExpression toitCallExpression) {
-                var expressions = toitCallExpression.childrenOfType(ToitExpression.class);
+                var expressions = toitCallExpression.getChildrenOfType(ToitExpression.class);
                 if (expressions.isEmpty()) return ToitEvaluatedType.UNRESOLVED;
                 return expressions.get(0).getType(scope);
             }
@@ -205,7 +218,7 @@ public class ToitEvaluatedType {
             @Override
             public ToitEvaluatedType visit(ToitRelationalExpression toitRelationalExpression) {
                 if (toitRelationalExpression.isAs()) {
-                    var subExpressions = toitRelationalExpression.childrenOfType(ToitExpression.class);
+                    var subExpressions = toitRelationalExpression.getChildrenOfType(ToitExpression.class);
                     if (subExpressions.isEmpty()) return UNRESOLVED;
                     var evaluatedType = subExpressions.get(subExpressions.size() - 1).accept(this);
                     if (evaluatedType.getStructure() != null) return evaluatedType.nonStatic();
@@ -238,5 +251,19 @@ public class ToitEvaluatedType {
         if (structure != null) return structure;
         if (file != null) return file;
         throw new RuntimeException("Called getPsiElement on unresolved type");
+    }
+
+    public boolean isAssignableTo(ToitEvaluatedType variableType) {
+        if (variableType.isUnresolved()) return true;
+        if (isUnresolved()) return true; // TODO: Fix this
+
+        if (structure == null || variableType.structure == null) return false;
+        return structure.isAssignableTo(variableType.structure);
+    }
+    public boolean isAssignableTo(ToitStructure structure) {
+        if (isUnresolved()) return true; // TODO: Fix this
+
+        if (this.structure == null) return false;
+        return this.structure.isAssignableTo(structure);
     }
 }

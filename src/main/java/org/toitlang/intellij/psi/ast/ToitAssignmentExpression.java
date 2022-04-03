@@ -15,4 +15,12 @@ public class ToitAssignmentExpression extends ToitExpression {
   public <T> T accept(ToitExpressionVisitor<T> expressionVisitor) {
     return expressionVisitor.visit(this);
   }
+
+  public ToitExpression getLeftHandSide() {
+    return getFirstChildOfType(ToitExpression.class);
+  }
+
+  public ToitExpression getRightHandSide() {
+    return getLastChildOfType(ToitExpression.class);
+  }
 }

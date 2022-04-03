@@ -7,7 +7,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.util.IncorrectOperationException;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
@@ -26,11 +25,11 @@ public class ToitParameterName extends ToitElement implements PsiNameIdentifierO
 
   @Override
   public ToitIdentifier getNameIdentifier() {
-    List<ToitNameableIdentifier> toitNameableIdentifiers = childrenOfType(ToitNameableIdentifier.class);
+    List<ToitNameableIdentifier> toitNameableIdentifiers = getChildrenOfType(ToitNameableIdentifier.class);
     if (toitNameableIdentifiers.size() > 0) {
       return toitNameableIdentifiers.get(0);
     }
-    List<ToitReferenceIdentifier> toitReferenceIdentifiers = childrenOfType(ToitReferenceIdentifier.class);
+    List<ToitReferenceIdentifier> toitReferenceIdentifiers = getChildrenOfType(ToitReferenceIdentifier.class);
     if (toitNameableIdentifiers.size() > 0) {
       return toitNameableIdentifiers.get(0);
     }

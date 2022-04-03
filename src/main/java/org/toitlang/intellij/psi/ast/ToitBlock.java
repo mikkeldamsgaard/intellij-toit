@@ -21,11 +21,11 @@ public class ToitBlock extends ToitElement {
     }
 
     public List<ToitParameterName> getParameters() {
-        return childrenOfType(ToitParameterName.class);
+        return getChildrenOfType(ToitParameterName.class);
     }
 
     public ToitScope getParameterScope() {
-        ToitScope scope = new ToitScope();
+        ToitScope scope = new ToitScope(true);
         var parameters = getParameters();
         parameters.forEach(p -> scope.add(p.getName(), p));
         if (parameters.isEmpty()) {

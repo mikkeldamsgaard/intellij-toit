@@ -2,9 +2,7 @@
 package org.toitlang.intellij.psi.ast;
 
 import com.intellij.lang.ASTNode;
-import com.intellij.psi.tree.TokenSet;
 import org.jetbrains.annotations.NotNull;
-import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 import java.util.Collection;
@@ -26,7 +24,7 @@ public class ToitExportDeclaration extends ToitElement {
   }
 
   public List<ToitReferenceIdentifier> getExportList() {
-    return childrenOfType(ToitReferenceIdentifier.class);
+    return getChildrenOfType(ToitReferenceIdentifier.class);
   }
 
 

@@ -32,7 +32,7 @@ public class ToitCompletionContributor extends CompletionContributor {
                         var call = pos.getParentOfType(ToitCallExpression.class);
                         var function = call.getFunction();
                         if (function == null) return;
-                        for (ToitParameterName toitParameterName : function.childrenOfType(ToitParameterName.class)) {
+                        for (ToitParameterName toitParameterName : function.getChildrenOfType(ToitParameterName.class)) {
                             result.addElement(LookupElementBuilder.create(toitParameterName));
                         }
                     }
@@ -159,11 +159,11 @@ public class ToitCompletionContributor extends CompletionContributor {
         if (toitFunction == null) return;
         Set<String> existingParameters = new HashSet<>();
 
-        for (ToitParameterName toitParameterName : toitFunction.childrenOfType(ToitParameterName.class)) {
-            var ref = toitParameterName.firstChildOfType(ToitReferenceIdentifier.class);
+        for (ToitParameterName toitParameterName : toitFunction.getChildrenOfType(ToitParameterName.class)) {
+            var ref = toitParameterName.getFirstChildOfType(ToitReferenceIdentifier.class);
             if (ref != null) existingParameters.add(ref.getName());
         }
-        toitFunction.getParentOfType(ToitBlock.class).childrenOfType(ToitVariableDeclaration.class)
+        toitFunction.getParentOfType(ToitBlock.class).getChildrenOfType(ToitVariableDeclaration.class)
                 .stream()
                 .filter(v -> !existingParameters.contains(v.getName()))
                 .forEach(v -> result.addElement(LookupElementBuilder.create(v)));

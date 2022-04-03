@@ -64,6 +64,7 @@
 
         <projectService serviceImplementation="org.toitlang.intellij.engine.ToitApiEngine"/>
         <indexedRootsProvider implementation="org.toitlang.intellij.files.ToitSdkFiles"/>
+
         <localInspection level="ERROR" enabledByDefault="true" displayName="Semantic errors"
                          groupName="Mandatory checks"
                          implementationClass="org.toitlang.intellij.inspections.SemanticErrorInspector"
@@ -74,6 +75,9 @@
         <localInspection level="ERROR" enabledByDefault="true" displayName="Reference errors"
                          groupName="Mandatory checks"
                          implementationClass="org.toitlang.intellij.inspections.StringErrorInspector"/>
+        <localInspection level="ERROR" enabledByDefault="true" displayName="Type errors"
+                         groupName="Mandatory checks"
+                         implementationClass="org.toitlang.intellij.inspections.TypeInspection"/>
 
 
         <completion.contributor language="Toit"

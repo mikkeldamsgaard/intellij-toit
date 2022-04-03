@@ -1,7 +1,6 @@
 package org.toitlang.intellij.psi;
 
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFileFactory;
 import org.toitlang.intellij.ToitFileType;
 import org.toitlang.intellij.psi.ast.*;
@@ -10,7 +9,7 @@ public class ToitElementFactory {
     public static ToitNameableIdentifier createStructureIdentifier(Project project, String name) {
         final ToitFile file = createFile(project, String.format("class %s:", name));
         var tf = (ToitStructure) file.getFirstChild();
-        return (ToitNameableIdentifier) tf.childrenOfType(ToitNameableIdentifier.class).get(0);
+        return (ToitNameableIdentifier) tf.getChildrenOfType(ToitNameableIdentifier.class).get(0);
     }
 
     public static ToitNameableIdentifier createFunctionIdentifier(Project project, String name) {
@@ -34,7 +33,7 @@ public class ToitElementFactory {
     public static ToitReferenceIdentifier createExportIdentifier(Project project, String name) {
         final ToitFile file = createFile(project, String.format("export %s", name));
         var ed = (ToitExportDeclaration) file.getFirstChild();
-        return ed.lastChildOfType(ToitReferenceIdentifier.class);
+        return ed.getLastChildOfType(ToitReferenceIdentifier.class);
     }
 
     public static ToitReferenceIdentifier createImportShowIdentifier(Project project, String name) {
@@ -46,7 +45,7 @@ public class ToitElementFactory {
     public static ToitReferenceIdentifier createImportIdentifier(Project project, String name) {
         final ToitFile file = createFile(project, String.format("import %s", name));
         var id = (ToitImportDeclaration) file.getFirstChild();
-        return id.lastChildOfType(ToitReferenceIdentifier.class);
+        return id.getLastChildOfType(ToitReferenceIdentifier.class);
     }
 
     public static ToitNameableIdentifier createFactoryIdentifier(Project project, String name) {

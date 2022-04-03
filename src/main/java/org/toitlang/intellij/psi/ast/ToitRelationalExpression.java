@@ -29,7 +29,7 @@ public class ToitRelationalExpression extends ToitExpression {
     }
 
     private boolean hasOperatorToken(TokenSet as) {
-        var operators = childrenOfType(ToitOperator.class);
+        var operators = getChildrenOfType(ToitOperator.class);
         for (ToitOperator operator : operators) {
             if (operator.hasToken(as)) return true;
         }

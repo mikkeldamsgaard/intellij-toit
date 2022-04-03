@@ -14,6 +14,7 @@ import org.toitlang.intellij.psi.visitor.ToitVisitor;
 import org.toitlang.intellij.psi.scope.ToitScope;
 
 import javax.swing.*;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -61,7 +62,7 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
     }
 
     public ToitScope getScope(boolean staticOnly) {
-        ToitScope structureScope = new ToitScope();
+        ToitScope structureScope = new ToitScope(false);
         populateScope(structureScope, staticOnly);
         if (!staticOnly) {
             var baseClass = getBaseClass();
@@ -73,7 +74,7 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
     }
 
     public void populateScope(ToitScope scope, boolean staticOnly) {
-        childrenOfType(ToitBlock.class).forEach(b ->
+        getChildrenOfType(ToitBlock.class).forEach(b ->
                 b.acceptChildren(new ToitVisitor() {
                     @Override
                     public void visit(ToitVariableDeclaration toitVariableDeclaration) {
@@ -105,9 +106,9 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
 
     @Override
     public List<IStructureViewable> getStructureChildren() {
-        var blocks = childrenOfType(ToitBlock.class);
+        var blocks = getChildrenOfType(ToitBlock.class);
         if (blocks.isEmpty()) return Collections.emptyList();
-        return blocks.get(0).childrenOfType(IStructureViewable.class);
+        return blocks.get(0).getChildrenOfType(IStructureViewable.class);
     }
 
     @Override
@@ -116,10 +117,9 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
     }
 
     public ToitStructure getBaseClass() {
-        var extendsTypes = childrenOfType(ToitType.class).stream()
+        var extendsTypes = getChildrenOfType(ToitType.class).stream()
                 .filter(ToitType::isExtendsType).collect(Collectors.toList());
 
-        var structScope = getToitResolveScope();
         for (ToitType extendsType : extendsTypes) {
             ToitStructure base = extendsType.resolve();
             if (base != null) return base;
@@ -128,14 +128,65 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
         return null;
     }
 
-    public ToitFunction getDefaultConstructor() {
-        ToitBlock block = firstChildOfType(ToitBlock.class);
-        if (block == null) return null;
 
-        var functions = block.childrenOfType(ToitFunction.class);
-        for (ToitFunction function : functions) {
-            if (function.isConstructor() && !function.hasFactoryName()) return function;
+    private List<ToitStructure> getInterfaces() {
+        var implementsTypes = getChildrenOfType(ToitType.class).stream()
+                .filter(ToitType::isImplementsType).collect(Collectors.toList());
+
+        List<ToitStructure> interfaces = new ArrayList<>();
+        for (ToitType implementsType : implementsTypes) {
+            ToitStructure _interface = implementsType.resolve();
+            if (_interface != null) interfaces.add(_interface);
         }
-        return null;
+
+        return interfaces;
+    }
+
+
+    public List<ToitFunction> getFactoryConstructors(String name) {
+        ToitBlock block = getFirstChildOfType(ToitBlock.class);
+        List<ToitFunction> result = new ArrayList<>();
+        if (block == null) return result;
+
+        var functions = block.getChildrenOfType(ToitFunction.class);
+        for (ToitFunction function : functions) {
+            if (function.isConstructor() && function.hasFactoryName() && name.equals(function.getFactoryName())) {
+                result.add(function);
+            }
+        }
+        return result;
+
+    }
+
+    public List<ToitFunction> getDefaultConstructors() {
+        ToitBlock block = getFirstChildOfType(ToitBlock.class);
+        List<ToitFunction> result = new ArrayList<>();
+        if (block == null) return result;
+
+        var functions = block.getChildrenOfType(ToitFunction.class);
+        for (ToitFunction function : functions) {
+            if (function.isConstructor() && !function.hasFactoryName()) {
+                result.add(function);
+            }
+        }
+        return result;
+    }
+
+    public boolean isAssignableTo(ToitStructure structure) {
+        if (equals(structure)) return true;
+        return structure.isBaseClassOrInterfaceOf(this);
+    }
+
+    private boolean isBaseClassOrInterfaceOf(ToitStructure structure) {
+        if (equals(structure)) return true;
+
+        for (ToitStructure _interface : structure.getInterfaces()) {
+            if (isBaseClassOrInterfaceOf(_interface)) return true;
+        }
+        var baseClass = structure.getBaseClass();
+        if (baseClass != null) {
+            return isBaseClassOrInterfaceOf(baseClass);
+        }
+        return false;
     }
 }

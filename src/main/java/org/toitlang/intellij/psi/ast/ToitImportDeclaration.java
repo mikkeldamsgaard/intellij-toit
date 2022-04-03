@@ -21,8 +21,8 @@ public class ToitImportDeclaration extends ToitElement {
     visitor.visit(this);
   }
 
-  public boolean hasShow() { return childrenOfType(ToitIdentifier.class).stream().anyMatch(ToitIdentifier::isShow); }
-  public boolean hasAs() { return childrenOfType(ToitIdentifier.class).stream().anyMatch(ToitIdentifier::isImportAs); }
+  public boolean hasShow() { return getChildrenOfType(ToitIdentifier.class).stream().anyMatch(ToitIdentifier::isShow); }
+  public boolean hasAs() { return getChildrenOfType(ToitIdentifier.class).stream().anyMatch(ToitIdentifier::isImportAs); }
 
   private final static TokenSet DOT_AND_IMPORT_IDENTIFIERS = TokenSet.create(DOT, DOT_DOT, ToitTypes.IMPORT_IDENTIFIER);
   public int getPrefixDots() {

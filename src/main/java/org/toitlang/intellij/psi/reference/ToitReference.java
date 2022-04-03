@@ -15,7 +15,6 @@ import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 import org.toitlang.intellij.psi.scope.ToitFileScope;
 import org.toitlang.intellij.psi.scope.ToitLocalScopeCalculator;
 import org.toitlang.intellij.psi.scope.ToitScope;
-import org.toitlang.intellij.psi.visitor.ToitVisitableElement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -110,7 +109,7 @@ public class ToitReference implements PsiPolyVariantReference {
         if (sType == ToitTypes.TYPE_IDENTIFIER) {
             var prevSib = source.getPrevSibling();
             if (prevSib != null) {
-                List<ToitReferenceIdentifier> refs = source.getParentOfType(ToitType.class).childrenOfType(ToitReferenceIdentifier.class);
+                List<ToitReferenceIdentifier> refs = source.getParentOfType(ToitType.class).getChildrenOfType(ToitReferenceIdentifier.class);
                 int idx = refs.indexOf(source);
                 if (idx == 1) {
                     var prevRef = refs.get(0).getReference().resolve();
@@ -133,7 +132,7 @@ public class ToitReference implements PsiPolyVariantReference {
             soft = true;
         } else if (sType == ToitTypes.IMPORT_IDENTIFIER) {
             var importDecl = source.getParentOfType(ToitImportDeclaration.class);
-            var imports = importDecl.childrenOfType(ToitReferenceIdentifier.class).stream().filter(ToitReferenceIdentifier::isImport).collect(Collectors.toList());
+            var imports = importDecl.getChildrenOfType(ToitReferenceIdentifier.class).stream().filter(ToitReferenceIdentifier::isImport).collect(Collectors.toList());
             if (importDecl.hasShow() || importDecl.isShowStar() || importDecl.hasAs() || importDecl.getPrefixDots() > 0) {
                 String fqn = "$"+importDecl.getPrefixDots()+"$"+imports.stream().map(ToitIdentifier::getName).collect(Collectors.joining("."));
                 var toitFile = scope.getImportedLibrary(fqn);
@@ -182,7 +181,7 @@ public class ToitReference implements PsiPolyVariantReference {
 
                     @Override
                     public Object visit(ToitPrimaryExpression toitPrimaryExpression) {
-                        if (!toitPrimaryExpression.childrenOfType(ToitPrimitive.class).isEmpty()) {
+                        if (!toitPrimaryExpression.getChildrenOfType(ToitPrimitive.class).isEmpty()) {
                             soft = true;
                         }
                         return visitExpression(toitPrimaryExpression);

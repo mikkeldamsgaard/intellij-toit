@@ -3,6 +3,7 @@ package org.toitlang.intellij.psi.ast;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiInvalidElementAccessException;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.tree.TokenSet;
@@ -16,13 +17,13 @@ import org.toitlang.intellij.psi.scope.ToitScope;
 import org.toitlang.intellij.psi.visitor.ToitVisitableElement;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public abstract class ToitBaseStubableElement<T extends StubElement<? extends PsiElement>> extends ToitVisitableElement<T> implements IToitElement {
     protected final static TokenSet ABSTRACT = TokenSet.create(ToitTypes.ABSTRACT);
     protected final static TokenSet STATIC = TokenSet.create(ToitTypes.STATIC);
     protected final static TokenSet STAR_SET = TokenSet.create(ToitTypes.STAR);
+    protected final static TokenSet DOT_SET = TokenSet.create(ToitTypes.DOT);
 
     public ToitBaseStubableElement(@NotNull ASTNode node) {
         super(node);
@@ -39,27 +40,27 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
     }
 
     @Override
-    public final ASTNode firstChildToken(TokenSet set) {
+    public final ASTNode getFirstChildToken(TokenSet set) {
         var children = getNode().getChildren(set);
         if (children.length > 0) return children[0];
         return null;
     }
 
-    public final <V> V firstChildOfType(Class<V> clazz) {
-        var children = childrenOfType(clazz);
+    public final <V> V getFirstChildOfType(Class<V> clazz) {
+        var children = getChildrenOfType(clazz);
         if (children.isEmpty()) return null;
         return children.get(0);
     }
 
     @Override
-    public final <V> V lastChildOfType(Class<V> clazz) {
-        var children = childrenOfType(clazz);
+    public final <V> V getLastChildOfType(Class<V> clazz) {
+        var children = getChildrenOfType(clazz);
         if (children.isEmpty()) return null;
         return children.get(children.size()-1);
     }
 
     @Override
-    public final <V> List<V> childrenOfType(Class<V> clazz) {
+    public final <V> List<V> getChildrenOfType(Class<V> clazz) {
         return ToitPsiHelper.childrenOfType(this, clazz);
     }
 
@@ -83,7 +84,11 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
 
     @Override
     public ToitFile getToitFile() {
-        return (ToitFile)getContainingFile().getOriginalFile();
+        try {
+            return (ToitFile)getContainingFile().getOriginalFile();
+        } catch (PsiInvalidElementAccessException e) {
+            return (ToitFile) getParentOfType(ToitFile.class).getOriginalFile();
+        }
     }
 
     @Override
@@ -108,6 +113,12 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
         return result;
     }
 
+    @Override
+    public <V> V getLastDescendentOfType(Class<V> clazz) {
+        var descendents = getDescendentsOfType(clazz);
+        if (descendents.isEmpty()) return null;
+        return descendents.get(descendents.size()-1);
+    }
 
     private <V> void getDescendentsOfType(Class<V> clazz, ArrayList<V> result) {
         for (PsiElement child : getChildren()) {

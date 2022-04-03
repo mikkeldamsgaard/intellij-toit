@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class ToitScope {
-    private final static ToitScope ROOT = new ToitScope() {
+    private final static ToitScope ROOT = new ToitScope(true) {
 
         @Override
         public @NotNull List<PsiElement> resolve(String key) {
@@ -20,7 +20,7 @@ public class ToitScope {
         }
 
         @Override
-        public void add(String key, List<PsiElement> value) {
+        public void add(String key, List<? extends PsiElement> value) {
         }
 
         @Override
@@ -29,22 +29,17 @@ public class ToitScope {
     };
     private final static List<ToitScope> DEFAULT_PARENTS = Collections.singletonList(ROOT);
     private final List<ToitScope> parents;
+    private final boolean finalResolver;
     Map<String, List<PsiElement>> local = new HashMap<>();
 
-    public ToitScope() {
+    public ToitScope(boolean finalResolver) {
+        this.finalResolver = finalResolver;
         this.parents = DEFAULT_PARENTS;
     }
 
-    private ToitScope(ToitScope parent) {
-        this.parents = Collections.singletonList(parent);
-    }
-
-    private ToitScope(List<ToitScope> parents) {
+    private ToitScope(List<ToitScope> parents, boolean finalResolver) {
+        this.finalResolver = finalResolver;
         this.parents = parents;
-    }
-
-    public ToitScope derive() {
-        return new ToitScope(this);
     }
 
     public void add(String key, PsiElement value) {
@@ -52,17 +47,19 @@ public class ToitScope {
         local.computeIfAbsent(key, k -> new ArrayList<>(1)).add(value);
     }
 
-    public void add(String key, List<PsiElement> value) {
+    public void add(String key, List<? extends PsiElement> value) {
         if (key == null) return;
-        local.computeIfAbsent(key, k -> new ArrayList<>(1)).addAll(value);
+        local.computeIfAbsent(key, k -> new ArrayList<>(value.size())).addAll(value);
     }
 
     public @NotNull List<PsiElement> resolve(String key) {
         List<PsiElement> result = new ArrayList<>();
         if (local.containsKey(key)) result.addAll(local.get(key));
-        for (ToitScope parent : parents) {
-            if (!result.isEmpty()) break; // This needs to be more sophisticated, but for now, we break when the closest scope resolves the name. It will work in most cases
-            result.addAll(parent.resolve(key));
+        if (result.isEmpty() || !finalResolver) {
+            for (ToitScope parent : parents) {
+                result.addAll(parent.resolve(key));
+                if (!result.isEmpty() && parent.finalResolver) break;
+            }
         }
         return result;
     }
@@ -92,14 +89,14 @@ public class ToitScope {
                 '}';
     }
 
-    public static ToitScope fromMap(Map<String, PsiElement> locals) {
-        ToitScope toitScope = new ToitScope();
+    public static ToitScope fromMap(Map<String, List<? extends PsiElement>> locals, boolean finalResolver) {
+        ToitScope toitScope = new ToitScope(finalResolver);
         locals.forEach(toitScope::add);
         return toitScope;
     }
 
     public static ToitScope chain(ToitScope... scopes) {
-        return new ToitScope(Arrays.stream(scopes).filter(t -> !t.isRedundant()).collect(Collectors.toList()));
+        return new ToitScope(Arrays.stream(scopes).filter(t -> !t.isRedundant()).collect(Collectors.toList()), false);
     }
 
 }

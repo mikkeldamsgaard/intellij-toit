@@ -15,4 +15,11 @@ public class ToitNamedArgument extends ToitElement {
   protected void accept(ToitVisitor visitor) {
     visitor.visit(this);
   }
+
+  @Override
+  public String getName() {
+    var identifier = getFirstChildOfType(ToitNameableIdentifier.class);
+    if (identifier != null) return identifier.getName();
+    return super.getName();
+  }
 }

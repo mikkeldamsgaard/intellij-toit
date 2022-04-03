@@ -4,7 +4,6 @@ package org.toitlang.intellij.psi.ast;
 import com.intellij.lang.ASTNode;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
-import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 public class ToitDerefExpression extends ToitExpression {
 
@@ -18,7 +17,7 @@ public class ToitDerefExpression extends ToitExpression {
   }
 
   public ToitReferenceIdentifier getToitReferenceIdentifier() {
-    for (ToitReferenceIdentifier toitReferenceIdentifier : childrenOfType(ToitReferenceIdentifier.class)) {
+    for (ToitReferenceIdentifier toitReferenceIdentifier : getChildrenOfType(ToitReferenceIdentifier.class)) {
       return toitReferenceIdentifier;
     }
     return null;

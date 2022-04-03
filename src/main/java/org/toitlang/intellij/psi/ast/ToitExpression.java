@@ -2,15 +2,12 @@
 package org.toitlang.intellij.psi.ast;
 
 import com.intellij.lang.ASTNode;
-import com.intellij.lang.PsiElementExternalizer;
-import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
 import org.toitlang.intellij.psi.scope.ToitScope;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -29,7 +26,7 @@ public abstract class ToitExpression extends ToitElement {
   public abstract  <T> T accept(ToitExpressionVisitor<T> expressionVisitor);
 
   public <T> List<T> acceptChildren(ToitExpressionVisitor<T> expressionVisitor) {
-    return childrenOfType(ToitExpression.class).stream()
+    return getChildrenOfType(ToitExpression.class).stream()
             .map(e -> e.accept(expressionVisitor))
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
@@ -37,5 +34,9 @@ public abstract class ToitExpression extends ToitElement {
 
   public ToitEvaluatedType getType(ToitScope scope) {
     return ToitEvaluatedType.evaluate(this, scope);
+  }
+
+  public boolean isNull() {
+    return getText().trim().equals("null");
   }
 }

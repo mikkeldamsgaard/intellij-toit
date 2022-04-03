@@ -3,7 +3,6 @@ package org.toitlang.intellij.psi.ast;
 import com.intellij.icons.AllIcons;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.StubBasedPsiElement;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.ui.RowIcon;
@@ -12,7 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.model.IToitPrimaryLanguageElement;
 import org.toitlang.intellij.psi.ToitFile;
-import org.toitlang.intellij.structureview.IStructureViewable;
 import org.toitlang.intellij.psi.stub.ToitStubElement;
 
 import javax.swing.*;
@@ -51,7 +49,7 @@ public abstract class ToitPrimaryLanguageElement<S extends PsiElement, T extends
 
     @Override
     public  ToitNameableIdentifier getNameIdentifier() {
-        var names = childrenOfType(ToitNameableIdentifier.class);
+        var names = getChildrenOfType(ToitNameableIdentifier.class);
         if (names.isEmpty()) return null;
         return names.get(0);
     }

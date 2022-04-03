@@ -39,7 +39,7 @@ public class ToitPostfixExpressionTypeEvaluatedType {
 
         ToitEvaluatedType prev = null;
 
-        for (ToitExpression child : toitPostfixExpression.childrenOfType(ToitExpression.class)) {
+        for (ToitExpression child : toitPostfixExpression.getChildrenOfType(ToitExpression.class)) {
             if (prev == null) {
                 prev = child.getType(toitPostfixExpression.getLocalToitResolveScope());
                 result.addType(child, prev);

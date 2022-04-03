@@ -2,9 +2,11 @@
 package org.toitlang.intellij.psi.ast;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.ResolveResult;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ToitCallExpression extends ToitExpression {
@@ -19,13 +21,27 @@ public class ToitCallExpression extends ToitExpression {
     }
 
     public ToitFunction getFunction() {
-        var callee = firstChildOfType(ToitExpression.class);
+        var callee = getFirstChildOfType(ToitExpression.class);
         if (callee == null) return null;
-        List<ToitReferenceIdentifier> references = callee.getDescendentsOfType(ToitReferenceIdentifier.class);
-        if (references.isEmpty())   return null;
-        var ref = references.get(references.size()-1).getReference();
-        var function = ref.resolve();
+        ToitReferenceIdentifier lastRef = callee.getLastDescendentOfType(ToitReferenceIdentifier.class);
+        if (lastRef == null) return null;
+        var function = lastRef.getReference().resolve();
         if (function instanceof ToitFunction) return (ToitFunction) function;
         return null;
+    }
+
+    public List<ToitFunction> getFunctions() {
+        var callee = getFirstChildOfType(ToitExpression.class);
+        if (callee == null) return null;
+        ToitReferenceIdentifier lastRef = callee.getLastDescendentOfType(ToitReferenceIdentifier.class);
+        if (lastRef == null) return null;
+        var functions = lastRef.getReference().multiResolve(false);
+        List<ToitFunction> result = new ArrayList<>(functions.length);
+        for (ResolveResult resolveResult : functions) {
+            var resolvedElement = resolveResult.getElement();
+            if (resolvedElement instanceof ToitFunction) result.add((ToitFunction) resolvedElement);
+            if (resolvedElement instanceof ToitStructure) result.addAll(((ToitStructure)resolvedElement).getDefaultConstructors());
+        }
+        return result;
     }
 }

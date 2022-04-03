@@ -48,13 +48,13 @@ public class ToitType extends ToitElement {
 
   @Override
   public String getName() {
-    return childrenOfType(ToitReferenceIdentifier.class).stream()
+    return getChildrenOfType(ToitReferenceIdentifier.class).stream()
             .map(ToitReferenceIdentifier::getName)
             .collect(Collectors.joining("."));
   }
 
   public ToitStructure resolve() {
-    var refs = childrenOfType(ToitReferenceIdentifier.class);
+    var refs = getChildrenOfType(ToitReferenceIdentifier.class);
     if (refs.size() == 1) {
       return firstStructureInScope(getToitResolveScope(), refs.get(0).getName());
     } else if (refs.size() == 2) {

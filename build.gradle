@@ -24,12 +24,16 @@ intellij {
 patchPluginXml {
     changeNotes = """
 <ul>
-<li>"this" and "super" now correctly resolves to the referenced structure as an instance</li>
-<li>Keyword completiong now shows up in correct color in completion list</li>
+<li>"this" now correctly resolves to the referenced structure as an instance</li>
+<li>Keyword completion now shows up in correct color in the completion list</li>
 <li>class/monitor/interface/abstract completions no longer show up in namedparameter completion</li>
 <li>Fixed an error where unary operators were not parsed correctly. Before "a +- b" parsed, now it does not</li>
 <li>Rename now works on all resolved references</li>
 <li>Added more keyword completions (break/continue/return/if/for/while/try/finally)</li>
+<li>Type inspection, checking that declared types matches and that parameters match function calls</li>
+<li>Enhanced unary minus parsing</li>
+<li>"super" now correctly resolved to the base class in constructors and the overwritten method in functions</li>
+
 </ul>
       """
 }

@@ -10,15 +10,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ToitLocalScopeCalculator extends ToitVisitor {
-    private final ToitVisitableElement origin;
+    private final static String SUPER = "super";
+    private final static String THIS = "this";
+
+    private final IToitElement origin;
     private final List<ToitScope> localScopes;
 
-    public ToitLocalScopeCalculator(ToitVisitableElement origin) {
+    public ToitLocalScopeCalculator(IToitElement origin) {
         this.origin = origin;
         this.localScopes = new ArrayList<>();
     }
 
-    public static ToitScope calculate(ToitVisitableElement origin) {
+    public static ToitScope calculate(IToitElement origin) {
         return new ToitLocalScopeCalculator(origin).calculate();
     }
 
@@ -29,7 +32,7 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
 
     public void visitElement(@NotNull PsiElement element) {
         if (element.getParent() instanceof ToitBlock) {
-            ToitScope scope = new ToitScope();
+            ToitScope scope = new ToitScope(true);
             var e = element.getPrevSibling();
             while (e != null) {
                 if (e instanceof ToitVariableDeclaration) addVariableDeclarationToScope(scope, (ToitVariableDeclaration) e);
@@ -43,7 +46,7 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
 
     @Override
     public void visit(ToitVariableDeclaration toitVariableDeclaration) {
-        ToitScope scope = new ToitScope();
+        ToitScope scope = new ToitScope(true);
         addVariableDeclarationToScope(scope, toitVariableDeclaration);
         localScopes.add(scope);
         visitElement(toitVariableDeclaration);
@@ -65,8 +68,8 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
     }
 
     private void processNestedVariableDeclarations(ToitElement element) {
-        ToitScope scope = new ToitScope();
-        for (var v : element.childrenOfType(ToitVariableDeclaration.class)) {
+        ToitScope scope = new ToitScope(true);
+        for (var v : element.getChildrenOfType(ToitVariableDeclaration.class)) {
             addVariableDeclarationToScope(scope,v);
         }
         localScopes.add(scope);
@@ -90,14 +93,20 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
         localScopes.add(toitBlock.getParameterScope());
 
         if (toitBlock.getParent() instanceof ToitFunction) {
+            ToitFunction function = (ToitFunction) toitBlock.getParent();
+
             ToitStructure structure = toitBlock.getParentOfType(ToitStructure.class);
-            if (structure != null) {
-                ToitScope superThis = new ToitScope();
-                superThis.add("this", structure);
+            if (!function.isStatic() && structure != null) {
+                ToitScope superThis = new ToitScope(true);
+                superThis.add(THIS, structure);
 
                 ToitStructure baseClass = structure.getBaseClass();
                 if (baseClass != null) {
-                    superThis.add("super", baseClass);
+                    if (!function.isConstructor()) {
+                        superThis.add(SUPER, baseClass.getScope(false).resolve(function.getName()));
+                    } else {
+                        superThis.add(SUPER, baseClass);
+                    }
                 }
 
                 localScopes.add(superThis);

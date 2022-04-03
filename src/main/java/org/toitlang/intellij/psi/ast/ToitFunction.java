@@ -11,6 +11,9 @@ import com.intellij.util.IncorrectOperationException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.psi.ToitFile;
+import org.toitlang.intellij.psi.ToitTypes;
+import org.toitlang.intellij.psi.calls.ParameterInfo;
+import org.toitlang.intellij.psi.calls.ParametersInfo;
 import org.toitlang.intellij.psi.scope.ToitScope;
 import org.toitlang.intellij.psi.stub.ToitFunctionStub;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
@@ -19,6 +22,8 @@ import javax.swing.*;
 import java.util.List;
 
 public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitFunctionStub> {
+    ParametersInfo parametersInfo;
+
     public ToitFunction(@NotNull ASTNode node) {
         super(node);
     }
@@ -32,9 +37,14 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
         visitor.visit(this);
     }
 
+    @Override
+    public void subtreeChanged() {
+        parametersInfo = null;
+    }
+
     // TODO: Stub this
     public ToitType getType() {
-        for (ToitType toitType : childrenOfType(ToitType.class)) {
+        for (ToitType toitType : getChildrenOfType(ToitType.class)) {
             if (toitType.isReturnType()) return toitType;
         }
         return null;
@@ -76,15 +86,15 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
     }
 
     private ASTNode getStatic() {
-        return firstChildToken(STATIC);
+        return getFirstChildToken(STATIC);
     }
 
     private ASTNode getAbstract() {
-        return firstChildToken(ABSTRACT);
+        return getFirstChildToken(ABSTRACT);
     }
 
     public void semanticErrorCheck(ProblemsHolder holder) {
-        boolean hasBody = !childrenOfType(ToitBlock.class).isEmpty();
+        boolean hasBody = !getChildrenOfType(ToitBlock.class).isEmpty();
 
         if (getParent() instanceof ToitFile) {
             if (isStatic())
@@ -122,21 +132,21 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
     }
 
     public boolean isConstructor() {
-        for (ToitPseudoKeyword toitPseudoKeyword : childrenOfType(ToitPseudoKeyword.class)) {
+        for (ToitPseudoKeyword toitPseudoKeyword : getChildrenOfType(ToitPseudoKeyword.class)) {
             if ("constructor".equals(toitPseudoKeyword.getName())) return true;
         }
         return false;
     }
 
     public boolean isOperator() {
-        for (ToitPseudoKeyword toitPseudoKeyword : childrenOfType(ToitPseudoKeyword.class)) {
+        for (ToitPseudoKeyword toitPseudoKeyword : getChildrenOfType(ToitPseudoKeyword.class)) {
             if ("operator".equals(toitPseudoKeyword.getName())) return true;
         }
         return false;
     }
 
     public boolean hasFactoryName() {
-        for (ToitNameableIdentifier toitNameableIdentifier : childrenOfType(ToitNameableIdentifier.class)) {
+        for (ToitNameableIdentifier toitNameableIdentifier : getChildrenOfType(ToitNameableIdentifier.class)) {
             if (toitNameableIdentifier.isFactoryName()) return true;
         }
         return false;
@@ -144,20 +154,72 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
 
 
     public String getFactoryName() {
-        for (ToitNameableIdentifier toitNameableIdentifier : childrenOfType(ToitNameableIdentifier.class)) {
+        for (ToitNameableIdentifier toitNameableIdentifier : getChildrenOfType(ToitNameableIdentifier.class)) {
             if (toitNameableIdentifier.isFactoryName()) return toitNameableIdentifier.getName();
         }
         return null;
     }
 
     public List<ToitParameterName> getParameters() {
-        return childrenOfType(ToitParameterName.class);
+        return getChildrenOfType(ToitParameterName.class);
     }
 
     public ToitScope getParameterScope() {
-        ToitScope scope = new ToitScope();
+        ToitScope scope = new ToitScope(true);
         getParameters().forEach(p -> scope.add(p.getName(), p));
         return scope;
     }
 
+    public boolean isReturnTypeNullable() {
+        var type = getType();
+        if (type == null) return true;
+        return type.getNextSibling() != null && type.getNextSibling().getNode().getElementType() == ToitTypes.QUESTION;
+    }
+
+    public ParametersInfo getParameterInfo() {
+        if (parametersInfo == null) {
+            parametersInfo = new ParametersInfo();
+            getChildrenOfType(ToitParameterName.class).forEach(this::parseParameterName);
+        }
+        return parametersInfo;
+    }
+
+    private void parseParameterName(ToitParameterName pn) {
+        boolean isNamed = pn.getNode().getFirstChildNode().getElementType() == ToitTypes.MINUS_MINUS;
+        boolean isMemberInitializer = pn.getNode().getChildren(DOT_SET).length != 0;
+        boolean isBlock = pn.getPrevSibling() != null && pn.getPrevSibling().getNode().getElementType() == ToitTypes.LBRACKET;
+
+        ToitType toitType = null;
+        boolean nullable = false;
+        boolean hasDefaultVale = false;
+        try {
+            PsiElement cur = pn.getNextSibling();
+            if (cur == null) return;
+            if (cur.getNode().getElementType() == ToitTypes.SLASH) {
+                cur = cur.getNextSibling();
+                if (cur == null) return;
+                if (cur instanceof ToitType) {
+                    toitType = (ToitType) cur;
+                    cur = cur.getNextSibling();
+                    if (cur == null) return;
+                }
+                if (cur.getNode().getElementType() == ToitTypes.QUESTION) {
+                    nullable = true;
+                    cur = cur.getNextSibling();
+                    if (cur == null) return;
+                }
+            }
+            if (cur.getNode().getElementType() == ToitTypes.EQUALS) {
+                hasDefaultVale = true;
+            }
+        } finally {
+            ParameterInfo info = new ParameterInfo(toitType, nullable, hasDefaultVale, isBlock, isMemberInitializer);
+
+            if (isNamed) {
+                parametersInfo.addNamed(pn.getName(), info);
+            } else {
+                parametersInfo.addPositional(info);
+            }
+        }
+    }
 }

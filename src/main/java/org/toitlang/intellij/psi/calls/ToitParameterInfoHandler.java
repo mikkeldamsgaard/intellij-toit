@@ -4,17 +4,14 @@ import com.intellij.lang.parameterInfo.CreateParameterInfoContext;
 import com.intellij.lang.parameterInfo.ParameterInfoHandler;
 import com.intellij.lang.parameterInfo.ParameterInfoUIContext;
 import com.intellij.lang.parameterInfo.UpdateParameterInfoContext;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.ResolveResult;
-import com.intellij.ui.JBColor;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.psi.ast.*;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -90,20 +87,17 @@ public class ToitParameterInfoHandler implements ParameterInfoHandler<ToitExpres
         ToitReferenceIdentifier functionName = null;
         if (e instanceof ToitDerefExpression && e.getParent().getParent() instanceof ToitTopLevelExpression) {
             call = (ToitExpression) e;
-            functionName = call.lastChildOfType(ToitReferenceIdentifier.class);
+            functionName = call.getLastChildOfType(ToitReferenceIdentifier.class);
         } else if (e instanceof ToitPrimaryExpression && e.getParent() instanceof ToitTopLevelExpression) {
             call = (ToitExpression) e;
-            functionName = call.firstChildOfType(ToitReferenceIdentifier.class);
+            functionName = call.getFirstChildOfType(ToitReferenceIdentifier.class);
         } else {
             call = ((ToitExpression) e).getParentOfType(ToitCallExpression.class);
             if (call == null) return null;
-            ToitExpression functionalExpression = call.firstChildOfType(ToitExpression.class);
-            if (functionalExpression != null) {
-                var refs = functionalExpression.getDescendentsOfType(ToitReferenceIdentifier.class);
-                if (!refs.isEmpty()) functionName = refs.get(refs.size()-1);
-            }
+            ToitExpression functionalExpression = call.getFirstChildOfType(ToitExpression.class);
+            if (functionalExpression == null) return null;
+            functionName = functionalExpression.getLastDescendentOfType(ToitReferenceIdentifier.class);
         }
-
 
         if (functionName == null) return null;
 
@@ -122,8 +116,7 @@ public class ToitParameterInfoHandler implements ParameterInfoHandler<ToitExpres
                     .collect(Collectors.toList());
 
             for (ToitStructure struct : structs) {
-                var defaultConstructor = struct.getDefaultConstructor();
-                if (defaultConstructor != null) functions.add(defaultConstructor);
+                functions.addAll(struct.getDefaultConstructors());
             }
         }
         return new CallResolve(call, functions);

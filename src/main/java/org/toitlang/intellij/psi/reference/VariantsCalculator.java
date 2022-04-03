@@ -81,7 +81,7 @@ public class VariantsCalculator {
         } else if (sType == ToitTypes.IMPORT_SHOW_IDENTIFIER) {
             ToitImportDeclaration import_ = source.getParentOfType(ToitImportDeclaration.class);
             ToitReferenceIdentifier last = null;
-            for (ToitReferenceIdentifier toitReferenceIdentifier : import_.childrenOfType(ToitReferenceIdentifier.class)) {
+            for (ToitReferenceIdentifier toitReferenceIdentifier : import_.getChildrenOfType(ToitReferenceIdentifier.class)) {
                 if (toitReferenceIdentifier.getNode().getElementType() == ToitTypes.IMPORT_IDENTIFIER)
                     last = toitReferenceIdentifier;
             }
@@ -100,7 +100,7 @@ public class VariantsCalculator {
         } else if (sType == ToitTypes.IMPORT_IDENTIFIER) {
             ToitImportDeclaration import_ = source.getParentOfType(ToitImportDeclaration.class);
             List<ToitReferenceIdentifier> path = new ArrayList<>();
-            for (var tr : import_.childrenOfType(ToitReferenceIdentifier.class)) {
+            for (var tr : import_.getChildrenOfType(ToitReferenceIdentifier.class)) {
                 if (tr == source) break;
                 if (tr.getNode().getElementType() == ToitTypes.IMPORT_IDENTIFIER) path.add(tr);
             }
@@ -161,7 +161,7 @@ public class VariantsCalculator {
         ToitBlock block = expression.getParentOfType(ToitBlock.class);
         if (block == null) return false;
         if (block.getParent() instanceof ToitFunction || block.getParent() instanceof ToitStructure) return false;
-        return block.childrenOfType(ToitParameterName.class).isEmpty();
+        return block.getChildrenOfType(ToitParameterName.class).isEmpty();
     }
 
     @SuppressWarnings("rawtypes")

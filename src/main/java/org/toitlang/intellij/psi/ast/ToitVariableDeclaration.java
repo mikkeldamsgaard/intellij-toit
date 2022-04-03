@@ -8,6 +8,7 @@ import com.intellij.psi.stubs.IStubElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.psi.ToitFile;
+import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.stub.ToitVariableDeclarationStub;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
@@ -37,7 +38,7 @@ public class ToitVariableDeclaration extends ToitPrimaryLanguageElement<ToitVari
 
     // TODO: Stub this
     public ToitType getType() {
-        for (ToitType toitType : childrenOfType(ToitType.class)) {
+        for (ToitType toitType : getChildrenOfType(ToitType.class)) {
             return toitType;
         }
 
@@ -61,10 +62,17 @@ public class ToitVariableDeclaration extends ToitPrimaryLanguageElement<ToitVari
     public boolean isField() {
         return getParent().getParent() instanceof ToitStructure;
     }
+
     public boolean isConstant() {
-        for (ToitOperator toitOperator : childrenOfType(ToitOperator.class)) {
+        for (ToitOperator toitOperator : getChildrenOfType(ToitOperator.class)) {
             return toitOperator.isConstDeclare();
         }
         return false;
+    }
+
+    public boolean isReturnTypeNullable() {
+        var type = getType();
+        if (type == null) return true;
+        return type.getNextSibling() != null && type.getNextSibling().getNode().getElementType() == ToitTypes.QUESTION;
     }
 }

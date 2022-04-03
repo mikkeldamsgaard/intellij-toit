@@ -41,9 +41,9 @@ public class ToitSdkFiles extends IndexableSetContributor {
         var cache = coreMap.get(project);
         if (cache == null) {
             var root = getSdkRoot(project);
-            if (root == null) return new ToitScope();
+            if (root == null) return new ToitScope(false);
 
-            Map<String, PsiElement> coreElements = new HashMap<>();
+            Map<String, List<? extends PsiElement>> coreElements = new HashMap<>();
 
             VirtualFile core = root.findFileByRelativePath("core");
             if (core != null) {
@@ -59,7 +59,7 @@ public class ToitSdkFiles extends IndexableSetContributor {
                 }
             }
 
-            cache = ToitScope.fromMap(coreElements);
+            cache = ToitScope.fromMap(coreElements,false);
 
             coreMap.put(project,cache);
         }
