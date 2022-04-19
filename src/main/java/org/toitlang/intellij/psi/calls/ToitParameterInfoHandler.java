@@ -77,14 +77,13 @@ public class ToitParameterInfoHandler implements ParameterInfoHandler<ToitExpres
         private java.util.List<ToitFunction> functions;
     }
 
-
     private static CallResolve resolve(PsiFile file, int offset) {
         var e = file.findElementAt(offset);
         while (e != null && !(e instanceof ToitExpression)) e = e.getParent();
         if (e == null) return null;
 
         ToitExpression call;
-        ToitReferenceIdentifier functionName = null;
+        ToitReferenceIdentifier functionName;
         if (e instanceof ToitDerefExpression && e.getParent().getParent() instanceof ToitTopLevelExpression) {
             call = (ToitExpression) e;
             functionName = call.getLastChildOfType(ToitReferenceIdentifier.class);

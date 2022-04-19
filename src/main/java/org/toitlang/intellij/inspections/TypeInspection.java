@@ -7,6 +7,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ast.*;
+import org.toitlang.intellij.psi.calls.ParameterInfo;
 import org.toitlang.intellij.psi.calls.ToitCallHelper;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
@@ -88,13 +89,29 @@ public class TypeInspection extends LocalInspectionTool {
                         if (ref == null) return null;
                         if (ref.getReference().resolve() == null) return null;
 
-                        var function = ToitCallHelper.resolveCall(toitCallExpression);
-                        if (function == null) {
+                        // Check if the function can resolve
+                        var resolvedFunctionCall = ToitCallHelper.resolveCall(toitCallExpression);
+                        if (resolvedFunctionCall == null) {
                             IToitElement errorElm = toitCallExpression.getFirstChildOfType(ToitExpression.class);
                             if (errorElm != null) errorElm = errorElm.getLastDescendentOfType(ToitReferenceIdentifier.class);
                             if (errorElm == null) errorElm = toitCallExpression;
                             holder.registerProblem(errorElm, "Cannot match arguments to function call");
+                        } else {
+                            // Check parameter types
+                            for (IToitElement argument : resolvedFunctionCall.getArguments()) {
+                                if (argument instanceof ToitExpression) {
+                                    ToitEvaluatedType type = ((ToitExpression)argument).getType(argument.getLocalToitResolveScope());
+                                    ParameterInfo parameterInfo = resolvedFunctionCall.getParamForArg(argument);
+                                    if (type != null && !type.isUnresolved() && parameterInfo.getType() != null) {
+                                        ToitStructure resolvedParameterType = parameterInfo.getType().resolve();
+                                        if (resolvedParameterType != null && !type.isAssignableTo(resolvedParameterType)) {
+                                            holder.registerProblem(argument, "Cannot assign expression of type "+type.getStructure().getName()+" to parameter of type "+ resolvedParameterType.getName());
+                                        }
+                                    }
+                                }
+                            }
                         }
+
                         return null;
                     }
 

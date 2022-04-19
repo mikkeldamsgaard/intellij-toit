@@ -1,7 +1,6 @@
 // This is a generated file. Not intended for manual editing.
 package org.toitlang.intellij.psi.ast;
 
-import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.icons.AllIcons;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.NlsSafe;
@@ -85,39 +84,12 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
         return hasToken(STATIC);
     }
 
-    private ASTNode getStatic() {
+    public ASTNode getStatic() {
         return getFirstChildToken(STATIC);
     }
 
-    private ASTNode getAbstract() {
+    public ASTNode getAbstract() {
         return getFirstChildToken(ABSTRACT);
-    }
-
-    public void semanticErrorCheck(ProblemsHolder holder) {
-        boolean hasBody = !getChildrenOfType(ToitBlock.class).isEmpty();
-
-        if (getParent() instanceof ToitFile) {
-            if (isStatic())
-                holder.registerProblem(this, getRelativeRangeInParent(getStatic()), "Top level functions cannot be static");
-            if (!hasBody) holder.registerProblem(getFunctionName(), "Missing body");
-        } else {
-            ToitStructure parent = getParentOfType(ToitStructure.class);
-            ToitNameableIdentifier functionName = getFunctionName();
-            if (functionName == null) return;
-            if (parent.isClass()) {
-                boolean isAbstractClass = parent.isAbstract();
-                if (isAbstract() && !isAbstractClass)
-                    holder.registerProblem(this, getRelativeRangeInParent(getAbstract()), "Abstract functions not allowed in non-abstract class");
-                if (!isAbstract() && !hasBody) {
-                    holder.registerProblem(functionName, "Missing body");
-                }
-            }
-
-            if (parent.isInterface()) {
-                if (hasBody && !isStatic())
-                    holder.registerProblem(functionName, "Only static interface methods may have a body");
-            }
-        }
     }
 
     @Override

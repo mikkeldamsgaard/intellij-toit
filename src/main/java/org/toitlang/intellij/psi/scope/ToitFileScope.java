@@ -30,7 +30,12 @@ public class ToitFileScope {
                 }
             }
         });
-        projectImports.forEach(p -> scope.putAll(p.getToitFileScope().getExportedScope(new HashSet<>())));
+        projectImports.forEach(p -> {
+            Map<String, List<? extends PsiElement>> exportedScope = p.getToitFileScope().getExportedScope(new HashSet<>());
+            for (String name : exportedScope.keySet()) {
+                if (!locals.containsKey(name)) scope.put(name, exportedScope.get(name));
+            }
+        });
         return ToitScope.fromMap(scope, true);
     }
 
@@ -51,18 +56,15 @@ public class ToitFileScope {
         Map<String, List<? extends PsiElement>> result = new HashMap<>();
         if (seen.contains(this)) return result; // Cycle detection. If export are cycled, it is an error
         seen.add(this);
+        result.putAll(locals);
 
-        if (exports.isEmpty()) result.putAll(locals);
-        else {
+        if (!exports.isEmpty()) {
             for (ToitFile projectImport : projectImports) {
                 var pExported =  projectImport.getToitFileScope().getExportedScope(seen);
                 pExported.entrySet().stream()
                         .filter(e -> exports.contains("*") || exports.contains(e.getKey()))
                         .forEach(e -> result.put(e.getKey(),e.getValue()));
             }
-            locals.entrySet().stream()
-                    .filter(e -> exports.contains("*") || exports.contains(e.getKey()))
-                    .forEach(e -> result.put(e.getKey(),e.getValue()));
         }
         return result;
     }

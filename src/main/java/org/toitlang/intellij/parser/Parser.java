@@ -60,7 +60,7 @@ public class Parser {
         }
 
         while (true) {
-            if (!identifier(IMPORT_IDENTIFIER)) {
+            if (!identifierMinusAllowed(IMPORT_IDENTIFIER)) {
                 return importPart.error("Expected identifier");
             }
             if (!is(ToitTypes.DOT)) break;
@@ -302,6 +302,7 @@ public class Parser {
                 consume();
             }
             if (!(isIdentifier() && currentTokenIsAttached)) return parameter.error("Named parameter format error");
+            minusMinusIdentifier(isDot ? REFERENCE_IDENTIFIER : NAMED_PARAMETER_IDENTIFIER);
         } else {
             if (is(DOT)) {
                 isDot = true;
@@ -309,8 +310,8 @@ public class Parser {
                 if (!(isIdentifier() && currentTokenIsAttached)) return parameter.error("Field parameter format error");
             } else if (!isIdentifier())
                 return parameter.error("Expected parameter name, got " + tokenType());
+            identifier(isDot ? REFERENCE_IDENTIFIER : NAMED_PARAMETER_IDENTIFIER);
         }
-        identifier(isDot ? REFERENCE_IDENTIFIER : NAMED_PARAMETER_IDENTIFIER);
 
         return parameter.done();
     }
@@ -384,6 +385,7 @@ public class Parser {
             if (is(SLASH)) {
                 consumeAllowNewlines();
                 parsed &= typeName(false, VARIABLE_TYPE);
+                if (parsed && is(QUESTION)) consumeAllowNewlines();
             }
         }
 
@@ -667,7 +669,7 @@ public class Parser {
 
             var namedArgument = mark(NAMED_ARGUMENT);
             if (expect(MINUS_MINUS)) {
-                if (!identifier(NAMED_PARAMETER_IDENTIFIER))
+                if (!minusMinusIdentifier(NAMED_PARAMETER_IDENTIFIER))
                     return errorInParameterParsing("Variable name expected", expr, lookahead, namedArgument);
                 if (is(EQUALS)) {
                     consumeAllowNewlines();
@@ -779,7 +781,7 @@ public class Parser {
 
         boolean anyConsumed = false;
         while (isAllowingNewlines(operatorSet)) {
-            if (!operatorMinusNotAttached()) break;
+            operator();
 
             if (rightHandFullExpression) {
                 if (!expression(allowBlock)) return expr.drop();
@@ -882,10 +884,10 @@ public class Parser {
             } else if (is(LCURLY)) {
                 if (!setOrMapLiteral()) return expression.drop();
             } else if (is(LBRACKET)) {
-                if (!listLiteral()) return expression.drop();
+                if (!listLiteral(LIST_LITERAL)) return expression.drop();
             } else if (is(HASH)) {
                 consumeAllowNewlines();
-                if (!listLiteral()) return expression.drop();
+                if (!listLiteral(BYTE_ARRAY_LITERAL)) return expression.drop();
             } else if (isIdentifier()) {
                 identifier(REFERENCE_IDENTIFIER);
             } else if (is(PRIMITIVE)) {
@@ -988,8 +990,8 @@ public class Parser {
         return literal.done();
     }
 
-    private boolean listLiteral() {
-        var list = mark(LIST_LITERAL);
+    private boolean listLiteral(IElementType listType) {
+        var list = mark(listType);
         consumeAllowNewlines();
 
         while (!builder.eof()) {
@@ -1009,36 +1011,61 @@ public class Parser {
     private boolean assignmentOperator() {
         var assignmentOperator = mark(OPERATOR);
         if (is(DECLARE) || is(CONST_DECLARE)) {
-            consumeAllowNewlines(assignmentOperator);
-            return true;
+            consumeAllowNewlines();
+            return assignmentOperator.done();
         }
         return assignmentOperator.collapse();
     }
 
-    private boolean operatorMinusNotAttached() {
-        boolean isMinus = is(MINUS); // Minus is the only operator that is both infix and unary
-        Marker minusMarker = isMinus?mark(RECOVER):null;
-
-        operator();
-
-        if (isMinus && currentTokenIsAttached) {
-            minusMarker.rollback();
-            return false;
-        }
-
-        if (minusMarker != null) minusMarker.drop();
-        return true;
-    }
-
     private void operator() {
-        consumeAllowNewlines(mark(OPERATOR));
+        var o = mark(OPERATOR);
+        consumeAllowNewlines();
+        o.done();
     }
 
     private boolean identifier(IElementType elementType) {
         if (!isIdentifier()) return false;
         var i = mark(elementType);
-        consumeAllowNewlines(i);
+        consume();
+        i.done();
+        if (isNewLine() || isIndent() || isDedent() || is(TokenType.WHITE_SPACE)) {
+            consumeAllowNewlines();
+        }
         return true;
+    }
+
+    private boolean identifierMinusAllowed(IElementType elementType) {
+        if (!isIdentifier()) return false;
+        var i = mark(elementType);
+        consume();
+        return identifierWithMinus(i);
+    }
+
+    private boolean minusMinusIdentifier(IElementType elementType) {
+        if (!isIdentifier() || !currentTokenIsAttached) return false;
+        var i = mark(elementType);
+        return identifierWithMinus(i);
+    }
+
+    private boolean identifierWithMinus(Marker i) {
+        boolean prevWasMinus = false;
+        while (currentTokenIsAttached && (is(IDENTIFIER) || is(MINUS))) {
+            if (is(IDENTIFIER)) {
+                prevWasMinus = false;
+                consume();
+            } else if (is(MINUS) && currentTokenIsAttached) {
+                prevWasMinus = true;
+                consume();
+            }
+        }
+        if (prevWasMinus) return i.error("Parameter name error");
+        if (is(TokenType.WHITE_SPACE) || isNewLine() || isDedent() || isIndent()) {
+            i.done();
+            consumeAllowNewlines();
+            return true;
+        } else {
+            return i.done();
+        }
     }
 
     boolean tryRule(Producer<Boolean> rule) {
@@ -1205,19 +1232,7 @@ public class Parser {
         return builder.getTokenType();
     }
 
-    boolean consume(boolean allowNewLines, Marker mark, IElementType doneType) {
-        if (allowNewLines) consumeAllowNewlines(mark);
-        else consume(mark);
-        return true;
-    }
-
     void consume() {
-        consume(null);
-    }
-
-    private static final TokenSet DETACH_TOKENS = TokenSet.create(TokenType.WHITE_SPACE, INDENT, DEDENT, NEWLINE);
-
-    void consume(Marker mark) {
         // Detect if we are at begging of line and increment line number
         if (isNewLine()) {
             currentLineNo++;
@@ -1230,19 +1245,16 @@ public class Parser {
         currentTokenIsAttached = !is(DETACH_TOKENS);
 
         builder.advanceLexer();
-        if (mark != null) mark.done();
         if (is(TokenType.WHITE_SPACE)) {
             currentTokenIsAttached = false;
             while (is(TokenType.WHITE_SPACE)) builder.advanceLexer();
         }
     }
 
-    void consumeAllowNewlines() {
-        consumeAllowNewlines(null);
-    }
+    private static final TokenSet DETACH_TOKENS = TokenSet.create(TokenType.WHITE_SPACE, INDENT, DEDENT, NEWLINE);
 
-    void consumeAllowNewlines(Marker mark) {
-        if (!isNewLine()) consume(mark);
+    void consumeAllowNewlines() {
+        if (!isNewLine()) consume();
         while (!builder.eof()) {
             if (isNewLine()) consume();
             else if (isIndent()) {

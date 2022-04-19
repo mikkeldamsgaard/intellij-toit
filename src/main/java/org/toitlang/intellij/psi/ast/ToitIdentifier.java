@@ -22,7 +22,7 @@ public abstract class ToitIdentifier extends ToitElement {
   public @NotNull  String getName() {
     if (name == null) name = getText();
     if (name == null) name = "__UnknownToit__";
-    return name;
+    return name.trim();
   }
 
   public boolean isImport() { return getNode().getElementType() == ToitTypes.IMPORT_IDENTIFIER; }

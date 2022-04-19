@@ -1,8 +1,11 @@
+Bugs:
+
 Top:
+  - Add completion for null, true, false, any, none
+
   - rename of named parameter (change named argument to be reference)
   - Inspections
      - Type
-       - parameter type vs argument type
        - better error message when arguments mismatch
      - Missing implementations of abstract classes/interfaces
   - show params enhancement

@@ -37,4 +37,12 @@ public class ParametersInfo {
     public boolean hasNamedParameter(String name) {
         return named.containsKey(name);
     }
+
+    public ParameterInfo getPositional(int position) {
+        return positionals.get(position);
+    }
+
+    public ParameterInfo getNamedParameter(String name) {
+        return named.get(name);
+    }
 }

@@ -29,10 +29,12 @@ public class ToitParameterName extends ToitElement implements PsiNameIdentifierO
     if (toitNameableIdentifiers.size() > 0) {
       return toitNameableIdentifiers.get(0);
     }
+
     List<ToitReferenceIdentifier> toitReferenceIdentifiers = getChildrenOfType(ToitReferenceIdentifier.class);
-    if (toitNameableIdentifiers.size() > 0) {
-      return toitNameableIdentifiers.get(0);
+    if (toitReferenceIdentifiers.size() > 0) {
+      return toitReferenceIdentifiers.get(0);
     }
+
     return null;
   }
 

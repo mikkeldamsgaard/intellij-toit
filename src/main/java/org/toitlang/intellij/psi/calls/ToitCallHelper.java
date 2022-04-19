@@ -1,61 +1,65 @@
 package org.toitlang.intellij.psi.calls;
 
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveResult;
-import com.intellij.psi.tree.IElementType;
 import org.toitlang.intellij.psi.ast.*;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
-import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 import java.util.*;
 
-/** Helper function to resolve expressions to calls. Both PrimaryExpression (with on reference identifier inside) and
- * PostfixExpression can be calls in disguise with zero arguments */
+/**
+ * Helper function to resolve expressions to calls. Both PrimaryExpression (with on reference identifier inside) and
+ * PostfixExpression can be calls in disguise with zero arguments
+ */
 public class ToitCallHelper {
-    public static ToitFunction resolveCall(ToitExpression expression) {
+    public static ResolvedFunctionCall resolveCall(ToitExpression expression) {
         return expression.accept(new ToitExpressionVisitor<>() {
             @Override
-            public ToitFunction visit(ToitCallExpression toitCallExpression) {
+            public ResolvedFunctionCall visit(ToitCallExpression toitCallExpression) {
                 List<IToitElement> arguments = new ArrayList<>();
                 var children = toitCallExpression.getChildren();
                 if (children.length <= 1) return null;
-                for (int i= 1;i<children.length;i++) {
-                    if (children[i] instanceof ToitExpression || children[i] instanceof ToitNamedArgument) arguments.add((IToitElement) children[i]);
+                for (int i = 1; i < children.length; i++) {
+                    if (children[i] instanceof ToitExpression || children[i] instanceof ToitNamedArgument)
+                        arguments.add((IToitElement) children[i]);
                 }
 
                 for (ToitFunction function : toitCallExpression.getFunctions()) {
-                    if (parametersMatches(function, arguments)) return function;
+                    ResolvedFunctionCall resolved = parametersMatches(function, arguments);
+                    if (resolved != null) return resolved;
                 }
+
                 return null;
             }
 
             @Override
-            public ToitFunction visit(ToitPostfixExpression toitPostfixExpression) {
+            public ResolvedFunctionCall visit(ToitPostfixExpression toitPostfixExpression) {
                 return resolveFunction(toitPostfixExpression);
             }
 
             @Override
-            public ToitFunction visit(ToitPrimaryExpression toitPrimaryExpression) {
+            public ResolvedFunctionCall visit(ToitPrimaryExpression toitPrimaryExpression) {
                 return resolveFunction(toitPrimaryExpression);
             }
 
             @Override
-            public ToitFunction visit(ToitDerefExpression toitDerefExpression) {
+            public ResolvedFunctionCall visit(ToitDerefExpression toitDerefExpression) {
                 return resolveFunction(toitDerefExpression);
             }
 
-            private ToitFunction resolveFunction(ToitExpression expression) {
+            private ResolvedFunctionCall resolveFunction(ToitExpression expression) {
                 var ref = expression.getLastDescendentOfType(ToitReferenceIdentifier.class);
                 if (ref == null) return null;
                 for (ResolveResult resolveResult : ref.getReference().multiResolve(false)) {
                     var resolved = resolveResult.getElement();
                     if (resolved instanceof ToitFunction) {
                         var function = (ToitFunction) resolved;
-                        if (parametersMatches(function, Collections.emptyList())) return function;
+                        ResolvedFunctionCall resolvedFunctionCall = parametersMatches(function, Collections.emptyList());
+                        if (resolvedFunctionCall != null) return resolvedFunctionCall;
                     } else if (resolved instanceof ToitStructure) {
                         ToitStructure structure = (ToitStructure) resolved;
                         for (ToitFunction defaultConstructor : structure.getDefaultConstructors()) {
-                            if (parametersMatches(defaultConstructor,Collections.emptyList())) return defaultConstructor;
+                            ResolvedFunctionCall resolvedFunctionCall = parametersMatches(defaultConstructor, Collections.emptyList());
+                            if (resolvedFunctionCall != null) return resolvedFunctionCall;
                         }
                     }
                 }
@@ -67,7 +71,7 @@ public class ToitCallHelper {
     // Is this expression an immediate function call. Not including nested expression;
     // so "(func_call)" will not return true, but "func_call" will return true
     public static boolean isFunctionCall(ToitExpression expression) {
-        Boolean res= expression.accept(new ToitExpressionVisitor<>() {
+        Boolean res = expression.accept(new ToitExpressionVisitor<>() {
             @Override
             public Boolean visit(ToitCallExpression toitCallExpression) {
                 return true;
@@ -112,26 +116,67 @@ public class ToitCallHelper {
     }
 
 
-    public static boolean parametersMatches(ToitFunction toitFunction, List<IToitElement> parameters) {
+    public static ResolvedFunctionCall parametersMatches(ToitFunction toitFunction, List<IToitElement> parameters) {
+        ResolvedFunctionCall resolvedFunctionCall = new ResolvedFunctionCall(toitFunction);
         ParametersInfo parametersInfo = toitFunction.getParameterInfo();
-        int positionalCount = 0;
-        Set<String> names = new HashSet<>();
+        List<IToitElement> positionalArgs = new ArrayList<>();
+        Map<String, ToitNamedArgument> names = new HashMap<>();
 
         for (IToitElement parameter : parameters) {
-            if (parameter instanceof ToitExpression) positionalCount++;
+            if (parameter instanceof ToitExpression) positionalArgs.add(parameter);
             if (parameter instanceof ToitNamedArgument) {
                 ToitNamedArgument namedArgument = (ToitNamedArgument) parameter;
-                names.add(namedArgument.getName());
+                names.put(namedArgument.getName(), namedArgument);
             }
         }
 
-        if (positionalCount < parametersInfo.getNumberOfNonDefaultPositionals() || positionalCount > parametersInfo.getNumberOfPositionals()) return false;
+        /* Positional args */
+        if (positionalArgs.size() < parametersInfo.getNumberOfNonDefaultPositionals() ||
+                positionalArgs.size() > parametersInfo.getNumberOfPositionals()) return null;
+
+        int position = 0;
+        for (IToitElement positionalArg : positionalArgs) {
+            ParameterInfo param = parametersInfo.getPositional(position++);
+            resolvedFunctionCall.addMatch(positionalArg, param);
+        }
+
+        /* Named non default parameters */
         for (String nonDefaultNamedParameter : parametersInfo.getNonDefaultNamedParameters()) {
-            if (!names.contains(nonDefaultNamedParameter)) return false;
+            if (!names.containsKey(nonDefaultNamedParameter)) return null;
+            resolvedFunctionCall.addMatch(names.get(nonDefaultNamedParameter), parametersInfo.getNamedParameter(nonDefaultNamedParameter));
         }
-        for (String name : names) {
-            if (!parametersInfo.hasNamedParameter(name)) return false;
+
+        for (String name : names.keySet()) {
+            if (!parametersInfo.hasNamedParameter(name)) return null;
+            resolvedFunctionCall.addMatch(names.get(name), parametersInfo.getNamedParameter(name));
         }
-        return true;
+
+        return resolvedFunctionCall;
+    }
+
+
+    static public class ResolvedFunctionCall {
+        private final Map<IToitElement, ParameterInfo> argsToParams = new HashMap<>();
+        private ToitFunction toitFunction;
+
+        public ResolvedFunctionCall(ToitFunction toitFunction) {
+            this.toitFunction = toitFunction;
+        }
+
+        public ToitFunction getToitFunction() {
+            return toitFunction;
+        }
+
+        private void addMatch(IToitElement arg, ParameterInfo param) {
+            argsToParams.put(arg, param);
+        }
+
+        public ParameterInfo getParamForArg(IToitElement arg) {
+            return argsToParams.get(arg);
+        }
+
+        public Set<IToitElement> getArguments() {
+            return argsToParams.keySet();
+        }
     }
 }

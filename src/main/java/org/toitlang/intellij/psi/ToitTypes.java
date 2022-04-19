@@ -156,6 +156,7 @@ public interface ToitTypes {
   IElementType POSTFIX_INCREMENT_EXPRESSION = new ToitElementType("POSTFIX_EXPRESSION", ToitPostfixIncrementExpression::new);
 
   IElementType LIST_LITERAL = new ToitElementType("LIST_LITERAL", ToitListLiteral::new);
+  IElementType BYTE_ARRAY_LITERAL = new ToitElementType("BYTE_ARRAY_LITERAL", ToitListLiteral::new);
   IElementType SET_LITERAL = new ToitElementType("SET_LITERAL", ToitSetLiteral::new);
   IElementType MAP_LITERAL = new ToitElementType("MAP_LITERAL", ToitMapLiteral::new);
 

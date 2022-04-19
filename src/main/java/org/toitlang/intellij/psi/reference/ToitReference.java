@@ -76,7 +76,10 @@ public class ToitReference implements PsiPolyVariantReference {
 
     @Override
     public PsiElement bindToElement(@NotNull PsiElement element) throws IncorrectOperationException {
-        throw new IncorrectOperationException("Rebind cannot be performed for " + getClass());
+        destinations.clear();
+        destinations.add(element);
+        dependencies.add(element);
+        return element;
     }
 
     @Override

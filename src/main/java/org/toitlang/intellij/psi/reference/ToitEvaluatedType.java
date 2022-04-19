@@ -43,6 +43,7 @@ public class ToitEvaluatedType {
 
 
     private final static String LIST_CLASS_NAME = "List";
+    private final static String BYTE_ARRAY_CLASS_NAME = "ByteArray";
     private final static String INT_CLASS_NAME = "int";
     private final static String FLOAT_CLASS_NAME = "float";
     private final static String BOOL_CLASS_NAME = "bool";
@@ -188,7 +189,10 @@ public class ToitEvaluatedType {
 
             @Override
             public ToitEvaluatedType visit(ToitListLiteral toitListLiteral) {
-                return resolveToStruct(scope, LIST_CLASS_NAME);
+                if (toitListLiteral.isByteArray()) {
+                    return resolveToStruct(scope, BYTE_ARRAY_CLASS_NAME);
+                } else
+                    return resolveToStruct(scope, LIST_CLASS_NAME);
             }
 
             @Override

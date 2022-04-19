@@ -65,4 +65,10 @@ public abstract class ToitPrimaryLanguageElement<S extends PsiElement, T extends
     public boolean isTopLevel() {
         return getParent() instanceof ToitFile;
     }
+
+    public PsiElement getProblemIdentifier() {
+        var name = getNameIdentifier();
+        if (name != null) return name;
+        return this;
+    }
 }

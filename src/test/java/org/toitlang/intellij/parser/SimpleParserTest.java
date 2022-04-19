@@ -476,4 +476,18 @@ public class SimpleParserTest extends ParserTest {
 
     }
 
+
+    public void testMinusExpression() {
+        var p = parseFile("tmp", "" +
+                "x ::= a-1"
+        );
+        checkError(p, "");
+    }
+
+    public void testDashInParams() {
+        var p = parseFile("tmp", "" +
+                "x --p-a:"
+        );
+        checkError(p, "");
+    }
 }

@@ -1,6 +1,8 @@
 package org.toitlang.intellij.psi.scope;
 
 import com.intellij.psi.PsiElement;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.model.IToitPrimaryLanguageElement;
 
@@ -53,15 +55,24 @@ public class ToitScope {
     }
 
     public @NotNull List<PsiElement> resolve(String key) {
+        return doResolve(key).result;
+    }
+
+    private ScopeResolveResult doResolve(String key) {
         List<PsiElement> result = new ArrayList<>();
         if (local.containsKey(key)) result.addAll(local.get(key));
-        if (result.isEmpty() || !finalResolver) {
+        if (finalResolver && !result.isEmpty()) return new ScopeResolveResult(result, true);
+
+        if (parents != null) {
             for (ToitScope parent : parents) {
+                var parentResult = parent.doResolve(key);
+                if (parentResult.isFinal) return parentResult;
+
                 result.addAll(parent.resolve(key));
-                if (!result.isEmpty() && parent.finalResolver) break;
             }
         }
-        return result;
+
+        return new ScopeResolveResult(result,false);
     }
 
     protected void addVariant(Set<PsiElement> variants) {
@@ -99,4 +110,10 @@ public class ToitScope {
         return new ToitScope(Arrays.stream(scopes).filter(t -> !t.isRedundant()).collect(Collectors.toList()), false);
     }
 
+    @Data
+    @AllArgsConstructor
+    static class ScopeResolveResult {
+        List<PsiElement> result;
+        boolean isFinal;
+    }
 }

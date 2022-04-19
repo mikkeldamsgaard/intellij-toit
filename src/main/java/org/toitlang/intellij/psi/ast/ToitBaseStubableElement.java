@@ -78,7 +78,7 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
         return clazz.cast(p);
     }
 
-    protected static TextRange getRelativeRangeInParent(ASTNode node) {
+    public static TextRange getRelativeRangeInParent(ASTNode node) {
         return new TextRange(node.getStartOffsetInParent(), node.getStartOffsetInParent() + node.getTextLength());
     }
 
