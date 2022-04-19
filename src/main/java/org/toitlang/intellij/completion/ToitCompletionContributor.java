@@ -24,22 +24,6 @@ public class ToitCompletionContributor extends CompletionContributor {
     public ToitCompletionContributor() {
 
         extend(CompletionType.BASIC,
-                PlatformPatterns.psiElement().withAncestor(2, StandardPatterns.instanceOf(ToitNamedArgument.class)),
-                new CompletionProvider<>() {
-                    @Override
-                    protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
-                        var pos = (ToitNameableIdentifier) parameters.getPosition().getParent();
-                        var call = pos.getParentOfType(ToitCallExpression.class);
-                        var function = call.getFunction();
-                        if (function == null) return;
-                        for (ToitParameterName toitParameterName : function.getChildrenOfType(ToitParameterName.class)) {
-                            result.addElement(LookupElementBuilder.create(toitParameterName));
-                        }
-                    }
-                }
-        );
-
-        extend(CompletionType.BASIC,
                 PlatformPatterns.psiElement()
                         .withParent(ToitRecover.class)
                         .withSuperParent(2, ToitFile.class)
@@ -75,6 +59,27 @@ public class ToitCompletionContributor extends CompletionContributor {
         completeBreakContinueReturnAndControls(toitElm, result);
         completeFinally(toitElm, result);
         completeConstructorAbstractStaticInStructureBlock(toitElm, result);
+        completeNullTrueFalse(toitElm, result);
+        completeNoneAny(toitElm, result);
+    }
+
+    private void completeNoneAny(IToitElement toitElm, CompletionResultSet result) {
+        if (toitElm.getParent() instanceof ToitType) {
+            var type = toitElm.getParentOfType(ToitType.class);
+            PsiElement prevNonWhiteSpace = type.getPrevNonWhiteSpaceSibling();
+            if (prevNonWhiteSpace == null || prevNonWhiteSpace.getNode().getElementType() != ToitTypes.DOT)
+                result.addElement(keywordElement("any"));
+            if (prevNonWhiteSpace != null && prevNonWhiteSpace.getNode().getElementType() == ToitTypes.RETURN_TYPE_OPERATOR)
+                result.addElement(keywordElement("none"));
+        }
+    }
+
+    private void completeNullTrueFalse(IToitElement toitElm, CompletionResultSet result) {
+        if (toitElm.getParent() instanceof ToitPrimaryExpression) {
+            result.addElement(keywordElement("null"));
+            result.addElement(keywordElement("true"));
+            result.addElement(keywordElement("false"));
+        }
     }
 
     private void completeConstructorAbstractStaticInStructureBlock(IToitElement toitElm, CompletionResultSet result) {

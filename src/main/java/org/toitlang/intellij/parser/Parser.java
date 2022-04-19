@@ -669,12 +669,12 @@ public class Parser {
 
             var namedArgument = mark(NAMED_ARGUMENT);
             if (expect(MINUS_MINUS)) {
-                if (!minusMinusIdentifier(NAMED_PARAMETER_IDENTIFIER))
-                    return errorInParameterParsing("Variable name expected", expr, lookahead, namedArgument);
+                if (!minusMinusIdentifier(NAMED_ARGUMENT_IDENTIFIER))
+                    return errorInParameterParsing("Argument name expected", expr, lookahead, namedArgument);
                 if (is(EQUALS)) {
                     consumeAllowNewlines();
                     if (!(areArgumentsOnNewLines ? expression(allowBlock) : assignmentExpression(allowBlock)))
-                        return errorInParameterParsing("Expected expression in named parameter", expr, lookahead, namedArgument);
+                        return errorInParameterParsing("Expected expression in named argument", expr, lookahead, namedArgument);
                 }
                 namedArgument.done();
                 numArgumnets++;

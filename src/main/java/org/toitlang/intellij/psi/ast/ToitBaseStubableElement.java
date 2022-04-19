@@ -77,6 +77,11 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
         while (p != null && !clazz.isInstance(p)) p = p.getPrevSibling();
         return clazz.cast(p);
     }
+    public PsiElement getPrevNonWhiteSpaceSibling() {
+        var p = getPrevSibling();
+        while (p != null && TokenSet.WHITE_SPACE.contains(p.getNode().getElementType())) p = p.getPrevSibling();
+        return p;
+    }
 
     public static TextRange getRelativeRangeInParent(ASTNode node) {
         return new TextRange(node.getStartOffsetInParent(), node.getStartOffsetInParent() + node.getTextLength());

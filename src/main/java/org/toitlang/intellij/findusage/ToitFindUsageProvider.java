@@ -21,7 +21,7 @@ public class ToitFindUsageProvider implements FindUsagesProvider {
     private ToitNameableIdentifier getNamedIdentifier(PsiElement element) {
         if (element instanceof PsiNameIdentifierOwner) {
             var psiNameIdentifier = ((PsiNameIdentifierOwner)element).getNameIdentifier();
-            return (ToitNameableIdentifier) psiNameIdentifier;
+            if (psiNameIdentifier instanceof  ToitNameableIdentifier) return (ToitNameableIdentifier) psiNameIdentifier;
         }
         return null;
     }
@@ -51,8 +51,7 @@ public class ToitFindUsageProvider implements FindUsagesProvider {
     @Override
     public @Nls @NotNull String getNodeText(@NotNull PsiElement element, boolean useFullName) {
         ToitNameableIdentifier ne = getNamedIdentifier(element);
-        String name = ne.getName();
-        return name != null ? name : "";
+        return ne.getName();
     }
 
     @Override
@@ -73,7 +72,8 @@ public class ToitFindUsageProvider implements FindUsagesProvider {
                         EXPORT_IDENTIFIER,
                         TYPE_IDENTIFIER,
                         REFERENCE_IDENTIFIER,
-                        BREAK_CONTINUE_LABEL_IDENTIFIER),
+                        BREAK_CONTINUE_LABEL_IDENTIFIER,
+                        NAMED_ARGUMENT_IDENTIFIER),
                 TokenSet.create(COMMENT),
                 TokenSet.create(STRING_PART, STRING_PART, STRING_END, INTEGER, FLOAT)
         );

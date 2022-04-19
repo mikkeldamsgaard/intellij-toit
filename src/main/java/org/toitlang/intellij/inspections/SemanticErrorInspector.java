@@ -4,9 +4,11 @@ import com.intellij.codeInspection.LocalInspectionTool;
 import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ToitFile;
+import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.ast.*;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
@@ -24,6 +26,15 @@ public class SemanticErrorInspector extends LocalInspectionTool {
                 checkStaticAbstract(toitFunction, holder);
                 checkReturn(toitFunction, holder);
             }
+
+            @Override
+            public void visit(ToitType toitType) {
+                if ("none".equals(toitType.getName())) {
+                    PsiElement prevNonWhiteSpace = toitType.getPrevNonWhiteSpaceSibling();
+                    if (prevNonWhiteSpace == null || prevNonWhiteSpace.getNode().getElementType() != ToitTypes.RETURN_TYPE_OPERATOR)
+                        holder.registerProblem(toitType, "Type none is only allowed as a return type");
+                }
+            }
         };
     }
 
@@ -40,7 +51,7 @@ public class SemanticErrorInspector extends LocalInspectionTool {
     }
 
     private boolean checkReturn(ToitBlock block, ProblemsHolder holder, ToitType returnType, boolean noReturnValue) {
-        boolean[] result = { false };
+        boolean[] result = {false};
         block.acceptChildren(new ToitVisitor() {
             @Override
             public void visit(ToitReturn toitReturn) {
@@ -53,7 +64,7 @@ public class SemanticErrorInspector extends LocalInspectionTool {
                         ToitStructure returnStructure = returnType.resolve();
                         if (evaluatedType != null && returnStructure != null) {
                             if (!evaluatedType.isAssignableTo(returnStructure)) {
-                                holder.registerProblem(toitReturn, "Wrong return type. "+evaluatedType.getStructure().getName()+" is not assignable to "+ returnStructure.getName());
+                                holder.registerProblem(toitReturn, "Wrong return type. " + evaluatedType.getStructure().getName() + " is not assignable to " + returnStructure.getName());
                             }
                         }
                     }
@@ -68,11 +79,11 @@ public class SemanticErrorInspector extends LocalInspectionTool {
             public void visit(ToitIf toitIf) {
                 List<ToitBlock> blocks = toitIf.getChildrenOfType(ToitBlock.class);
                 List<ToitExpression> expressions = toitIf.getChildrenOfType(ToitExpression.class);
-                if (blocks.size()>expressions.size()) {
+                if (blocks.size() > expressions.size()) {
                     // There is an else without condition
                     boolean res = true;
                     for (ToitBlock toitBlock : blocks) {
-                        res = res && checkReturn(toitBlock,holder,returnType, noReturnValue);
+                        res = res && checkReturn(toitBlock, holder, returnType, noReturnValue);
                     }
                     if (res) result[0] = true;
                 }
@@ -89,8 +100,8 @@ public class SemanticErrorInspector extends LocalInspectionTool {
             // TODO: Needs to use the body of functions to determine if it throws by scanning for __throw__ instead of checking for the function names in exceptions.toit
             @Override
             public void visit(ToitExpression toitExpression) {
-                if (toitExpression.getChildren().length > 0) {
-                    ((ToitExpression)toitExpression.getChildren()[0]).accept(new ToitExpressionVisitor<>() {
+                if (toitExpression.getChildren().length > 0 && toitExpression.getChildren()[0] instanceof ToitExpression) {
+                    ((ToitExpression) toitExpression.getChildren()[0]).accept(new ToitExpressionVisitor<>() {
                         @Override
                         public Object visit(ToitCallExpression toitCallExpression) {
 

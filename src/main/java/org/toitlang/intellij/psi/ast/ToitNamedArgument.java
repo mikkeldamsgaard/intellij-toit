@@ -18,7 +18,7 @@ public class ToitNamedArgument extends ToitElement {
 
   @Override
   public String getName() {
-    var identifier = getFirstChildOfType(ToitNameableIdentifier.class);
+    var identifier = getFirstChildOfType(ToitReferenceIdentifier.class);
     if (identifier != null) return identifier.getName();
     return super.getName();
   }

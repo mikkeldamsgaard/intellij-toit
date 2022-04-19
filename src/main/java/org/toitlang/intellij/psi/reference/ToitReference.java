@@ -11,6 +11,7 @@ import org.toitlang.intellij.files.ToitSdkFiles;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.ast.*;
+import org.toitlang.intellij.psi.calls.ToitCallHelper;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 import org.toitlang.intellij.psi.scope.ToitFileScope;
 import org.toitlang.intellij.psi.scope.ToitLocalScopeCalculator;
@@ -137,13 +138,29 @@ public class ToitReference implements PsiPolyVariantReference {
             var importDecl = source.getParentOfType(ToitImportDeclaration.class);
             var imports = importDecl.getChildrenOfType(ToitReferenceIdentifier.class).stream().filter(ToitReferenceIdentifier::isImport).collect(Collectors.toList());
             if (importDecl.hasShow() || importDecl.isShowStar() || importDecl.hasAs() || importDecl.getPrefixDots() > 0) {
-                String fqn = "$"+importDecl.getPrefixDots()+"$"+imports.stream().map(ToitIdentifier::getName).collect(Collectors.joining("."));
+                String fqn = "$" + importDecl.getPrefixDots() + "$" + imports.stream().map(ToitIdentifier::getName).collect(Collectors.joining("."));
                 var toitFile = scope.getImportedLibrary(fqn);
                 if (toitFile != null) destinations.add(toitFile);
             } else {
-                var last = imports.get(imports.size()-1);
+                var last = imports.get(imports.size() - 1);
                 List<PsiElement> resolved = scope.resolve(last.getName());
                 destinations.addAll(resolved);
+            }
+        } else if (sType == ToitTypes.NAMED_ARGUMENT_IDENTIFIER) {
+            var call = source.getParentOfType(ToitCallExpression.class);
+            var resolved = ToitCallHelper.resolveCall(call);
+            if (resolved != null) {
+                var namedParameter = resolved.getToitFunction().getChildrenOfType(ToitParameterName.class);
+                for (ToitParameterName toitParameterName : namedParameter) {
+                    if (source.getText().trim().equals(toitParameterName.getName())) {
+                        ToitIdentifier identifier = toitParameterName.getNameIdentifier();
+                        if (identifier instanceof ToitReferenceIdentifier) {
+                            destinations.addAll(((ToitReferenceIdentifier)identifier).getReference().destinations);
+                        } else if (identifier instanceof ToitNameableIdentifier) {
+                            destinations.add(toitParameterName);
+                        }
+                    }
+                }
             }
         } else if (sType == ToitTypes.REFERENCE_IDENTIFIER) {
             var expressionParent = source.getExpressionParent();

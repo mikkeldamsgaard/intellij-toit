@@ -32,6 +32,8 @@ public class ToitReferenceIdentifier extends ToitIdentifier {
             return replace(ToitElementFactory.createReferenceIdentifier(getProject(), newElementName));
         else if (getNode().getElementType() == ToitTypes.BREAK_CONTINUE_LABEL_IDENTIFIER)
             return replace(ToitElementFactory.createBreakContinueLabelIdentifier(getProject(), newElementName));
+        else if (getNode().getElementType() == ToitTypes.NAMED_ARGUMENT_IDENTIFIER)
+            return replace(ToitElementFactory.createNamedArgumentIdentifier(getProject(), newElementName));
 
         return null;
     }

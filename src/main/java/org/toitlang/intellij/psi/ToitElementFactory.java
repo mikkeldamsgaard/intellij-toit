@@ -9,7 +9,7 @@ public class ToitElementFactory {
     public static ToitNameableIdentifier createStructureIdentifier(Project project, String name) {
         final ToitFile file = createFile(project, String.format("class %s:", name));
         var tf = (ToitStructure) file.getFirstChild();
-        return (ToitNameableIdentifier) tf.getChildrenOfType(ToitNameableIdentifier.class).get(0);
+        return tf.getChildrenOfType(ToitNameableIdentifier.class).get(0);
     }
 
     public static ToitNameableIdentifier createFunctionIdentifier(Project project, String name) {
@@ -58,7 +58,9 @@ public class ToitElementFactory {
     public static ToitNameableIdentifier createNamedParameterIdentifier(Project project, String name) {
         final ToitFile file = createFile(project, String.format("f --%s", name));
         var tf = (ToitFunction) file.getFirstChild();
-        return (ToitNameableIdentifier) tf.getFirstChild().getNextSibling();
+        var tp = tf.getFirstChildOfType(ToitParameterName.class);
+        assert tp != null;
+        return tp.getFirstChildOfType(ToitNameableIdentifier.class);
     }
 
     public static ToitNameableIdentifier createSimpleParameterIdentifier(Project project, String name) {
@@ -83,6 +85,17 @@ public class ToitElementFactory {
         var tbc = (ToitBreakContinue) tb.getFirstChild();
         return (ToitReferenceIdentifier) tbc.getFirstChild();
     }
+
+    public static ToitReferenceIdentifier createNamedArgumentIdentifier(Project project, String name) {
+        final ToitFile file = createFile(project, String.format("p := f --%s", name));
+        var tf = (ToitVariableDeclaration) file.getFirstChild();
+        var te = (ToitTopLevelExpression) tf.getLastChild();
+        var tc = (ToitCallExpression) te.getFirstChild();
+        var tn = tc.getFirstChildOfType(ToitNamedArgument.class);
+        assert tn != null;
+        return tn.getFirstChildOfType(ToitReferenceIdentifier.class);
+    }
+
 
     public static ToitReferenceIdentifier createTypeIdentifier(Project project, String name) {
         final ToitFile file = createFile(project, String.format("x/%s ::= 0", name));

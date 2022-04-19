@@ -8,6 +8,7 @@ import org.toitlang.intellij.files.ToitSdkFiles;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.ast.*;
+import org.toitlang.intellij.psi.calls.ToitCallHelper;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 import org.toitlang.intellij.psi.scope.ToitScope;
 
@@ -97,6 +98,13 @@ public class VariantsCalculator {
                     .filter(v -> !(v instanceof ToitFile))
                     .collect(Collectors.toList()));
             variants.add("*");
+        } else if (sType == ToitTypes.NAMED_ARGUMENT_IDENTIFIER) {
+            var call = source.getParentOfType(ToitCallExpression.class);
+            for (ToitFunction function : call.getFunctions()) {
+                variants.addAll(function.getChildrenOfType(ToitParameterName.class)
+                        .stream().map(ToitParameterName::getName)
+                        .collect(Collectors.toList()));
+            }
         } else if (sType == ToitTypes.IMPORT_IDENTIFIER) {
             ToitImportDeclaration import_ = source.getParentOfType(ToitImportDeclaration.class);
             List<ToitReferenceIdentifier> path = new ArrayList<>();

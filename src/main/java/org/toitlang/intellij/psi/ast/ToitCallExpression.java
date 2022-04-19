@@ -30,13 +30,13 @@ public class ToitCallExpression extends ToitExpression {
         return null;
     }
 
-    public List<ToitFunction> getFunctions() {
+    public @NotNull List<ToitFunction> getFunctions() {
+        List<ToitFunction> result = new ArrayList<>();
         var callee = getFirstChildOfType(ToitExpression.class);
-        if (callee == null) return null;
+        if (callee == null) return result;
         ToitReferenceIdentifier lastRef = callee.getLastDescendentOfType(ToitReferenceIdentifier.class);
-        if (lastRef == null) return null;
+        if (lastRef == null) return result;
         var functions = lastRef.getReference().multiResolve(false);
-        List<ToitFunction> result = new ArrayList<>(functions.length);
         for (ResolveResult resolveResult : functions) {
             var resolvedElement = resolveResult.getElement();
             if (resolvedElement instanceof ToitFunction) result.add((ToitFunction) resolvedElement);

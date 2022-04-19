@@ -38,13 +38,14 @@
                                implementationClass="org.toitlang.intellij.parser.ToitParserDefinition"/>
         <lang.syntaxHighlighterFactory language="Toit"
                                        implementationClass="org.toitlang.intellij.highlighting.ToitSyntaxHighlighterFactory"/>
-        <lang.findUsagesProvider language="Toit"
-                                 implementationClass="org.toitlang.intellij.findusage.ToitFindUsageProvider"/>
         <lang.psiStructureViewFactory language="Toit"
                                       implementationClass="org.toitlang.intellij.structureview.ToitStructureViewFactory"/>
         <lang.commenter language="Toit"
                         implementationClass="org.toitlang.intellij.commenting.ToitCommenter"/>
-
+        <lang.findUsagesProvider language="Toit"
+                                 implementationClass="org.toitlang.intellij.findusage.ToitFindUsageProvider"/>
+        <lang.namesValidator language="Toit"
+                             implementationClass="org.toitlang.intellij.findusage.ToitNamesValidator"/>
         <codeInsight.parameterInfo language="Toit"
                                    implementationClass="org.toitlang.intellij.psi.calls.ToitParameterInfoHandler"/>
 

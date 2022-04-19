@@ -1,17 +1,12 @@
 Bugs:
 
 Top:
-  - Add completion for null, true, false, any, none
-
-  - rename of named parameter (change named argument to be reference)
   - Inspections
-     - Type
-       - better error message when arguments mismatch
      - Missing implementations of abstract classes/interfaces
   - show params enhancement
+  - quick fix for missing reference (import)
 
 Near future
-  - quick fix for missing reference (import)
   - Add predefined indentifier from token.h
   - Handle 'import net\nimport net.udp as net'
 

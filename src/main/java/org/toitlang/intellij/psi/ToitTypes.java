@@ -117,6 +117,7 @@ public interface ToitTypes {
   IElementType TYPE_IDENTIFIER = new ToitElementType("TYPE_IDENTIFIER", ToitReferenceIdentifier::new);
   IElementType REFERENCE_IDENTIFIER = new ToitElementType("REFERENCE_IDENTIFIER", ToitReferenceIdentifier::new);
   IElementType BREAK_CONTINUE_LABEL_IDENTIFIER = new ToitElementType("BREAK_CONTINUE_LABEL_IDENTIFIER", ToitReferenceIdentifier::new);
+  IElementType NAMED_ARGUMENT_IDENTIFIER = new ToitElementType("NAMED_ARGUMENT_IDENTIFIER", ToitReferenceIdentifier::new);
 
 
   IElementType VARIABLE_TYPE = new ToitElementType("VARIABLE_TYPE", ToitType::new);

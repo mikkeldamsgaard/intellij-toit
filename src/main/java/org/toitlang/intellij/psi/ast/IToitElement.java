@@ -24,6 +24,8 @@ public interface IToitElement extends PsiElement {
 
     <V> V getPrevSiblingOfType(Class<V> clazz);
 
+    PsiElement getPrevNonWhiteSpaceSibling();
+
     ToitFile getToitFile();
 
     ToitScope getToitResolveScope();
