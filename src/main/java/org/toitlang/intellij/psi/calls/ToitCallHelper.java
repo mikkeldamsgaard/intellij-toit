@@ -131,8 +131,8 @@ public class ToitCallHelper {
         }
 
         /* Positional args */
-        if (positionalArgs.size() < parametersInfo.getNumberOfNonDefaultPositionals() ||
-                positionalArgs.size() > parametersInfo.getNumberOfPositionals()) return null;
+        if (positionalArgs.size() < parametersInfo.getNumberOfNonDefaultPositionalParameters() ||
+                positionalArgs.size() > parametersInfo.getNumberOfPositionalParameters()) return null;
 
         int position = 0;
         for (IToitElement positionalArg : positionalArgs) {
@@ -141,7 +141,7 @@ public class ToitCallHelper {
         }
 
         /* Named non default parameters */
-        for (String nonDefaultNamedParameter : parametersInfo.getNonDefaultNamedParameters()) {
+        for (String nonDefaultNamedParameter : parametersInfo.getNonDefaultNamedParameters().keySet()) {
             if (!names.containsKey(nonDefaultNamedParameter)) return null;
             resolvedFunctionCall.addMatch(names.get(nonDefaultNamedParameter), parametersInfo.getNamedParameter(nonDefaultNamedParameter));
         }

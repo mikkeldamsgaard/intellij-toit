@@ -47,7 +47,7 @@ public class ToitType extends ToitElement {
   }
 
   @Override
-  public String getName() {
+  public @NotNull String getName() {
     return getChildrenOfType(ToitReferenceIdentifier.class).stream()
             .map(ToitReferenceIdentifier::getName)
             .collect(Collectors.joining("."));

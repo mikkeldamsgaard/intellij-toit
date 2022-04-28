@@ -14,9 +14,7 @@ import org.toitlang.intellij.psi.visitor.ToitVisitor;
 import org.toitlang.intellij.psi.scope.ToitScope;
 
 import javax.swing.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -52,7 +50,7 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
         return hasToken(ABSTRACT);
     }
 
-    public String getName() {
+    public @NotNull String getName() {
         var stub = getStub();
         if (stub != null) return stub.getName();
 
@@ -129,7 +127,7 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
     }
 
 
-    private List<ToitStructure> getInterfaces() {
+    public List<ToitStructure> getInterfaces() {
         var implementsTypes = getChildrenOfType(ToitType.class).stream()
                 .filter(ToitType::isImplementsType).collect(Collectors.toList());
 
@@ -188,5 +186,36 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
             return isBaseClassOrInterfaceOf(baseClass);
         }
         return false;
+    }
+
+    public List<ToitFunction> getAllFunctions() {
+        List<ToitFunction> result = new ArrayList<>();
+        Set<ToitStructure> seen = new HashSet<>();
+        getAllFunctions(result, seen);
+        return result;
+    }
+
+    private void getAllFunctions(List<ToitFunction> result, Set<ToitStructure> seen) {
+        seen.add(this);
+        var block = getFirstChildOfType(ToitBlock.class);
+        if (block == null) return; // Malformed syntax
+
+        result.addAll(block.getChildrenOfType(ToitFunction.class));
+        var base = getBaseClass();
+        if (base != null && !seen.contains(base)) {
+            base.getAllFunctions(result, seen);
+        }
+
+        for (ToitStructure interface_ : getInterfaces()) {
+            if (!seen.contains(interface_)) {
+                interface_.getAllFunctions(result, seen);
+            }
+        }
+    }
+
+    public Set<ToitFunction> getOwnFunctions() {
+        var block = getFirstChildOfType(ToitBlock.class);
+        if (block == null) return Collections.emptySet(); // Malformed syntax
+        return new HashSet<>(block.getChildrenOfType(ToitFunction.class));
     }
 }

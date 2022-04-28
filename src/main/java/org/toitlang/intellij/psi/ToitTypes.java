@@ -24,7 +24,6 @@ public interface ToitTypes {
   IElementType COLON_COLON = new ToitTokenType("COLON_COLON");
   IElementType COMMA = new ToitTokenType("COMMA");
   IElementType COMMENT = new ToitTokenType("COMMENT");
-  IElementType CONSTRUCTOR = new ToitTokenType("CONSTRUCTOR");
   IElementType CONST_DECLARE = new ToitTokenType("CONST_DECLARE");
   IElementType CONTINUE = new ToitTokenType("CONTINUE");
   IElementType DECLARE = new ToitTokenType("DECLARE");
@@ -45,13 +44,11 @@ public interface ToitTypes {
   IElementType HASH = new ToitTokenType("HASH");
   IElementType HAT = new ToitTokenType("HAT");
   IElementType IDENTIFIER = new ToitTokenType("IDENTIFIER");
-  IElementType PARAMETER_NAME_TOKEN = new ToitTokenType("PARAMETER_NAME_TOKEN");
   IElementType IF = new ToitTokenType("IF");
   IElementType IMPORT = new ToitTokenType("IMPORT");
   IElementType INDENT = new ToitTokenType("INDENT");
   IElementType DEDENT = new ToitTokenType("DEDENT");
   IElementType INTEGER = new ToitTokenType("INTEGER");
-  IElementType INTERFACE = new ToitTokenType("INTERFACE");
   IElementType IS = new ToitTokenType("IS");
   IElementType IS_NOT = new ToitTokenType("IS_NOT");
   IElementType LBRACKET = new ToitTokenType("LBRACKET");

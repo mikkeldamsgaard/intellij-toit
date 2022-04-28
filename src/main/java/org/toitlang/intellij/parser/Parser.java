@@ -644,8 +644,8 @@ public class Parser {
         int newLineArgumentsIndentLevel = -1;
         if (!assignmentExpression(allowBlock)) return expr.drop();
         if (atStatementTerminator(allowBlock)) return expr.collapse();
-        if (!(allowBlock && is(COLON)) && !is(COLON_COLON) && currentTokenIsAttached) // TODO: Is this necessary?
-            return expr.collapse();
+//        if (!(allowBlock && is(COLON)) && !is(COLON_COLON) && currentTokenIsAttached) // TODO: Is this necessary?
+//            return expr.collapse();
         var lookahead = mark(null);
         boolean areArgumentsOnNewLines = false;
         int numArgumnets = 0;
@@ -662,7 +662,7 @@ public class Parser {
                     newLineArgumentsIndentLevel = currentIndentLevel;
                 }
             }
-            if (currentTokenIsAttached && !is(COLON) && !is(COLON_COLON))
+            if (currentTokenIsAttached && !is(COLON) && !is(COLON_COLON) && !is(LPAREN) && !is(LCURLY))
                 return errorInParameterParsing(expr, lookahead);
 
             if (!areArgumentsOnNewLines && currentIsAtBeginningOfLine) break;
@@ -781,6 +781,7 @@ public class Parser {
 
         boolean anyConsumed = false;
         while (isAllowingNewlines(operatorSet)) {
+            if (detectUnaryMinus()) break;
             operator();
 
             if (rightHandFullExpression) {
@@ -793,6 +794,19 @@ public class Parser {
 
         if (anyConsumed) return expr.done();
         else return expr.collapse();
+    }
+
+    private boolean detectUnaryMinus() {
+        if (is(MINUS) && !currentTokenIsAttached) {
+            var lookahead = mark(null);
+            try {
+                consume();
+                return currentTokenIsAttached;
+            } finally {
+                lookahead.rollback();
+            }
+        }
+        return false;
     }
 
 

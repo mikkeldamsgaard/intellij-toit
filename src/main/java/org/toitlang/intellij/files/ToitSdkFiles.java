@@ -37,6 +37,7 @@ public class ToitSdkFiles extends IndexableSetContributor {
         return null;
     }
 
+    // TODO: Change this to be aware of changes to the SDK files, to avoid "has returned an invalid lookup element"
     public static ToitScope getCoreScope(Project project) {
         var cache = coreMap.get(project);
         if (cache == null) {

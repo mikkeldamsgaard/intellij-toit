@@ -10,12 +10,17 @@ import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.ast.*;
+import org.toitlang.intellij.psi.calls.ToitCallHelper;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
 import org.toitlang.intellij.psi.reference.ToitReference;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class SemanticErrorInspector extends LocalInspectionTool {
     @Override
@@ -29,13 +34,64 @@ public class SemanticErrorInspector extends LocalInspectionTool {
 
             @Override
             public void visit(ToitType toitType) {
-                if ("none".equals(toitType.getName())) {
-                    PsiElement prevNonWhiteSpace = toitType.getPrevNonWhiteSpaceSibling();
-                    if (prevNonWhiteSpace == null || prevNonWhiteSpace.getNode().getElementType() != ToitTypes.RETURN_TYPE_OPERATOR)
-                        holder.registerProblem(toitType, "Type none is only allowed as a return type");
-                }
+                checkNoneType(toitType, holder);
+            }
+
+            @Override
+            public void visit(ToitExpression toitExpression) {
+                checkInstantiationOfAbstractClass(toitExpression, holder);
+            }
+
+            @Override
+            public void visit(ToitStructure toitStructure) {
+                checkMissingImplementations(toitStructure,holder);
             }
         };
+    }
+
+    private void checkMissingImplementations(ToitStructure toitStructure, ProblemsHolder holder) {
+        if (toitStructure.isInterface() || toitStructure.isAbstract()) return;
+
+        List<ToitFunction> allFunctions = toitStructure.getAllFunctions();
+        Map<String, List<ToitFunction>> implementedFunctions = new HashMap<>();
+        for (ToitFunction f : allFunctions) {
+            if (!f.isAbstract() && !f.getParentOfType(ToitStructure.class).isInterface()) {
+                implementedFunctions.computeIfAbsent(f.getName(), n -> new ArrayList<>()).add(f);
+            }
+        }
+        List<ToitFunction> missingImplementation = new ArrayList<>();
+
+        for (ToitFunction f : allFunctions) {
+            if ((f.isAbstract() || f.getParentOfType(ToitStructure.class).isInterface()) && !f.isOperator()) {
+                if (!implementedFunctions.containsKey(f.getName())) missingImplementation.add(f);
+                // TODO: Verify parameters
+            }
+        }
+
+        if (missingImplementation.size() > 0) {
+            holder.registerProblem(toitStructure.getProblemIdentifier(), "Missing implementation of "+
+                    missingImplementation.stream().map(ToitFunction::getName).collect(Collectors.toSet()));
+        }
+    }
+
+    private void checkInstantiationOfAbstractClass(ToitExpression toitExpression, @NotNull ProblemsHolder holder) {
+//        var resolved = ToitCallHelper.resolveCall(toitExpression);
+//        if (resolved != null && resolved.getToitFunction().isConstructor()) {
+//            var structure = resolved.getToitFunction().getParentOfType(ToitStructure.class);
+//            if (structure != null) {
+//                if (structure.isAbstract() || structure.isInterface()) {
+//                    holder.registerProblem(toitExpression, "Can not instantiate abstract class");
+//                }
+//            }
+//        }
+    }
+
+    private void checkNoneType(ToitType toitType, @NotNull ProblemsHolder holder) {
+        if ("none".equals(toitType.getName())) {
+            PsiElement prevNonWhiteSpace = toitType.getPrevNonWhiteSpaceSibling();
+            if (prevNonWhiteSpace == null || prevNonWhiteSpace.getNode().getElementType() != ToitTypes.RETURN_TYPE_OPERATOR)
+                holder.registerProblem(toitType, "Type none is only allowed as a return type");
+        }
     }
 
     private void checkReturn(ToitFunction toitFunction, ProblemsHolder holder) {
@@ -97,6 +153,16 @@ public class SemanticErrorInspector extends LocalInspectionTool {
                 super.visit(toitTry);
             }
 
+            @Override
+            public void visit(ToitWhile toitWhile) {
+                var expression = toitWhile.getFirstChildOfType(ToitExpression.class);
+                if (expression != null && expression.getText().trim().equals("true")) {
+                    ToitBlock toitBlock = toitWhile.getFirstChildOfType(ToitBlock.class);
+                    if (toitBlock != null && checkReturn(toitBlock, holder, returnType, noReturnValue)) result[0] = true;
+
+                }
+            }
+
             // TODO: Needs to use the body of functions to determine if it throws by scanning for __throw__ instead of checking for the function names in exceptions.toit
             @Override
             public void visit(ToitExpression toitExpression) {
@@ -122,6 +188,7 @@ public class SemanticErrorInspector extends LocalInspectionTool {
                         public Object visit(ToitPrimaryExpression toitPrimaryExpression) {
                             ToitReferenceIdentifier ref = toitPrimaryExpression.getFirstChildOfType(ToitReferenceIdentifier.class);
                             if (ref != null && ref.getName().equals("unreachable")) result[0] = true;
+                            if (toitPrimaryExpression.getFirstChildOfType(ToitPrimitive.class) != null) result[0] = true;
                             return null;
                         }
                     });

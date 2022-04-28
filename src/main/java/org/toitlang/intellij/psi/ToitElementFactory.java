@@ -5,6 +5,8 @@ import com.intellij.psi.PsiFileFactory;
 import org.toitlang.intellij.ToitFileType;
 import org.toitlang.intellij.psi.ast.*;
 
+import java.util.List;
+
 public class ToitElementFactory {
     public static ToitNameableIdentifier createStructureIdentifier(Project project, String name) {
         final ToitFile file = createFile(project, String.format("class %s:", name));
@@ -50,8 +52,10 @@ public class ToitElementFactory {
 
     public static ToitNameableIdentifier createFactoryIdentifier(Project project, String name) {
         final ToitFile file = createFile(project, String.format("class f:\n  constructor.%s:", name));
-        var tf = (ToitStructure) file.getFirstChild();
-        var f = (ToitFunction) tf.getFirstChild();
+        var ts = (ToitStructure) file.getFirstChild();
+        var tb = ts.getFirstChildOfType(ToitBlock.class);
+        assert tb != null;
+        var f = (ToitFunction) tb.getFirstChild();
         return (ToitNameableIdentifier) f.getFirstChild().getNextSibling();
     }
 
@@ -96,6 +100,14 @@ public class ToitElementFactory {
         return tn.getFirstChildOfType(ToitReferenceIdentifier.class);
     }
 
+    public static List<ToitFunction> createFunctions(Project project, String functionsStr) {
+        final ToitFile file = createFile(project, String.format("class A:\n%s",functionsStr));
+        var ts = (ToitStructure) file.getFirstChild();
+        var tb = ts.getFirstChildOfType(ToitBlock.class);
+        assert tb != null;
+        return tb.getChildrenOfType(ToitFunction.class);
+    }
+
 
     public static ToitReferenceIdentifier createTypeIdentifier(Project project, String name) {
         final ToitFile file = createFile(project, String.format("x/%s ::= 0", name));
@@ -109,4 +121,5 @@ public class ToitElementFactory {
         return (ToitFile) PsiFileFactory.getInstance(project).
                 createFileFromText(name, ToitFileType.INSTANCE, text);
     }
+
 }

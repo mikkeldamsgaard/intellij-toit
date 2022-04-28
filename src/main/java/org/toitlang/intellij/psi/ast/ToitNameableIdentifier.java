@@ -41,19 +41,19 @@ public class ToitNameableIdentifier extends ToitIdentifier {
 
   public PsiElement setName(@NlsSafe @NotNull String name) throws IncorrectOperationException {
     if (getNode().getElementType() == ToitTypes.STRUCTURE_IDENTIFIER)
-      return replace(ToitElementFactory.createStructureIdentifier(getProject(),name));
+      return replaceIdentifierToken(ToitElementFactory.createStructureIdentifier(getProject(),name));
     else if (getNode().getElementType() == ToitTypes.FUNCTION_IDENTIFIER)
-      return replace(ToitElementFactory.createFunctionIdentifier(getProject(),name));
+      return replaceIdentifierToken(ToitElementFactory.createFunctionIdentifier(getProject(),name));
     else if (getNode().getElementType() == ToitTypes.IMPORT_AS_IDENTIFIER)
-      return replace(ToitElementFactory.createImportAsIdentifier(getProject(),name));
+      return replaceIdentifierToken(ToitElementFactory.createImportAsIdentifier(getProject(),name));
     else if (getNode().getElementType() == ToitTypes.FACTORY_IDENTIFIER)
-      return replace(ToitElementFactory.createFactoryIdentifier(getProject(),name));
+      return replaceIdentifierToken(ToitElementFactory.createFactoryIdentifier(getProject(),name));
     else if (getNode().getElementType() == ToitTypes.NAMED_PARAMETER_IDENTIFIER)
-      return replace(ToitElementFactory.createNamedParameterIdentifier(getProject(),name));
+      return replaceIdentifierToken(ToitElementFactory.createNamedParameterIdentifier(getProject(),name));
     else if (getNode().getElementType() == ToitTypes.SIMPLE_PARAMETER_IDENTIFIER)
-      return replace(ToitElementFactory.createSimpleParameterIdentifier(getProject(),name));
+      return replaceIdentifierToken(ToitElementFactory.createSimpleParameterIdentifier(getProject(),name));
     else if (getNode().getElementType() == ToitTypes.VARIABLE_IDENTIFIER)
-      return replace(ToitElementFactory.createVariableIdentifier(getProject(),name));
+      return replaceIdentifierToken(ToitElementFactory.createVariableIdentifier(getProject(),name));
 
     return this;
   }

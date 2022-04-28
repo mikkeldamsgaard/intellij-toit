@@ -22,6 +22,7 @@
     <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
          on how to target different products -->
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <fileType name="Toit File"
@@ -48,6 +49,10 @@
                              implementationClass="org.toitlang.intellij.findusage.ToitNamesValidator"/>
         <codeInsight.parameterInfo language="Toit"
                                    implementationClass="org.toitlang.intellij.psi.calls.ToitParameterInfoHandler"/>
+        <codeInsight.overrideMethod language="Toit"
+                                    implementationClass="org.toitlang.intellij.psi.codeInsight.ToitOverrideMethodsHandler"/>
+        <codeInsight.implementMethod language="Toit"
+                                     implementationClass="org.toitlang.intellij.psi.codeInsight.ToitImplementMethodsHandler"/>
 
 
         <gotoClassContributor implementation="org.toitlang.intellij.findusage.ToitGotoClass"/>

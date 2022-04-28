@@ -16,41 +16,43 @@ public class ToitAnnotationHighlighter implements Annotator {
         element.accept(new ToitVisitor() {
             @Override
             public void visit(ToitNameableIdentifier toitNameableIdentifier) {
+                var highlighted =toitNameableIdentifier.getIdentifierToken();
                 if (toitNameableIdentifier.isFunctionName()) {
-                    applyHighlight(holder, toitNameableIdentifier, ToitSyntaxHighlighter.FUNCTION_DECLARATION);
+                    applyHighlight(holder, highlighted, ToitSyntaxHighlighter.FUNCTION_DECLARATION);
                 } else if (toitNameableIdentifier.isVariableName()) {
                     toitNameableIdentifier.getParent().accept(annotateVariable(toitNameableIdentifier, holder));
-                    applyHighlight(holder, toitNameableIdentifier, ToitSyntaxHighlighter.INSTANCE_FIELD);
+                    applyHighlight(holder, highlighted, ToitSyntaxHighlighter.INSTANCE_FIELD);
                 } else if (toitNameableIdentifier.isStructureName()) {
                     toitNameableIdentifier.getParent().accept(new ToitVisitor() {
                         @Override
                         public void visit(ToitStructure toitStructure) {
                             if (toitStructure.isInterface())
-                                applyHighlight(holder, toitNameableIdentifier, ToitSyntaxHighlighter.INTERFACE_NAME);
+                                applyHighlight(holder, highlighted, ToitSyntaxHighlighter.INTERFACE_NAME);
                             else
-                                applyHighlight(holder, toitNameableIdentifier, ToitSyntaxHighlighter.CLASS_NAME);
+                                applyHighlight(holder, highlighted, ToitSyntaxHighlighter.CLASS_NAME);
                         }
                     });
-                    applyHighlight(holder, toitNameableIdentifier, ToitSyntaxHighlighter.CLASS_NAME);
+                    applyHighlight(holder, highlighted, ToitSyntaxHighlighter.CLASS_NAME);
                 }
             }
 
             @Override
             public void visit(ToitReferenceIdentifier toitReferenceIdentifier) {
+                var highlighted =toitReferenceIdentifier.getIdentifierToken();
                 if (toitReferenceIdentifier.isTypeName()) {
-                    applyHighlight(holder, toitReferenceIdentifier, ToitSyntaxHighlighter.CLASS_REFERENCE);
+                    applyHighlight(holder, highlighted, ToitSyntaxHighlighter.CLASS_REFERENCE);
                 } else if (toitReferenceIdentifier.isReference()) {
                     ToitReference reference = toitReferenceIdentifier.getReference();
                     PsiElement ref = reference.resolve();
                     if (ref == null) {
                         String name = toitReferenceIdentifier.getName();
                         if (reference.isSoft() && ("it".equals(name) || "super".equals(name)))
-                            applyHighlight(holder, toitReferenceIdentifier, ToitSyntaxHighlighter.KEYWORD);
+                            applyHighlight(holder, highlighted, ToitSyntaxHighlighter.KEYWORD);
                     } else {
                         if ("this".equals(toitReferenceIdentifier.getName())) {
-                            applyHighlight(holder, toitReferenceIdentifier, ToitSyntaxHighlighter.KEYWORD);
+                            applyHighlight(holder, highlighted, ToitSyntaxHighlighter.KEYWORD);
                         } else
-                            ref.accept(annotateVariable(toitReferenceIdentifier, holder));
+                            ref.accept(annotateVariable(highlighted, holder));
                     }
                 }
             }

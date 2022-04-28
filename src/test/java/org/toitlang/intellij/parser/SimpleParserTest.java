@@ -3,6 +3,9 @@ package org.toitlang.intellij.parser;
 import junit.framework.AssertionFailedError;
 import org.toitlang.intellij.lexer.ToitLexerAdapter;
 import org.toitlang.intellij.lexer.ToitRestartableLexerAdapter;
+import org.toitlang.intellij.psi.ast.ToitAssignmentExpression;
+import org.toitlang.intellij.psi.ast.ToitExpression;
+import org.toitlang.intellij.psi.ast.ToitVariableDeclaration;
 
 
 public class SimpleParserTest extends ParserTest {
@@ -489,5 +492,17 @@ public class SimpleParserTest extends ParserTest {
                 "x --p-a:"
         );
         checkError(p, "");
+    }
+
+    public void testParenNoSpace() {
+        var p = parseFile("tmp", "" +
+                "a := f(1)"
+        );
+
+        assertTrue(p.getFirstChild() instanceof ToitVariableDeclaration);
+        ToitVariableDeclaration vd = (ToitVariableDeclaration) p.getFirstChild();
+        var e = vd.getFirstChildOfType(ToitExpression.class);
+        assertEquals("f(1)", e.getText());
+
     }
 }

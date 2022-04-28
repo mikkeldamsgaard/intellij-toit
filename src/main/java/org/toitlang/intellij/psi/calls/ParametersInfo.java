@@ -5,11 +5,11 @@ import java.util.stream.Collectors;
 
 public class ParametersInfo {
     private final Map<String, ParameterInfo> named;
-    private final List<ParameterInfo> positionals;
+    private final List<ParameterInfo> positionalParameters;
 
     public ParametersInfo() {
         named = new HashMap<>();
-        positionals = new ArrayList<>();
+        positionalParameters = new ArrayList<>();
     }
 
     public void addNamed(String name, ParameterInfo info) {
@@ -17,21 +17,26 @@ public class ParametersInfo {
     }
 
     public void addPositional(ParameterInfo info) {
-        positionals.add(info);
+        positionalParameters.add(info);
     }
 
-    public int getNumberOfNonDefaultPositionals() {
-        int i = 0;
-        while (i < positionals.size() && !positionals.get(i).hasDefaultValue) i++;
-        return i;
+    public List<ParameterInfo> getNonDefaultPositionalParameters() {
+        return positionalParameters.stream().filter(p -> !p.hasDefaultValue).collect(Collectors.toList());
+    }
+    public int getNumberOfNonDefaultPositionalParameters() {
+        return getNonDefaultPositionalParameters().size();
     }
 
-    public int getNumberOfPositionals() {
-        return positionals.size();
+    public int getNumberOfPositionalParameters() {
+        return positionalParameters.size();
     }
 
-    public Set<String> getNonDefaultNamedParameters() {
-        return named.entrySet().stream().filter(e -> !e.getValue().hasDefaultValue).map(Map.Entry::getKey).collect(Collectors.toSet());
+    public Map<String, ParameterInfo> getNonDefaultNamedParameters() {
+        Map<String, ParameterInfo> res = new HashMap<>();
+        for (Map.Entry<String, ParameterInfo> e : new HashMap<>(named).entrySet()) {
+            if (!e.getValue().hasDefaultValue) res.put(e.getKey(), e.getValue());
+        }
+        return res;
     }
 
     public boolean hasNamedParameter(String name) {
@@ -39,7 +44,7 @@ public class ParametersInfo {
     }
 
     public ParameterInfo getPositional(int position) {
-        return positionals.get(position);
+        return positionalParameters.get(position);
     }
 
     public ParameterInfo getNamedParameter(String name) {

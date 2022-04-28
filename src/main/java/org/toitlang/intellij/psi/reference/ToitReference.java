@@ -161,6 +161,8 @@ public class ToitReference implements PsiPolyVariantReference {
                         }
                     }
                 }
+            } else {
+                soft = true;
             }
         } else if (sType == ToitTypes.REFERENCE_IDENTIFIER) {
             var expressionParent = source.getExpressionParent();

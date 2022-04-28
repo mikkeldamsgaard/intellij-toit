@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitTypes;
+import org.toitlang.intellij.psi.calls.FunctionSignature;
 import org.toitlang.intellij.psi.calls.ParameterInfo;
 import org.toitlang.intellij.psi.calls.ParametersInfo;
 import org.toitlang.intellij.psi.scope.ToitScope;
@@ -50,7 +51,7 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
     }
 
     @Override
-    public String getName() {
+    public @NotNull  String getName() {
         var stub = getStub();
         if (stub != null && stub.getName() != null) return stub.getName();
 
@@ -185,7 +186,7 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
                 hasDefaultVale = true;
             }
         } finally {
-            ParameterInfo info = new ParameterInfo(toitType, nullable, hasDefaultVale, isBlock, isMemberInitializer);
+            ParameterInfo info = new ParameterInfo(toitType, pn.getName(), nullable, hasDefaultVale, isBlock, isMemberInitializer);
 
             if (isNamed) {
                 parametersInfo.addNamed(pn.getName(), info);
@@ -193,5 +194,12 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
                 parametersInfo.addPositional(info);
             }
         }
+    }
+
+    public FunctionSignature getSignature() {
+        ParametersInfo parameterInfo = getParameterInfo();
+        return new FunctionSignature(getName(),
+                parameterInfo.getNonDefaultPositionalParameters(),
+                parameterInfo.getNonDefaultNamedParameters());
     }
 }

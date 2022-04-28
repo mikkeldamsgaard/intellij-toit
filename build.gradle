@@ -20,6 +20,7 @@ dependencies {
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
     version = '2021.3.2'
+    plugins = ['com.intellij.java']
 }
 patchPluginXml {
     changeNotes = """
@@ -33,6 +34,7 @@ patchPluginXml {
 <li>Type inspection, checking that declared types matches and that parameters match function calls</li>
 <li>Enhanced unary minus parsing</li>
 <li>"super" now correctly resolved to the base class in constructors and the overwritten method in functions</li>
+<li>Identifiers followed by comments now colors and renames correcly</li>
 
 </ul>
       """

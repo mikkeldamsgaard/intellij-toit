@@ -1,10 +1,11 @@
 Bugs:
 
 Top:
-  - Inspections
-     - Missing implementations of abstract classes/interfaces
-  - show params enhancement
+   - show params enhancement
+  - enhanced display of missing implementations
+  - check parameters in missing implementations
   - quick fix for missing reference (import)
+  - Make ToitSdkFiles invalidate caches on changes
 
 Near future
   - Add predefined indentifier from token.h

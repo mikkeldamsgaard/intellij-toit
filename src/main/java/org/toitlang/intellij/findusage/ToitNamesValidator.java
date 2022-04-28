@@ -24,6 +24,6 @@ public class ToitNamesValidator implements NamesValidator {
 
     @Override
     public boolean isIdentifier(@NotNull String name, Project project) {
-        return name.matches("[_A-Za-z][_A-Za-z0-9-]+");
+        return name.matches("[_A-Za-z][_A-Za-z0-9-]*");
     }
 }
