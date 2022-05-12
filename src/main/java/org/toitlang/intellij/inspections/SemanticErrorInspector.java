@@ -10,16 +10,15 @@ import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.ast.*;
+import org.toitlang.intellij.psi.calls.FunctionSignature;
 import org.toitlang.intellij.psi.calls.ToitCallHelper;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
 import org.toitlang.intellij.psi.reference.ToitReference;
+import org.toitlang.intellij.psi.visitor.ToitVisitableElement;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class SemanticErrorInspector extends LocalInspectionTool {
@@ -46,24 +45,54 @@ public class SemanticErrorInspector extends LocalInspectionTool {
             public void visit(ToitStructure toitStructure) {
                 checkMissingImplementations(toitStructure,holder);
             }
+
+            @Override
+            public void visit(ToitVariableDeclaration toitVariableDeclaration) {
+                checkIllegalShadow(toitVariableDeclaration, holder);
+            }
         };
+    }
+
+    private void checkIllegalShadow(ToitVariableDeclaration toitVariableDeclaration, ProblemsHolder holder) {
+        if (toitVariableDeclaration.getParent().getParent() instanceof ToitStructure) return;
+
+        ToitElement scopeElement = toitVariableDeclaration.getPrevSiblingOfType(ToitElement.class);
+        if (scopeElement == null) scopeElement = toitVariableDeclaration.getParentOfType(ToitElement.class);
+        if (scopeElement == null) return;
+
+        ToitNameableIdentifier nameIdentifier = toitVariableDeclaration.getNameIdentifier();
+        if (nameIdentifier == null) return;
+
+        var resolved = scopeElement.getLocalToitResolveScope().resolve(nameIdentifier.getName());
+        for (PsiElement psiElement : resolved) {
+            if (psiElement instanceof ToitVariableDeclaration) {
+                holder.registerProblem(toitVariableDeclaration.getProblemIdentifier(), "Illegal shadow of outer variable");
+                return;
+            }
+        }
     }
 
     private void checkMissingImplementations(ToitStructure toitStructure, ProblemsHolder holder) {
         if (toitStructure.isInterface() || toitStructure.isAbstract()) return;
 
         List<ToitFunction> allFunctions = toitStructure.getAllFunctions();
-        Map<String, List<ToitFunction>> implementedFunctions = new HashMap<>();
+        Set<FunctionSignature> implementedFunctions = new HashSet<>();
         for (ToitFunction f : allFunctions) {
             if (!f.isAbstract() && !f.getParentOfType(ToitStructure.class).isInterface()) {
-                implementedFunctions.computeIfAbsent(f.getName(), n -> new ArrayList<>()).add(f);
+                implementedFunctions.add(f.getSignature());
             }
         }
+
+        List<ToitVariableDeclaration> allVariables = toitStructure.getAllVariables();
+        for (ToitVariableDeclaration v : allVariables) {
+            implementedFunctions.add(v.getGetterSignature());
+        }
+
         List<ToitFunction> missingImplementation = new ArrayList<>();
 
         for (ToitFunction f : allFunctions) {
             if ((f.isAbstract() || f.getParentOfType(ToitStructure.class).isInterface()) && !f.isOperator()) {
-                if (!implementedFunctions.containsKey(f.getName())) missingImplementation.add(f);
+                if (!implementedFunctions.contains(f.getSignature())) missingImplementation.add(f);
                 // TODO: Verify parameters
             }
         }
@@ -156,11 +185,10 @@ public class SemanticErrorInspector extends LocalInspectionTool {
             @Override
             public void visit(ToitWhile toitWhile) {
                 var expression = toitWhile.getFirstChildOfType(ToitExpression.class);
-                if (expression != null && expression.getText().trim().equals("true")) {
+                if (expression == null || !expression.getText().trim().equals("true")) {
                     ToitBlock toitBlock = toitWhile.getFirstChildOfType(ToitBlock.class);
                     if (toitBlock != null && checkReturn(toitBlock, holder, returnType, noReturnValue)) result[0] = true;
-
-                }
+                } else result[0] = true;
             }
 
             // TODO: Needs to use the body of functions to determine if it throws by scanning for __throw__ instead of checking for the function names in exceptions.toit

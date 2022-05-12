@@ -401,6 +401,22 @@ public class SimpleParserTest extends ParserTest {
         checkError(p, "");
     }
 
+    public void testOneItemSetLiteral() {
+        var p = parseFile("tmp", "" +
+                "f:\n" +
+                "  g := { 1 }\n"
+        );
+        checkError(p, "");
+    }
+
+    public void testOneItemMapLiteral() {
+        var p = parseFile("tmp", "" +
+                "f:\n" +
+                "  g := { \"a\": 1 }\n"
+        );
+        checkError(p, "");
+    }
+
     public void testRecursion() {
         var p = parseFile("tmp", "" +
                 "main:\n" +

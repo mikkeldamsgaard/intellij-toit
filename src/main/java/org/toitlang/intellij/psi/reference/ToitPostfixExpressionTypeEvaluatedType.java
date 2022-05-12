@@ -1,9 +1,6 @@
 package org.toitlang.intellij.psi.reference;
 
-import org.toitlang.intellij.psi.ast.ToitDerefExpression;
-import org.toitlang.intellij.psi.ast.ToitExpression;
-import org.toitlang.intellij.psi.ast.ToitPostfixExpression;
-import org.toitlang.intellij.psi.ast.ToitPostfixIncrementExpression;
+import org.toitlang.intellij.psi.ast.*;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 import org.toitlang.intellij.psi.scope.ToitScope;
 
@@ -41,6 +38,12 @@ public class ToitPostfixExpressionTypeEvaluatedType {
 
         for (ToitExpression child : toitPostfixExpression.getChildrenOfType(ToitExpression.class)) {
             if (prev == null) {
+                // Special case, that could cause a stack overflow: b := b.k (It is illegal, but can't prevent people from typing it)
+                if (toitPostfixExpression.getParent().getParent() instanceof ToitVariableDeclaration) {
+                    var varDecl = (ToitVariableDeclaration)toitPostfixExpression.getParent().getParent();
+                    if (varDecl.getNameIdentifier() != null && varDecl.getNameIdentifier().getName().equals(child.getText().trim())) break;
+                }
+
                 prev = child.getType(toitPostfixExpression.getLocalToitResolveScope());
                 result.addType(child, prev);
                 continue;

@@ -1,10 +1,11 @@
 Bugs:
 
 Top:
-   - show params enhancement
+  - show params enhancement
   - enhanced display of missing implementations
   - check parameters in missing implementations
   - quick fix for missing reference (import)
+  - quick fix for missing methods (implement)
   - Make ToitSdkFiles invalidate caches on changes
 
 Near future

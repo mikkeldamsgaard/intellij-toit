@@ -9,12 +9,14 @@
     The following features are included
      <ul>
        <li>Syntax highlighting</li>
+       <li>Completion</li>
        <li>Rename element</li>
        <li>Find usages</li>
        <li>Highlight syntax error</li>
        <li>Some semantic error checks</li>
        <li>Reference errors</li>
        <li>Provides a structure view</li>
+       <li>Some refactoring</li>
      </ul>
 
     ]]></description>
@@ -22,8 +24,6 @@
     <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
          on how to target different products -->
     <depends>com.intellij.modules.platform</depends>
-    <depends>com.intellij.modules.java</depends>
-
     <extensions defaultExtensionNs="com.intellij">
         <fileType name="Toit File"
                   implementationClass="org.toitlang.intellij.ToitFileType"

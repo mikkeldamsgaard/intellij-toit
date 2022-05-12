@@ -990,7 +990,9 @@ public class Parser {
                 consumeAllowNewlines();
             }
 
-            if (!expression(false)) return literal.drop();
+            if (map) {
+                if (!expression(false)) return literal.drop();
+            }
 
             if (!isAllowingNewlines(MAP_SET_SEPARATOR)) break;
             consumeAllowNewlines();

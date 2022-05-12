@@ -154,7 +154,6 @@ public class ToitCallHelper {
         return resolvedFunctionCall;
     }
 
-
     static public class ResolvedFunctionCall {
         private final Map<IToitElement, ParameterInfo> argsToParams = new HashMap<>();
         private ToitFunction toitFunction;

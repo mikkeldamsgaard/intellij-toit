@@ -1,10 +1,6 @@
 package org.toitlang.intellij.psi.codeInsight;
 
-import com.intellij.codeInsight.generation.ClassMember;
-import com.intellij.codeInsight.generation.JavaOverrideImplementMemberChooser;
-import com.intellij.codeInsight.generation.PsiMethodMember;
 import com.intellij.ide.util.MemberChooser;
-import com.intellij.lang.ASTNode;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Editor;
@@ -13,15 +9,11 @@ import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
-import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.impl.source.tree.PsiWhiteSpaceImpl;
-import com.intellij.psi.impl.source.tree.java.PsiWhileStatementImpl;
-import com.intellij.psi.infos.CandidateInfo;
 import com.intellij.psi.tree.TokenSet;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ToitElementFactory;
 import org.toitlang.intellij.psi.ToitPsiHelper;
-import org.toitlang.intellij.psi.ToitTokenType;
 import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.ast.IToitElement;
 import org.toitlang.intellij.psi.ast.ToitBlock;
@@ -30,7 +22,9 @@ import org.toitlang.intellij.psi.ast.ToitStructure;
 import org.toitlang.intellij.psi.calls.FunctionSignature;
 import org.toitlang.intellij.psi.ui.renders.MemberFunctionRender;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class OverrideImplementUtil {

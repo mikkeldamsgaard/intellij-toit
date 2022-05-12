@@ -23,7 +23,8 @@ public abstract class ToitIdentifier extends ToitElement {
     private final static TokenSet IDENTIFIER_SET = TokenSet.create(ToitTypes.IDENTIFIER);
 
     public @NotNull PsiElement getIdentifierToken() {
-        return getNode().getChildren(IDENTIFIER_SET)[0].getPsi();
+        ASTNode[] children = getNode().getChildren(IDENTIFIER_SET);
+        return children[children.length-1].getPsi();
     }
 
     @Override

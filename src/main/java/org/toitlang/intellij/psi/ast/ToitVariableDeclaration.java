@@ -9,10 +9,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitTypes;
+import org.toitlang.intellij.psi.calls.FunctionSignature;
 import org.toitlang.intellij.psi.stub.ToitVariableDeclarationStub;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 import javax.swing.*;
+import java.util.Collections;
 
 public class ToitVariableDeclaration extends ToitPrimaryLanguageElement<ToitVariableDeclaration, ToitVariableDeclarationStub> {
     public ToitVariableDeclaration(@NotNull ASTNode node) {
@@ -74,5 +76,9 @@ public class ToitVariableDeclaration extends ToitPrimaryLanguageElement<ToitVari
         var type = getType();
         if (type == null) return true;
         return type.getNextSibling() != null && type.getNextSibling().getNode().getElementType() == ToitTypes.QUESTION;
+    }
+
+    public FunctionSignature getGetterSignature() {
+        return new FunctionSignature(getName(), Collections.emptyList(), Collections.emptyMap());
     }
 }

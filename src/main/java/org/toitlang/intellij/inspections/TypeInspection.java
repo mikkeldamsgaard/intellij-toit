@@ -104,7 +104,7 @@ public class TypeInspection extends LocalInspectionTool {
                                     ParameterInfo parameterInfo = resolvedFunctionCall.getParamForArg(argument);
                                     if (type != null && !type.isUnresolved() && parameterInfo.getType() != null) {
                                         ToitStructure resolvedParameterType = parameterInfo.getType().resolve();
-                                        if (resolvedParameterType != null && !type.isAssignableTo(resolvedParameterType)) {
+                                        if (resolvedParameterType != null && !type.isAssignableTo(resolvedParameterType) && type.getStructure() != null) {
                                             holder.registerProblem(argument, "Cannot assign expression of type "+type.getStructure().getName()+" to parameter of type "+ resolvedParameterType.getName());
                                         }
                                     }

@@ -152,7 +152,7 @@ public class ToitReference implements PsiPolyVariantReference {
             if (resolved != null) {
                 var namedParameter = resolved.getToitFunction().getChildrenOfType(ToitParameterName.class);
                 for (ToitParameterName toitParameterName : namedParameter) {
-                    if (source.getText().trim().equals(toitParameterName.getName())) {
+                    if (source.getName().trim().equals(toitParameterName.getName())) {
                         ToitIdentifier identifier = toitParameterName.getNameIdentifier();
                         if (identifier instanceof ToitReferenceIdentifier) {
                             destinations.addAll(((ToitReferenceIdentifier)identifier).getReference().destinations);

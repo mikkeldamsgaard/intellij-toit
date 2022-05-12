@@ -60,17 +60,22 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
     }
 
     public ToitScope getScope(boolean staticOnly) {
+        return getScope(staticOnly, new HashSet<>());
+    }
+
+    private ToitScope getScope(boolean staticOnly, Set<ToitStructure> seenClasses) {
         ToitScope structureScope = new ToitScope(false);
         populateScope(structureScope, staticOnly);
+        seenClasses.add(this);
         if (!staticOnly) {
             var baseClass = getBaseClass();
-            if (baseClass != null) {
-                structureScope = ToitScope.chain(structureScope, baseClass.getScope(false));
+            if (baseClass != null && !seenClasses.contains(baseClass)) {
+                structureScope = ToitScope.chain(structureScope, baseClass.getScope(false,seenClasses));
             }
         }
         return structureScope;
-    }
 
+    }
     public void populateScope(ToitScope scope, boolean staticOnly) {
         getChildrenOfType(ToitBlock.class).forEach(b ->
                 b.acceptChildren(new ToitVisitor() {
@@ -189,26 +194,37 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
     }
 
     public List<ToitFunction> getAllFunctions() {
-        List<ToitFunction> result = new ArrayList<>();
+        List<ToitFunction> functions = new ArrayList<>();
+        List<ToitVariableDeclaration> variables = new ArrayList<>();
         Set<ToitStructure> seen = new HashSet<>();
-        getAllFunctions(result, seen);
-        return result;
+        getAllFunctions(functions, variables, seen);
+        return functions;
     }
 
-    private void getAllFunctions(List<ToitFunction> result, Set<ToitStructure> seen) {
+    public List<ToitVariableDeclaration> getAllVariables() {
+        List<ToitFunction> functions = new ArrayList<>();
+        List<ToitVariableDeclaration> variables = new ArrayList<>();
+        Set<ToitStructure> seen = new HashSet<>();
+        getAllFunctions(functions, variables, seen);
+        return variables;
+    }
+
+    private void getAllFunctions(List<ToitFunction> result, List<ToitVariableDeclaration> variables, Set<ToitStructure> seen) {
         seen.add(this);
         var block = getFirstChildOfType(ToitBlock.class);
         if (block == null) return; // Malformed syntax
 
         result.addAll(block.getChildrenOfType(ToitFunction.class));
+        variables.addAll(block.getChildrenOfType(ToitVariableDeclaration.class));
+
         var base = getBaseClass();
         if (base != null && !seen.contains(base)) {
-            base.getAllFunctions(result, seen);
+            base.getAllFunctions(result, variables, seen);
         }
 
         for (ToitStructure interface_ : getInterfaces()) {
             if (!seen.contains(interface_)) {
-                interface_.getAllFunctions(result, seen);
+                interface_.getAllFunctions(result, variables, seen);
             }
         }
     }

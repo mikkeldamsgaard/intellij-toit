@@ -32,9 +32,10 @@ public class ToitReferenceIdentifier extends ToitIdentifier {
             return replaceIdentifierToken(ToitElementFactory.createReferenceIdentifier(getProject(), newElementName));
         else if (getNode().getElementType() == ToitTypes.BREAK_CONTINUE_LABEL_IDENTIFIER)
             return replaceIdentifierToken(ToitElementFactory.createBreakContinueLabelIdentifier(getProject(), newElementName));
-        else if (getNode().getElementType() == ToitTypes.NAMED_ARGUMENT_IDENTIFIER)
+        else if (getNode().getElementType() == ToitTypes.NAMED_ARGUMENT_IDENTIFIER) {
+            if (getText().startsWith("no-")) newElementName = "no-"+newElementName;
             return replaceIdentifierToken(ToitElementFactory.createNamedArgumentIdentifier(getProject(), newElementName));
-
+        }
         return null;
     }
 
