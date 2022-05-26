@@ -168,7 +168,9 @@ public class ToitCompletionContributor extends CompletionContributor {
             var ref = toitParameterName.getFirstChildOfType(ToitReferenceIdentifier.class);
             if (ref != null) existingParameters.add(ref.getName());
         }
-        toitFunction.getParentOfType(ToitBlock.class).getChildrenOfType(ToitVariableDeclaration.class)
+        ToitBlock body = toitFunction.getParentOfType(ToitBlock.class);
+        if (body == null) return;
+        body.getChildrenOfType(ToitVariableDeclaration.class)
                 .stream()
                 .filter(v -> !existingParameters.contains(v.getName()))
                 .forEach(v -> result.addElement(LookupElementBuilder.create(v)));

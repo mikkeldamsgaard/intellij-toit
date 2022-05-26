@@ -61,7 +61,8 @@ public class ToitType extends ToitElement {
       for (PsiElement fileRef : getToitResolveScope().resolve(refs.get(0).getName())) {
         if (fileRef instanceof ToitFile) {
           ToitFile toitFile = (ToitFile) fileRef;
-          return firstStructureInScope(toitFile.getToitFileScope().getToitScope(), refs.get(1).getName());
+          var res = firstStructureInScope(toitFile.getToitFileScope().getToitScope(), refs.get(1).getName());
+          if (res != null) return null;
         }
       }
     }

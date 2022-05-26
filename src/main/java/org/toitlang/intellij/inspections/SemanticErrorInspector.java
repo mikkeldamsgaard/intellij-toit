@@ -54,7 +54,7 @@ public class SemanticErrorInspector extends LocalInspectionTool {
     }
 
     private void checkIllegalShadow(ToitVariableDeclaration toitVariableDeclaration, ProblemsHolder holder) {
-        if (toitVariableDeclaration.getParent().getParent() instanceof ToitStructure) return;
+        if (toitVariableDeclaration.getParent().getParent() instanceof ToitStructure || toitVariableDeclaration.getParent() instanceof ToitFile) return;
 
         ToitElement scopeElement = toitVariableDeclaration.getPrevSiblingOfType(ToitElement.class);
         if (scopeElement == null) scopeElement = toitVariableDeclaration.getParentOfType(ToitElement.class);
@@ -65,7 +65,7 @@ public class SemanticErrorInspector extends LocalInspectionTool {
 
         var resolved = scopeElement.getLocalToitResolveScope().resolve(nameIdentifier.getName());
         for (PsiElement psiElement : resolved) {
-            if (psiElement instanceof ToitVariableDeclaration) {
+            if (psiElement instanceof ToitVariableDeclaration && psiElement != toitVariableDeclaration) {
                 holder.registerProblem(toitVariableDeclaration.getProblemIdentifier(), "Illegal shadow of outer variable");
                 return;
             }

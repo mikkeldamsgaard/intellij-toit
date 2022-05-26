@@ -38,13 +38,31 @@ public class ToitPostfixExpressionTypeEvaluatedType {
 
         for (ToitExpression child : toitPostfixExpression.getChildrenOfType(ToitExpression.class)) {
             if (prev == null) {
-                // Special case, that could cause a stack overflow: b := b.k (It is illegal, but can't prevent people from typing it)
-                if (toitPostfixExpression.getParent().getParent() instanceof ToitVariableDeclaration) {
-                    var varDecl = (ToitVariableDeclaration)toitPostfixExpression.getParent().getParent();
-                    if (varDecl.getNameIdentifier() != null && varDecl.getNameIdentifier().getName().equals(child.getText().trim())) break;
+                ToitScope resolveScope = null;
+
+                var topLevelExpr = toitPostfixExpression.getParentOfType(ToitTopLevelExpression.class);
+                if (topLevelExpr != null && topLevelExpr.getParent() instanceof ToitVariableDeclaration) {
+                    ToitVariableDeclaration toitVariableDeclaration = (ToitVariableDeclaration) topLevelExpr.getParent();
+                    var prevParentSibling = toitVariableDeclaration.getPrevSiblingOfType(ToitElement.class);
+                    if (prevParentSibling != null) {
+                        resolveScope = prevParentSibling.getToitResolveScope();
+                    }
+
+                    if (resolveScope == null) {
+                        var parent = toitVariableDeclaration.getParentOfType(ToitElement.class);
+                        if (parent != null) resolveScope = parent.getToitResolveScope();
+                    }
+
+                    if (resolveScope == null) {
+                        resolveScope = toitVariableDeclaration.getToitFile().getToitFileScope().getToitScope();
+                    }
                 }
 
-                prev = child.getType(toitPostfixExpression.getLocalToitResolveScope());
+                if (resolveScope == null) {
+                    resolveScope = toitPostfixExpression.getToitResolveScope();
+                }
+
+                prev = child.getType(resolveScope);
                 result.addType(child, prev);
                 continue;
             }

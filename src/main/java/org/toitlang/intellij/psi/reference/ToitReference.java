@@ -116,11 +116,13 @@ public class ToitReference implements PsiPolyVariantReference {
                 List<ToitReferenceIdentifier> refs = source.getParentOfType(ToitType.class).getChildrenOfType(ToitReferenceIdentifier.class);
                 int idx = refs.indexOf(source);
                 if (idx == 1) {
-                    var prevRef = refs.get(0).getReference().resolve();
-                    if (prevRef instanceof ToitFile) {
-                        ToitScope exportedScope = ((ToitFile) prevRef).getToitFileScope().getExportedScope();
-                        var elm = exportedScope.resolve(name);
-                        destinations.addAll(elm);
+                    var prevRefs = refs.get(0).getReference().multiResolve(false);
+                    for (ResolveResult prevRef : prevRefs) {
+                        if (prevRef.getElement() instanceof ToitFile) {
+                            ToitScope exportedScope = ((ToitFile) prevRef.getElement()).getToitFileScope().getExportedScope();
+                            var elm = exportedScope.resolve(name);
+                            destinations.addAll(elm);
+                        }
                     }
                 }
             } else {
