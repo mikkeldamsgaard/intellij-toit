@@ -56,7 +56,7 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
     public final <V> V getLastChildOfType(Class<V> clazz) {
         var children = getChildrenOfType(clazz);
         if (children.isEmpty()) return null;
-        return children.get(children.size()-1);
+        return children.get(children.size() - 1);
     }
 
     @Override
@@ -77,6 +77,7 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
         while (p != null && !clazz.isInstance(p)) p = p.getPrevSibling();
         return clazz.cast(p);
     }
+
     public PsiElement getPrevNonWhiteSpaceSibling() {
         var p = getPrevSibling();
         while (p != null && TokenSet.WHITE_SPACE.contains(p.getNode().getElementType())) p = p.getPrevSibling();
@@ -90,7 +91,7 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
     @Override
     public ToitFile getToitFile() {
         try {
-            return (ToitFile)getContainingFile().getOriginalFile();
+            return (ToitFile) getContainingFile().getOriginalFile();
         } catch (PsiInvalidElementAccessException e) {
             return (ToitFile) getParentOfType(ToitFile.class).getOriginalFile();
         }
@@ -98,12 +99,12 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
 
     @Override
     public ToitScope getToitResolveScope() {
-        return ToitScope.chain(getToitFile().getToitFileScope().getToitScope(), ToitSdkFiles.getCoreScope(getProject()));
+        return ToitScope.chain(this + "-" + getName() + "-resolve", getToitFile().getToitFileScope().getToitScope(), ToitSdkFiles.getCoreScope(getProject()));
     }
 
     @Override
     public ToitScope getLocalToitResolveScope() {
-        return ToitScope.chain(ToitLocalScopeCalculator.calculate(this), getToitResolveScope());
+        return ToitScope.chain(this + "-" + getName() + "-local-resolve", ToitLocalScopeCalculator.calculate(this), getToitResolveScope());
     }
 
     @Override
@@ -122,7 +123,7 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
     public <V> V getLastDescendentOfType(Class<V> clazz) {
         var descendents = getDescendentsOfType(clazz);
         if (descendents.isEmpty()) return null;
-        return descendents.get(descendents.size()-1);
+        return descendents.get(descendents.size() - 1);
     }
 
     private <V> void getDescendentsOfType(Class<V> clazz, ArrayList<V> result) {
@@ -130,7 +131,7 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
             if (clazz.isInstance(child)) result.add(clazz.cast(child));
             else if (child instanceof ToitBaseStubableElement) {
                 //noinspection rawtypes,unchecked
-                ((ToitBaseStubableElement)child).getDescendentsOfType(clazz, result);
+                ((ToitBaseStubableElement) child).getDescendentsOfType(clazz, result);
             }
         }
     }
@@ -145,7 +146,7 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
 
         if (parent == null) return null;
         if (vClass.isInstance(parent)) return vClass.cast(parent);
-        return ((IToitElement)parent).getParentOfType(vClass);
+        return ((IToitElement) parent).getParentOfType(vClass);
     }
 
     @Override
@@ -155,14 +156,14 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
 
     @Override
     public <V> V getParentWithIntermediaries(Class<V> vClass, Class<? extends IToitElement> p1, Class<? extends IToitElement> p2) {
-        return getParentWithIntermediaries(vClass, List.of(p1,p2));
+        return getParentWithIntermediaries(vClass, List.of(p1, p2));
     }
 
     @Override
     public <V> V getParentChain(Class<V> top, List<Class<? extends IToitElement>> classes) {
-        int cur = classes.size()-1;
+        int cur = classes.size() - 1;
         PsiElement elm = getParent();
-        while (cur>=0) {
+        while (cur >= 0) {
             if (!classes.get(cur).isInstance(elm)) return null;
             cur--;
             elm = elm.getParent();

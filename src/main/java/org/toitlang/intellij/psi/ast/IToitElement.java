@@ -39,4 +39,6 @@ public interface IToitElement extends PsiElement {
     <V> V getParentWithIntermediaries(Class<V> vClass, Class<? extends IToitElement> p1, Class<? extends IToitElement> p2);
 
     <V> V getParentChain(Class<V> top, List<Class<? extends IToitElement>> classes);
+
+    String getName();
 }

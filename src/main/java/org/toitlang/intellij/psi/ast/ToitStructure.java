@@ -64,13 +64,13 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
     }
 
     private ToitScope getScope(boolean staticOnly, Set<ToitStructure> seenClasses) {
-        ToitScope structureScope = new ToitScope(false);
+        ToitScope structureScope = new ToitScope(getName()+"-structure",false);
         populateScope(structureScope, staticOnly);
         seenClasses.add(this);
         if (!staticOnly) {
             var baseClass = getBaseClass();
             if (baseClass != null && !seenClasses.contains(baseClass)) {
-                structureScope = ToitScope.chain(structureScope, baseClass.getScope(false,seenClasses));
+                structureScope = ToitScope.chain(getName()+"-structure-base", structureScope, baseClass.getScope(false,seenClasses));
             }
         }
         return structureScope;

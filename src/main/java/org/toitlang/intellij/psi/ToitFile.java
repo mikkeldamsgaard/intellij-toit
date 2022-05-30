@@ -23,7 +23,7 @@ import java.util.List;
 public class ToitFile extends PsiFileBase implements IStructureViewable {
     CachedValue<ToitFileScope> cachedScope =
             CachedValuesManager.getManager(getProject()).createCachedValue(() -> {
-                ToitFileScope toitFileScope = new ToitFileScope();
+                ToitFileScope toitFileScope = new ToitFileScope(this);
                 toitFileScope.build(this);
                 return new CachedValueProvider.Result<>(toitFileScope, toitFileScope.dependencies(this));
             });

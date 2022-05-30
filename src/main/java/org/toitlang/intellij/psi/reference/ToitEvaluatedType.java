@@ -165,7 +165,6 @@ public class ToitEvaluatedType {
                 }
 
                 var toitReferenceIdentifier = referenceIdentifiers.get(0);
-                System.out.println(toitReferenceIdentifier.getName());
                 return resolveTypeOfNameInScope(toitReferenceIdentifier.getName(), scope);
             }
 

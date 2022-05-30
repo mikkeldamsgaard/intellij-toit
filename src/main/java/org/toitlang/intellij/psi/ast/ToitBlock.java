@@ -25,7 +25,7 @@ public class ToitBlock extends ToitElement {
     }
 
     public ToitScope getParameterScope() {
-        ToitScope scope = new ToitScope(true);
+        ToitScope scope = new ToitScope("param", true);
         var parameters = getParameters();
         parameters.forEach(p -> scope.add(p.getName(), p));
         if (parameters.isEmpty()) {

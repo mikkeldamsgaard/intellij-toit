@@ -3,6 +3,7 @@ package org.toitlang.intellij.psi.scope;
 import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.files.ToitFileResolver;
+import org.toitlang.intellij.files.ToitSdkFiles;
 import org.toitlang.intellij.model.IToitPrimaryLanguageElement;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ast.*;
@@ -17,6 +18,11 @@ public class ToitFileScope {
     private final Map<ToitFile, List<String>> shows = new HashMap<>();
     private final List<ToitFile> projectImports = new ArrayList<>();
     private final List<String> exports = new ArrayList<>();
+    private final ToitFile toitFile;
+
+    public ToitFileScope(ToitFile toitFile) {
+        this.toitFile = toitFile;
+    }
 
     public ToitScope getToitScope() {
         Map<String, List<? extends PsiElement>> scope = new HashMap<>(locals);
@@ -30,18 +36,20 @@ public class ToitFileScope {
                 }
             }
         });
+
         projectImports.forEach(p -> {
             Map<String, List<? extends PsiElement>> exportedScope = p.getToitFileScope().getExportedScope(new HashSet<>());
             for (String name : exportedScope.keySet()) {
                 if (!locals.containsKey(name)) scope.put(name, exportedScope.get(name));
             }
         });
-        return ToitScope.fromMap(scope, true);
+
+        return ToitScope.fromMap(toitFile.getName()+"-file", scope, true);
     }
 
 
     public ToitScope getExportedScope() {
-        return ToitScope.fromMap(getExportedScope(new HashSet<>()),false);
+        return ToitScope.fromMap(toitFile.getName()+"-exported", getExportedScope(new HashSet<>()),false);
     }
 
     public Map<String, List<IToitPrimaryLanguageElement>> getLocals() {
@@ -65,7 +73,21 @@ public class ToitFileScope {
                         .filter(e -> exports.contains("*") || exports.contains(e.getKey()))
                         .forEach(e -> result.put(e.getKey(),e.getValue()));
             }
+
+            for (Map.Entry<ToitFile, List<String>> e : shows.entrySet()) {
+                exports.stream()
+                        .filter(ex -> e.getValue().contains(ex))
+                        .forEach(ex -> result.put(ex,e.getKey().getToitFileScope().getExportedScope().resolve(ex)));
+
+            }
         }
+
+        for (String export : exports) {
+            if (!"*".equals(export) && !result.containsKey(export)) {
+                result.put(export, ToitSdkFiles.getCoreScope(toitFile.getProject()).resolve(export));
+            }
+        }
+
         return result;
     }
 

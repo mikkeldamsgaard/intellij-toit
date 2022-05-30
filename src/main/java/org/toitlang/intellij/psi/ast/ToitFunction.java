@@ -138,7 +138,7 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
     }
 
     public ToitScope getParameterScope() {
-        ToitScope scope = new ToitScope(true);
+        ToitScope scope = new ToitScope(getName()+"-param", true);
         getParameters().forEach(p -> scope.add(p.getName(), p));
         return scope;
     }

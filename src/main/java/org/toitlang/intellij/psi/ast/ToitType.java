@@ -62,7 +62,7 @@ public class ToitType extends ToitElement {
         if (fileRef instanceof ToitFile) {
           ToitFile toitFile = (ToitFile) fileRef;
           var res = firstStructureInScope(toitFile.getToitFileScope().getToitScope(), refs.get(1).getName());
-          if (res != null) return null;
+          if (res != null) return res;
         }
       }
     }

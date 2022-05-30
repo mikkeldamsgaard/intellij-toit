@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class ToitScope {
-    private final static ToitScope ROOT = new ToitScope(true) {
+    private final static ToitScope ROOT = new ToitScope("root",true) {
 
         @Override
         public @NotNull List<PsiElement> resolve(String key) {
@@ -34,12 +34,16 @@ public class ToitScope {
     private final boolean finalResolver;
     Map<String, List<PsiElement>> local = new HashMap<>();
 
-    public ToitScope(boolean finalResolver) {
+    private final String name;
+
+    public ToitScope(String name, boolean finalResolver) {
+        this.name = name;
         this.finalResolver = finalResolver;
         this.parents = DEFAULT_PARENTS;
     }
 
-    private ToitScope(List<ToitScope> parents, boolean finalResolver) {
+    private ToitScope(String name, List<ToitScope> parents, boolean finalResolver) {
+        this.name = name;
         this.finalResolver = finalResolver;
         this.parents = parents;
     }
@@ -95,19 +99,20 @@ public class ToitScope {
     @Override
     public String toString() {
         return "ToitScope{" +
-                "parent=" + parents +
+                "name="+name+
+                ", parent=" + parents +
                 ", local=" + local +
                 '}';
     }
 
-    public static ToitScope fromMap(Map<String, List<? extends PsiElement>> locals, boolean finalResolver) {
-        ToitScope toitScope = new ToitScope(finalResolver);
+    public static ToitScope fromMap(String name, Map<String, List<? extends PsiElement>> locals, boolean finalResolver) {
+        ToitScope toitScope = new ToitScope(name, finalResolver);
         locals.forEach(toitScope::add);
         return toitScope;
     }
 
-    public static ToitScope chain(ToitScope... scopes) {
-        return new ToitScope(Arrays.stream(scopes).filter(t -> !t.isRedundant()).collect(Collectors.toList()), false);
+    public static ToitScope chain(String name, ToitScope... scopes) {
+        return new ToitScope(name, Arrays.stream(scopes).filter(t -> !t.isRedundant()).collect(Collectors.toList()), false);
     }
 
     @Data

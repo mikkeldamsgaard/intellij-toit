@@ -27,12 +27,12 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
 
     private ToitScope calculate() {
         origin.accept(this);
-        return ToitScope.chain(localScopes.toArray(new ToitScope[0]));
+        return ToitScope.chain(origin +"-"+origin.getName()+"-local", localScopes.toArray(new ToitScope[0]));
     }
 
     public void visitElement(@NotNull PsiElement element) {
         if (element.getParent() instanceof ToitBlock) {
-            ToitScope scope = new ToitScope(true);
+            ToitScope scope = new ToitScope(element.toString(), true);
             var e = element.getPrevSibling();
             while (e != null) {
                 if (e instanceof ToitVariableDeclaration) addVariableDeclarationToScope(scope, (ToitVariableDeclaration) e);
@@ -46,7 +46,7 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
 
     @Override
     public void visit(ToitVariableDeclaration toitVariableDeclaration) {
-        ToitScope scope = new ToitScope(true);
+        ToitScope scope = new ToitScope(toitVariableDeclaration.getName(), true);
         addVariableDeclarationToScope(scope, toitVariableDeclaration);
         localScopes.add(scope);
         visitElement(toitVariableDeclaration);
@@ -68,7 +68,7 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
     }
 
     private void processNestedVariableDeclarations(ToitElement element) {
-        ToitScope scope = new ToitScope(true);
+        ToitScope scope = new ToitScope(element.toString(), true);
         for (var v : element.getChildrenOfType(ToitVariableDeclaration.class)) {
             addVariableDeclarationToScope(scope,v);
         }
@@ -97,7 +97,7 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
 
             ToitStructure structure = toitBlock.getParentOfType(ToitStructure.class);
             if (!function.isStatic() && structure != null) {
-                ToitScope superThis = new ToitScope(true);
+                ToitScope superThis = new ToitScope(function.getName(), true);
                 superThis.add(THIS, structure);
 
                 ToitStructure baseClass = structure.getBaseClass();

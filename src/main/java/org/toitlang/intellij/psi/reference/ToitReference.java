@@ -99,7 +99,7 @@ public class ToitReference implements PsiPolyVariantReference {
         ToitScope core = ToitSdkFiles.getCoreScope(source.getProject());
         ToitScope toitFileScopeScope = toitFileScope.getToitScope();
         ToitScope localScope = ToitLocalScopeCalculator.calculate(source);
-        var scope = ToitScope.chain(localScope, toitFileScopeScope, core);
+        var scope = ToitScope.chain(source+"-"+source.getName()+"-eval",localScope, toitFileScopeScope, core);
 
         return new EvaluationScope(scope, toitFileScope);
     }
@@ -189,7 +189,7 @@ public class ToitReference implements PsiPolyVariantReference {
                         if (prev == null || prev.isUnresolved()) {
                             soft = true;
                         } else if (prev.getFile() != null) {
-                            destinations.addAll(prev.getFile().getToitFileScope().getToitScope().resolve(name));
+                            destinations.addAll(prev.getFile().getToitFileScope().getExportedScope().resolve(name));
                         } else if (prev.getStructure() != null) {
                             destinations.addAll(prev.getStructure().getScope(prev.isStatic()).resolve(name));
                         }

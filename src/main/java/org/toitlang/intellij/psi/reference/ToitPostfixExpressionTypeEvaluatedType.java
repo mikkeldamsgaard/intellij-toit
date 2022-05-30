@@ -45,12 +45,12 @@ public class ToitPostfixExpressionTypeEvaluatedType {
                     ToitVariableDeclaration toitVariableDeclaration = (ToitVariableDeclaration) topLevelExpr.getParent();
                     var prevParentSibling = toitVariableDeclaration.getPrevSiblingOfType(ToitElement.class);
                     if (prevParentSibling != null) {
-                        resolveScope = prevParentSibling.getToitResolveScope();
+                        resolveScope = prevParentSibling.getLocalToitResolveScope();
                     }
 
                     if (resolveScope == null) {
                         var parent = toitVariableDeclaration.getParentOfType(ToitElement.class);
-                        if (parent != null) resolveScope = parent.getToitResolveScope();
+                        if (parent != null) resolveScope = parent.getLocalToitResolveScope();
                     }
 
                     if (resolveScope == null) {
@@ -59,7 +59,7 @@ public class ToitPostfixExpressionTypeEvaluatedType {
                 }
 
                 if (resolveScope == null) {
-                    resolveScope = toitPostfixExpression.getToitResolveScope();
+                    resolveScope = toitPostfixExpression.getLocalToitResolveScope();
                 }
 
                 prev = child.getType(resolveScope);
