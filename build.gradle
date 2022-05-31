@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'org.toitlang'
-version '1.5'
+version '1.6'
 
 repositories {
     mavenCentral()
@@ -25,8 +25,7 @@ intellij {
 patchPluginXml {
     changeNotes = """
 <ul>
-<li>Fixed platform dependency</li>
-
+<li>Bugfix release</li>
 </ul>
       """
     sinceBuild = "213"
