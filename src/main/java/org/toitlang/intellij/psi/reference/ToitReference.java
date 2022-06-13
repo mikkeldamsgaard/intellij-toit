@@ -191,7 +191,19 @@ public class ToitReference implements PsiPolyVariantReference {
                         } else if (prev.getFile() != null) {
                             destinations.addAll(prev.getFile().getToitFileScope().getExportedScope().resolve(name));
                         } else if (prev.getStructure() != null) {
-                            destinations.addAll(prev.getStructure().getScope(prev.isStatic()).resolve(name));
+                            // Special case for setters
+                            boolean isPotentialSetterCall = ToitCallHelper.isPotentialSetterCall(toitDerefExpression);
+                            for (PsiElement psiElement : prev.getStructure().getScope(prev.isStatic()).resolve(name)) {
+                                if (psiElement instanceof ToitFunction) {
+                                    if (isPotentialSetterCall && ((ToitFunction) psiElement).isSetter()) {
+                                        destinations.add(psiElement);
+                                    } else if (!isPotentialSetterCall && !((ToitFunction) psiElement).isSetter()) {
+                                        destinations.add(psiElement);
+                                    }
+                                } else {
+                                    destinations.add(psiElement);
+                                }
+                            }
                         }
                         return null;
                     }

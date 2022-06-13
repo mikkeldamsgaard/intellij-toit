@@ -76,30 +76,36 @@ public class SemanticErrorInspector extends LocalInspectionTool {
         if (toitStructure.isInterface() || toitStructure.isAbstract()) return;
 
         List<ToitFunction> allFunctions = toitStructure.getAllFunctions();
-        Set<FunctionSignature> implementedFunctions = new HashSet<>();
+        Map<String, Set<FunctionSignature>> implementedFunctions = new HashMap<>();
         for (ToitFunction f : allFunctions) {
             if (!f.isAbstract() && !f.getParentOfType(ToitStructure.class).isInterface()) {
-                implementedFunctions.add(f.getSignature());
+                implementedFunctions.computeIfAbsent(f.getName(), n -> new HashSet<>()).add(f.getSignature());
             }
         }
 
         List<ToitVariableDeclaration> allVariables = toitStructure.getAllVariables();
         for (ToitVariableDeclaration v : allVariables) {
-            implementedFunctions.add(v.getGetterSignature());
+            implementedFunctions.computeIfAbsent(v.getName(), n -> new HashSet<>()).add(v.getGetterSignature());
         }
 
-        List<ToitFunction> missingImplementation = new ArrayList<>();
+        List<FunctionSignature> missingImplementation = new ArrayList<>();
 
-        for (ToitFunction f : allFunctions) {
+        FunctionLoop: for (ToitFunction f : allFunctions) {
             if ((f.isAbstract() || f.getParentOfType(ToitStructure.class).isInterface()) && !f.isOperator()) {
-                if (!implementedFunctions.contains(f.getSignature())) missingImplementation.add(f);
-                // TODO: Verify parameters
+                var overloaded = implementedFunctions.computeIfAbsent(f.getName(), n -> new HashSet<>());
+                FunctionSignature signature = f.getSignature();
+
+                for (FunctionSignature functionSignature : overloaded) {
+                    if (functionSignature.implements_(signature)) continue FunctionLoop;
+                }
+
+                missingImplementation.add(signature);
             }
         }
 
         if (missingImplementation.size() > 0) {
-            holder.registerProblem(toitStructure.getProblemIdentifier(), "Missing implementation of "+
-                    missingImplementation.stream().map(ToitFunction::getName).collect(Collectors.toSet()));
+            holder.registerProblem(toitStructure.getProblemIdentifier(), "Missing implementation of\n>> "+
+                    missingImplementation.stream().map(FunctionSignature::render).collect(Collectors.joining("\n>> ")));
         }
     }
 

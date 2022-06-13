@@ -24,6 +24,7 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
     protected final static TokenSet STATIC = TokenSet.create(ToitTypes.STATIC);
     protected final static TokenSet STAR_SET = TokenSet.create(ToitTypes.STAR);
     protected final static TokenSet DOT_SET = TokenSet.create(ToitTypes.DOT);
+    protected final static TokenSet EQUALS = TokenSet.create(ToitTypes.EQUALS);
 
     public ToitBaseStubableElement(@NotNull ASTNode node) {
         super(node);

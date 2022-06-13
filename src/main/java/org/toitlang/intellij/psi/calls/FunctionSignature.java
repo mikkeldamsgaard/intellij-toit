@@ -12,6 +12,7 @@ public class FunctionSignature {
     String functionName;
     List<ParameterInfo> positionalParameters;
     Map<String, ParameterInfo> namedParameters;
+    Map<String, ParameterInfo> defaultedNamedParameters;
 
     public String getFunctionName() {
         return functionName;
@@ -25,6 +26,10 @@ public class FunctionSignature {
         return namedParameters;
     }
 
+    public Map<String, ParameterInfo> getDefaultedNamedParameters() {
+        return defaultedNamedParameters;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -34,6 +39,17 @@ public class FunctionSignature {
         return Objects.equals(functionName, that.functionName) &&
                 positionalParameters.size() == that.positionalParameters.size() &&
                 Objects.equals(namedParameters.keySet(), that.namedParameters.keySet());
+    }
+
+    public boolean implements_(FunctionSignature signature) {
+        if (!functionName.equals(signature.functionName)) return false;
+        if (positionalParameters.size() != signature.positionalParameters.size()) return false;
+
+        for (String nonDefaultParam : signature.namedParameters.keySet()) {
+            if (!namedParameters.containsKey(nonDefaultParam) && !defaultedNamedParameters.containsKey(nonDefaultParam)) return false;
+        }
+
+        return true;
     }
 
     @Override

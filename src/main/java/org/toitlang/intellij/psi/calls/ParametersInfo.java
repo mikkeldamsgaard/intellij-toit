@@ -39,6 +39,14 @@ public class ParametersInfo {
         return res;
     }
 
+    public Map<String, ParameterInfo> getDefaultNamedParameters() {
+        Map<String, ParameterInfo> res = new HashMap<>();
+        for (Map.Entry<String, ParameterInfo> e : new HashMap<>(named).entrySet()) {
+            if (e.getValue().hasDefaultValue) res.put(e.getKey(), e.getValue());
+        }
+        return res;
+    }
+
     public boolean hasNamedParameter(String name) {
         return named.containsKey(name);
     }

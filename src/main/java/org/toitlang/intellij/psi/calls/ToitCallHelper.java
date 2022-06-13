@@ -1,5 +1,6 @@
 package org.toitlang.intellij.psi.calls;
 
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveResult;
 import org.toitlang.intellij.psi.ast.*;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
@@ -177,5 +178,17 @@ public class ToitCallHelper {
         public Set<IToitElement> getArguments() {
             return argsToParams.keySet();
         }
+    }
+
+    public static boolean isPotentialSetterCall(ToitDerefExpression toitDerefExpression) {
+        return toitDerefExpression.getParent() != null && toitDerefExpression.getParent().getParent() instanceof ToitAssignmentExpression;
+    }
+
+    public static boolean isSetterCall(ToitExpression toitExpression) {
+        if (toitExpression instanceof ToitDerefExpression) {
+            PsiElement resolved = ((ToitDerefExpression) toitExpression).getToitReferenceIdentifier().getReference().resolve();
+            return resolved instanceof ToitFunction && ((ToitFunction) resolved).isSetter();
+        }
+        return false;
     }
 }

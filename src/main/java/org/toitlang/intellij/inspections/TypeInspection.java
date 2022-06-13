@@ -74,7 +74,7 @@ public class TypeInspection extends LocalInspectionTool {
 
                     private void checkFunctionCallNoArgs(ToitExpression expression) {
                         if (ToitCallHelper.isFunctionCall(expression)) {
-                            if (ToitCallHelper.resolveCall(expression) == null) {
+                            if (ToitCallHelper.resolveCall(expression) == null && !ToitCallHelper.isSetterCall(expression)) {
                                 holder.registerProblem(expression.getLastDescendentOfType(ToitReferenceIdentifier.class),
                                         "Function needs arguments, none were supplied");
                             }

@@ -120,8 +120,8 @@ public class ToitPackageHandler {
 
         if (packageFile != null) {
             if (lockFile == null) ToitNotifier.notifyPackageLockFileMissing(project, packageFile);
-            else if (packageFile.getTimeStamp() > lockFile.getTimeStamp())
-                ToitNotifier.notityStaleLockFile(project, packageFile);
+            else if (packageFile.getTimeStamp() > lockFile.getTimeStamp()+2500)
+                ToitNotifier.notifyStaleLockFile(project, packageFile);
         }
         if (lockFile != null) return lockFile;
         return findPackageLockFile(project, virtualFile);

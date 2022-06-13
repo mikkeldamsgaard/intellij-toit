@@ -19,7 +19,7 @@ public class ToitNotifier  {
                 .notify(project);
     }
 
-    public static void notityStaleLockFile(Project project, VirtualFile packageFile) {
+    public static void notifyStaleLockFile(Project project, VirtualFile packageFile) {
         NotificationGroupManager.getInstance().getNotificationGroup("Toit Severe Group")
                 .createNotification("Package issue","Found package.yaml with stale lock file. Please run package manager. "+packageFile.getPresentableUrl(), NotificationType.WARNING)
                 .notify(project);

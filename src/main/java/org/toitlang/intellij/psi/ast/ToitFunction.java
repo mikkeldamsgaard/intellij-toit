@@ -51,7 +51,7 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
     }
 
     @Override
-    public @NotNull  String getName() {
+    public @NotNull String getName() {
         var stub = getStub();
         if (stub != null && stub.getName() != null) return stub.getName();
 
@@ -91,6 +91,20 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
 
     public ASTNode getAbstract() {
         return getFirstChildToken(ABSTRACT);
+    }
+
+    public boolean isSetter() {
+        boolean foundFunction = false;
+        for (ASTNode child : getNode().getChildren(null)) {
+            if (!foundFunction) {
+                if (child.getElementType() == ToitTypes.FUNCTION_IDENTIFIER) {
+                    foundFunction = true;
+                }
+            } else {
+                return child.getElementType() == ToitTypes.EQUALS;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -138,7 +152,7 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
     }
 
     public ToitScope getParameterScope() {
-        ToitScope scope = new ToitScope(getName()+"-param", true);
+        ToitScope scope = new ToitScope(getName() + "-param", true);
         getParameters().forEach(p -> scope.add(p.getName(), p));
         return scope;
     }
@@ -200,6 +214,8 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
         ParametersInfo parameterInfo = getParameterInfo();
         return new FunctionSignature(getName(),
                 parameterInfo.getNonDefaultPositionalParameters(),
-                parameterInfo.getNonDefaultNamedParameters());
+                parameterInfo.getNonDefaultNamedParameters(),
+                parameterInfo.getDefaultNamedParameters());
     }
+
 }

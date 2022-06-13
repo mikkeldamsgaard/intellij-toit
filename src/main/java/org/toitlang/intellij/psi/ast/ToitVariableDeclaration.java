@@ -79,6 +79,6 @@ public class ToitVariableDeclaration extends ToitPrimaryLanguageElement<ToitVari
     }
 
     public FunctionSignature getGetterSignature() {
-        return new FunctionSignature(getName(), Collections.emptyList(), Collections.emptyMap());
+        return new FunctionSignature(getName(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap());
     }
 }
