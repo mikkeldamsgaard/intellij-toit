@@ -171,7 +171,6 @@ public class ToitEvaluatedType {
 
             @Override
             public ToitEvaluatedType visit(ToitTopLevelExpression toitTopLevelExpression) {
-                System.out.println(toitTopLevelExpression.getText());
                 var recursed = recurse(toitTopLevelExpression);
                 if (recursed.isEmpty()) return UNRESOLVED;
                 return recursed.get(recursed.size()-1); // Return the value of the last expression.
