@@ -3,6 +3,7 @@ package org.toitlang.intellij.psi.ast;
 
 import com.intellij.lang.ASTNode;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
 import org.toitlang.intellij.psi.scope.ToitScope;

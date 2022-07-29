@@ -156,7 +156,7 @@ public class TypeInspection extends LocalInspectionTool {
                     }
                 } else {
                     ToitEvaluatedType expressionType = expression.getType(toitReturn.getLocalToitResolveScope());
-                    if (!expressionType.isAssignableTo(functionReturnStructure))
+                    if (expressionType != null && !expressionType.isAssignableTo(functionReturnStructure))
                         holder.registerProblem(expression, "Cannot return expression of type " + expressionType + " from function declared with return type " + functionReturnType.getName());
                 }
             }

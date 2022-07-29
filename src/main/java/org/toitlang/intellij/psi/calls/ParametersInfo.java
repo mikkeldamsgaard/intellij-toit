@@ -21,7 +21,7 @@ public class ParametersInfo {
     }
 
     public List<ParameterInfo> getNonDefaultPositionalParameters() {
-        return positionalParameters.stream().filter(p -> !p.hasDefaultValue).collect(Collectors.toList());
+        return new ArrayList<>(positionalParameters).stream().filter(p -> !p.hasDefaultValue).collect(Collectors.toList());
     }
     public int getNumberOfNonDefaultPositionalParameters() {
         return getNonDefaultPositionalParameters().size();

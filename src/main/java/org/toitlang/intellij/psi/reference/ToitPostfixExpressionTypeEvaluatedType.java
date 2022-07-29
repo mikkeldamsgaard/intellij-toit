@@ -30,7 +30,6 @@ public class ToitPostfixExpressionTypeEvaluatedType {
     }
 
 
-
     public static ToitPostfixExpressionTypeEvaluatedType calculate(ToitPostfixExpression toitPostfixExpression) {
         var result = new ToitPostfixExpressionTypeEvaluatedType();
 
@@ -38,30 +37,7 @@ public class ToitPostfixExpressionTypeEvaluatedType {
 
         for (ToitExpression child : toitPostfixExpression.getChildrenOfType(ToitExpression.class)) {
             if (prev == null) {
-                ToitScope resolveScope = null;
-
-                var topLevelExpr = toitPostfixExpression.getParentOfType(ToitTopLevelExpression.class);
-                if (topLevelExpr != null && topLevelExpr.getParent() instanceof ToitVariableDeclaration) {
-                    ToitVariableDeclaration toitVariableDeclaration = (ToitVariableDeclaration) topLevelExpr.getParent();
-                    var prevParentSibling = toitVariableDeclaration.getPrevSiblingOfType(ToitElement.class);
-                    if (prevParentSibling != null) {
-                        resolveScope = prevParentSibling.getLocalToitResolveScope();
-                    }
-
-                    if (resolveScope == null) {
-                        var parent = toitVariableDeclaration.getParentOfType(ToitElement.class);
-                        if (parent != null) resolveScope = parent.getLocalToitResolveScope();
-                    }
-
-                    if (resolveScope == null) {
-                        resolveScope = toitVariableDeclaration.getToitFile().getToitFileScope().getToitScope();
-                    }
-                }
-
-                if (resolveScope == null) {
-                    resolveScope = toitPostfixExpression.getLocalToitResolveScope();
-                }
-
+                var resolveScope = toitPostfixExpression.getLocalToitResolveScope();
                 prev = child.getType(resolveScope);
                 result.addType(child, prev);
                 continue;

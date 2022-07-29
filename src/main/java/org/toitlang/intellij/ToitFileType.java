@@ -36,4 +36,6 @@ public class ToitFileType extends LanguageFileType {
     public @Nullable Icon getIcon() {
         return ToitIcons.FILE;
     }
+
+
 }

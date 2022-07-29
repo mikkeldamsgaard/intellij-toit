@@ -45,6 +45,7 @@ public class ToitElementFactory {
     }
 
     public static ToitReferenceIdentifier createImportIdentifier(Project project, String name) {
+        if (name.endsWith(ToitFileType.INSTANCE.getDefaultExtension())) name = name.substring(0,name.length()- ToitFileType.INSTANCE.getDefaultExtension().length());
         final ToitFile file = createFile(project, String.format("import %s", name));
         var id = (ToitImportDeclaration) file.getFirstChild();
         return id.getLastChildOfType(ToitReferenceIdentifier.class);

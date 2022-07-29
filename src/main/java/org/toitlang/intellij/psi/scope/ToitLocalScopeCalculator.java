@@ -25,8 +25,34 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
         return new ToitLocalScopeCalculator(origin).calculate();
     }
 
+    private ToitVariableDeclaration getImmediateVariableDeclarationParentOfOrigin() {
+        PsiElement p = origin;
+        while (p != null) {
+            if (p instanceof ToitBlock) return null;
+            if (p instanceof ToitVariableDeclaration) return (ToitVariableDeclaration) p;
+            p = p.getParent();
+        }
+        return null;
+    }
+
     private ToitScope calculate() {
-        origin.accept(this);
+        IToitElement scopeStart = null;
+        ToitVariableDeclaration toitVariableDeclaration = getImmediateVariableDeclarationParentOfOrigin();
+        if (toitVariableDeclaration != null) { // Catch cases such as "x := x.y"
+            scopeStart = toitVariableDeclaration.getPrevSiblingOfType(IToitElement.class);
+
+            if (scopeStart == null) {
+                scopeStart = toitVariableDeclaration.getParentOfType(ToitElement.class);
+            }
+
+            if (scopeStart == null) {
+                return toitVariableDeclaration.getToitFile().getToitFileScope().getToitScope();
+            }
+        }
+
+        if (scopeStart == null) scopeStart = origin;
+
+        scopeStart.accept(this);
         return ToitScope.chain(origin +"-"+origin.getName()+"-local", localScopes.toArray(new ToitScope[0]));
     }
 

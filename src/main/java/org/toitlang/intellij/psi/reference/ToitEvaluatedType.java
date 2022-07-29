@@ -93,7 +93,8 @@ public class ToitEvaluatedType {
                         processDeferredType(toitType);
                     } else {
                         for (ToitExpression toitExpression : toitVariableDeclaration.getChildrenOfType(ToitExpression.class)) {
-                            var type = toitExpression.getType(toitVariableDeclaration.getLocalToitResolveScope());
+                            ToitScope localToitResolveScope = toitVariableDeclaration.getLocalToitResolveScope();
+                            var type = toitExpression.getType(localToitResolveScope);
                             types.add(type.nonStatic().estimated());
                         }
                     }
@@ -170,6 +171,7 @@ public class ToitEvaluatedType {
 
             @Override
             public ToitEvaluatedType visit(ToitTopLevelExpression toitTopLevelExpression) {
+                System.out.println(toitTopLevelExpression.getText());
                 var recursed = recurse(toitTopLevelExpression);
                 if (recursed.isEmpty()) return UNRESOLVED;
                 return recursed.get(recursed.size()-1); // Return the value of the last expression.
@@ -216,7 +218,7 @@ public class ToitEvaluatedType {
                 } else if (toitSimpleLiteral.isBoolean()) {
                     return resolveToStruct(scope, BOOL_CLASS_NAME);
                 }
-                return null;
+                return UNRESOLVED;
             }
 
             @Override

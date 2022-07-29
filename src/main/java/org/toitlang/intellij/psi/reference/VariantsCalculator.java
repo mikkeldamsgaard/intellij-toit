@@ -188,7 +188,7 @@ public class VariantsCalculator {
     }
 
     private Object[] getVariants() {
-        return variants.toArray();
+        return variants.stream().map(o -> (o instanceof ToitFile)?((ToitFile)o).getPresentableText():o).toArray();
     }
 
     public static Object[] getVariants(ToitReferenceIdentifier source, EvaluationScope evaluationScope) {
