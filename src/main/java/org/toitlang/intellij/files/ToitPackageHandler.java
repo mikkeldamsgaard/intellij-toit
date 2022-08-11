@@ -1,5 +1,6 @@
 package org.toitlang.intellij.files;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.intellij.openapi.progress.ProcessCanceledException;
@@ -18,7 +19,7 @@ import java.util.logging.Logger;
 
 public class ToitPackageHandler {
     private final static Logger LOG = Logger.getLogger(ToitPackageHandler.class.getSimpleName());
-    private final static ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    private final static ObjectMapper mapper = new ObjectMapper(new YAMLFactory().configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true));
 
     public static ToitFile findPackageSourceFile(ToitFile toitFile, List<String> paths) {
         VirtualFile packageLockFile = findPackageLockFile(toitFile.getProject(), toitFile.getVirtualFile());
@@ -132,7 +133,7 @@ public class ToitPackageHandler {
     public static class PackageLock {
         Map<String, String> prefixes;
         Map<String, PackageInfo> packages;
-
+        String sdk;
         @Data
         @NoArgsConstructor
         public static class PackageInfo {
