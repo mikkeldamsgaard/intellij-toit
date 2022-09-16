@@ -20,6 +20,7 @@ dependencies {
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
     version = '2022.2'
+    updateSinceUntilBuild = false
 }
 
 tasks {
@@ -33,7 +34,6 @@ patchPluginXml {
 <li>Bump version dependencies</li>
 </ul>
       """
-    sinceBuild = "213"
 }
 
 test {
