@@ -46,10 +46,10 @@ public class ToitPackageHandler {
 
             if (packageInfo == null) return null;
 
-            String pckPath = getPacketSourcePath(packageInfo);
-            VirtualFile projectRoot = packageLockFile.getParent();
+            String pckPath = getPackageSourcePath(packageInfo);
+            VirtualFile searchRoot = getPackageSearchRoot(packageLockFile, packageInfo);
             for (String file : filesToFind) {
-                var f = projectRoot.findFileByRelativePath(pckPath + file);
+                var f = searchRoot.findFileByRelativePath(pckPath + file);
                 if (f != null) return (ToitFile) PsiManager.getInstance(toitFile.getProject()).findFile(f);
             }
         } catch (ProcessCanceledException e) {
@@ -74,9 +74,9 @@ public class ToitPackageHandler {
             var packageInfo = packageLock.getPackages().get(package_);
             if (packageInfo == null) return null;
 
-            String pckPath = getPacketSourcePath(packageInfo);
-            VirtualFile projectRoot = packageLockFile.getParent();
-            return projectRoot.findFileByRelativePath(pckPath+String.join(File.separator, path.subList(1, path.size())));
+            String pckPath = getPackageSourcePath(packageInfo);
+            VirtualFile searchRoot = getPackageSearchRoot(packageLockFile, packageInfo);
+            return searchRoot.findFileByRelativePath(pckPath+String.join(File.separator, path.subList(1, path.size())));
         } catch (ProcessCanceledException e) {
             // Ignore
         } catch (Exception e) {
@@ -88,14 +88,24 @@ public class ToitPackageHandler {
         return null;
     }
 
-    private static String getPacketSourcePath(PackageLock.PackageInfo packageInfo) {
-        String pckPath;
+    private static String getPackageSourcePath(PackageLock.PackageInfo packageInfo) {
         if (packageInfo.url != null) {
-            pckPath = String.format(".packages/%s/%s/src/", packageInfo.url, packageInfo.version);
+            return String.format(".packages/%s/%s/src/", packageInfo.url, packageInfo.version);
         } else {
-            pckPath = String.format("%s/src/", packageInfo.path);
+            return "src/";
         }
-        return pckPath;
+    }
+
+    private static VirtualFile getPackageSearchRoot(VirtualFile packageLockFile, PackageLock.PackageInfo packageInfo) {
+        if (packageInfo.getUrl() != null) {
+            return packageLockFile.getParent();
+        } else {
+            if (new File(packageInfo.getPath()).isAbsolute()) {
+                return packageLockFile.getFileSystem().findFileByPath(packageInfo.getPath());
+            } else {
+                return packageLockFile.getParent().findFileByRelativePath(packageInfo.getPath());
+            }
+        }
     }
 
     public static Collection<String> listPrefixes(ToitFile toitFile) {

@@ -985,9 +985,11 @@ public class Parser {
                 }
                 first = false;
             } else {
-                if (map && !isAllowingNewlines(MAP_KEY_VALUE_SEPARATOR))
-                    return literal.error("Expected element separator ':'");
-                consumeAllowNewlines();
+                if (map) {
+                    if (!isAllowingNewlines(MAP_KEY_VALUE_SEPARATOR))
+                        return literal.error("Expected element separator ':'");
+                    consumeAllowNewlines();
+                }
             }
 
             if (map) {

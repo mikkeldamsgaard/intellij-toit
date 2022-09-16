@@ -1,11 +1,11 @@
 plugins {
-    id 'org.jetbrains.intellij' version '1.5.2'
+    id 'org.jetbrains.intellij' version '1.9.0'
     id 'java'
     id "io.freefair.lombok" version "5.3.3.3"
 }
 
 group 'org.toitlang'
-version '1.6'
+version '1.7'
 
 repositories {
     mavenCentral()
@@ -19,15 +19,18 @@ dependencies {
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
-    version = '2022.1'
+    version = '2022.2'
 }
 
+tasks {
+    runIde {
+        jvmArgs("-Xmx2000m")
+    }
+}
 patchPluginXml {
     changeNotes = """
 <ul>
-<li>Bugfix release</li>
-<li>Better handling of toit files and search for files.</li>
-<li>Removed some exceptions (Stack overflow mostly)</li>
+<li>Bump version dependencies</li>
 </ul>
       """
     sinceBuild = "213"

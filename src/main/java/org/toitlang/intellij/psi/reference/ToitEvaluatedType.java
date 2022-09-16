@@ -95,7 +95,7 @@ public class ToitEvaluatedType {
                         for (ToitExpression toitExpression : toitVariableDeclaration.getChildrenOfType(ToitExpression.class)) {
                             ToitScope localToitResolveScope = toitVariableDeclaration.getLocalToitResolveScope();
                             var type = toitExpression.getType(localToitResolveScope);
-                            types.add(type.nonStatic().estimated());
+                            if (type != null) types.add(type.nonStatic().estimated());
                         }
                     }
                 }

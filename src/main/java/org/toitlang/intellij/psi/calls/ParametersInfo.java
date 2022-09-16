@@ -12,26 +12,26 @@ public class ParametersInfo {
         positionalParameters = new ArrayList<>();
     }
 
-    public void addNamed(String name, ParameterInfo info) {
+    public synchronized void addNamed(String name, ParameterInfo info) {
         named.put(name,info);
     }
 
-    public void addPositional(ParameterInfo info) {
+    public synchronized void addPositional(ParameterInfo info) {
         positionalParameters.add(info);
     }
 
-    public List<ParameterInfo> getNonDefaultPositionalParameters() {
+    public synchronized List<ParameterInfo> getNonDefaultPositionalParameters() {
         return new ArrayList<>(positionalParameters).stream().filter(p -> !p.hasDefaultValue).collect(Collectors.toList());
     }
-    public int getNumberOfNonDefaultPositionalParameters() {
+    public synchronized int getNumberOfNonDefaultPositionalParameters() {
         return getNonDefaultPositionalParameters().size();
     }
 
-    public int getNumberOfPositionalParameters() {
+    public synchronized int getNumberOfPositionalParameters() {
         return positionalParameters.size();
     }
 
-    public Map<String, ParameterInfo> getNonDefaultNamedParameters() {
+    public synchronized Map<String, ParameterInfo> getNonDefaultNamedParameters() {
         Map<String, ParameterInfo> res = new HashMap<>();
         for (Map.Entry<String, ParameterInfo> e : new HashMap<>(named).entrySet()) {
             if (!e.getValue().hasDefaultValue) res.put(e.getKey(), e.getValue());
@@ -39,7 +39,7 @@ public class ParametersInfo {
         return res;
     }
 
-    public Map<String, ParameterInfo> getDefaultNamedParameters() {
+    public synchronized Map<String, ParameterInfo> getDefaultNamedParameters() {
         Map<String, ParameterInfo> res = new HashMap<>();
         for (Map.Entry<String, ParameterInfo> e : new HashMap<>(named).entrySet()) {
             if (e.getValue().hasDefaultValue) res.put(e.getKey(), e.getValue());
@@ -47,15 +47,15 @@ public class ParametersInfo {
         return res;
     }
 
-    public boolean hasNamedParameter(String name) {
+    public synchronized boolean hasNamedParameter(String name) {
         return named.containsKey(name);
     }
 
-    public ParameterInfo getPositional(int position) {
+    public synchronized ParameterInfo getPositional(int position) {
         return positionalParameters.get(position);
     }
 
-    public ParameterInfo getNamedParameter(String name) {
+    public synchronized ParameterInfo getNamedParameter(String name) {
         return named.get(name);
     }
 }

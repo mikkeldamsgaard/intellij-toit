@@ -1,4 +1,18 @@
 Bugs:
+class A:
+  static X ::= 1
+main:
+  a = A
+  a.X // <<== Should be an error
+
+----
+class B:
+  A a
+  B b
+  constructor:
+    a = A this
+    b = B // <== This should be an error, initialize after this use
+
 
 Top:
   - show params enhancement
