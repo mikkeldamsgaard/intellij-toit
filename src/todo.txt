@@ -1,3 +1,4 @@
+
 Bugs:
 class A:
   static X ::= 1

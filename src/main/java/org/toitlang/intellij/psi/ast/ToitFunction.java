@@ -217,5 +217,4 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
                 parameterInfo.getNonDefaultNamedParameters(),
                 parameterInfo.getDefaultNamedParameters());
     }
-
 }

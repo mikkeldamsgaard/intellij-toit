@@ -189,6 +189,14 @@ public class ToitCallHelper {
             PsiElement resolved = ((ToitDerefExpression) toitExpression).getToitReferenceIdentifier().getReference().resolve();
             return resolved instanceof ToitFunction && ((ToitFunction) resolved).isSetter();
         }
+        if (toitExpression instanceof ToitPrimaryExpression) {
+            for (ToitReferenceIdentifier toitReferenceIdentifier : toitExpression.getChildrenOfType(ToitReferenceIdentifier.class)) {
+                for (ResolveResult resolveResult : toitReferenceIdentifier.getReference().multiResolve(false)) {
+                    if (resolveResult.getElement() instanceof ToitFunction && ((ToitFunction)resolveResult.getElement()).isSetter()) return true;
+                }
+            }
+
+        }
         return false;
     }
 }

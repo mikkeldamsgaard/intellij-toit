@@ -183,14 +183,25 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
     private boolean isBaseClassOrInterfaceOf(ToitStructure structure) {
         if (equals(structure)) return true;
 
-        for (ToitStructure _interface : structure.getInterfaces()) {
-            if (isBaseClassOrInterfaceOf(_interface)) return true;
+        return isBaseClassOrInterfaceOf(structure, new Stack<>());
+    }
+
+    private boolean isBaseClassOrInterfaceOf(ToitStructure structure, Stack<ToitStructure> seen) {
+        if (equals(structure)) return true;
+
+        try {
+            seen.push(structure);
+            for (ToitStructure _interface : structure.getInterfaces()) {
+                if (isBaseClassOrInterfaceOf(_interface, seen)) return true;
+            }
+            var baseClass = structure.getBaseClass();
+            if (baseClass != null && !seen.contains(baseClass)) {
+                return isBaseClassOrInterfaceOf(baseClass, seen);
+            }
+            return false;
+        } finally {
+            seen.pop();
         }
-        var baseClass = structure.getBaseClass();
-        if (baseClass != null) {
-            return isBaseClassOrInterfaceOf(baseClass);
-        }
-        return false;
     }
 
     public List<ToitFunction> getAllFunctions() {

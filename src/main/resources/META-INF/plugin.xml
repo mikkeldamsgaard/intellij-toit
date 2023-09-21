@@ -54,7 +54,8 @@
                                     implementationClass="org.toitlang.intellij.psi.codeInsight.ToitOverrideMethodsHandler"/>
         <codeInsight.implementMethod language="Toit"
                                      implementationClass="org.toitlang.intellij.psi.codeInsight.ToitImplementMethodsHandler"/>
-
+        <codeInsight.gotoSuper language="Toit"
+                               implementationClass="org.toitlang.intellij.psi.codeInsight.ToitGotoSuperHandler"/>
 
         <gotoClassContributor implementation="org.toitlang.intellij.findusage.ToitGotoClass"/>
         <gotoSymbolContributor implementation="org.toitlang.intellij.findusage.ToitGotoSymbol"/>
@@ -89,6 +90,7 @@
 
         <completion.contributor language="Toit"
                                 implementationClass="org.toitlang.intellij.completion.ToitCompletionContributor"/>
+
     </extensions>
 
     <actions>
@@ -96,6 +98,6 @@
     </actions>
 
     <change-notes>
-        First version
+        Added GoTo Upper. Various bugfixes.
     </change-notes>
 </idea-plugin>

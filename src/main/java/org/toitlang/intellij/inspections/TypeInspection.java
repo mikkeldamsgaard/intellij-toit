@@ -132,7 +132,7 @@ public class TypeInspection extends LocalInspectionTool {
                     }
                 } else {
                     ToitEvaluatedType expressionType = expression.getType(toitVariableDeclaration.getLocalToitResolveScope());
-                    if (expressionType.getStructure() == null) return;
+                    if (expressionType == null || expressionType.getStructure() == null) return;
                     if (!expressionType.isAssignableTo(declaredStructure))
                         holder.registerProblem(expression, "Cannot assign expression of type " + expressionType + " to variable of type " + declaredType.getName());
                 }
