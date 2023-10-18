@@ -1,8 +1,6 @@
 package org.toitlang.intellij.files;
 
-import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import org.toitlang.intellij.psi.ToitFile;
 
@@ -19,8 +17,7 @@ public class ToitProjectFiles {
         }
         VirtualFile dir = file.getVirtualFile().getParent();
         for (String fileName : filesToFind) {
-            String relativeFileName = prefix + fileName;
-            var vf = dir.findFileByRelativePath(relativeFileName);
+            var vf = ToitFileResolver.findRelativeIgnoreUnderscoreMinus(dir, prefix.toString(), fileName);
             if (vf != null) return (ToitFile) PsiManager.getInstance(file.getProject()).findFile(vf);
         }
         return null;

@@ -38,7 +38,7 @@ public class ToitAnnotationHighlighter implements Annotator {
 
             @Override
             public void visit(ToitReferenceIdentifier toitReferenceIdentifier) {
-                var highlighted =toitReferenceIdentifier.getIdentifierToken();
+                var highlighted = toitReferenceIdentifier.getIdentifierToken();
                 if (toitReferenceIdentifier.isTypeName()) {
                     applyHighlight(holder, highlighted, ToitSyntaxHighlighter.CLASS_REFERENCE);
                 } else if (toitReferenceIdentifier.isReference()) {

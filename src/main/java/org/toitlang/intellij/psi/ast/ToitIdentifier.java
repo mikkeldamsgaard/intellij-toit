@@ -6,7 +6,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.TokenSet;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ToitTypes;
-import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 public abstract class ToitIdentifier extends ToitElement {
     private String name;
@@ -24,7 +23,7 @@ public abstract class ToitIdentifier extends ToitElement {
 
     public @NotNull PsiElement getIdentifierToken() {
         ASTNode[] children = getNode().getChildren(IDENTIFIER_SET);
-        return children[children.length-1].getPsi();
+        return children[children.length - 1].getPsi();
     }
 
     @Override
@@ -74,6 +73,14 @@ public abstract class ToitIdentifier extends ToitElement {
 
     protected PsiElement replaceIdentifierToken(ToitIdentifier newRef) {
         return getIdentifierToken().replace(newRef.getIdentifierToken());
+    }
+
+    public static boolean compareIgnoreUnderscoreMinus(String i1, String i2) {
+        return normalizeMinusUnderscore(i1).equals(normalizeMinusUnderscore(i2));
+    }
+
+    public static String normalizeMinusUnderscore(String s) {
+        return s.replaceAll("_", "-");
     }
 
 }

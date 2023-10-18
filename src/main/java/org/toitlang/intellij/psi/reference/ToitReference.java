@@ -5,6 +5,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.util.IncorrectOperationException;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.files.ToitSdkFiles;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 public class ToitReference implements PsiPolyVariantReference {
     private final ToitReferenceIdentifier source;
     private final List<PsiElement> destinations;
+    @Getter
     private final List<PsiElement> dependencies;
     boolean soft;
 
@@ -32,10 +34,6 @@ public class ToitReference implements PsiPolyVariantReference {
         destinations = new ArrayList<>();
         dependencies = new ArrayList<>();
         soft = false;
-    }
-
-    public List<PsiElement> getDependencies() {
-        return dependencies;
     }
 
     @Override
@@ -154,7 +152,7 @@ public class ToitReference implements PsiPolyVariantReference {
             if (resolved != null) {
                 var namedParameter = resolved.getToitFunction().getChildrenOfType(ToitParameterName.class);
                 for (ToitParameterName toitParameterName : namedParameter) {
-                    if (source.getName().trim().equals(toitParameterName.getName())) {
+                    if (ToitIdentifier.compareIgnoreUnderscoreMinus(source.getName().trim(), toitParameterName.getName())) {
                         ToitIdentifier identifier = toitParameterName.getNameIdentifier();
                         if (identifier instanceof ToitReferenceIdentifier) {
                             destinations.addAll(((ToitReferenceIdentifier)identifier).getReference().destinations);

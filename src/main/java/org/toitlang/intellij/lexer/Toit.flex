@@ -41,11 +41,13 @@ import com.intellij.lexer.FlexLexer;
                 indentStack.pop();
                 return ToitTypes.DEDENT;
             }
+
             IElementType indentIn() {
                 indentStack.push(yycolumn);
                 yybegin(NORMAL);
                 return ToitTypes.INDENT;
             }
+
             IElementType indentIgnore() {
                 yybegin(NORMAL);
                 return null;
@@ -174,9 +176,9 @@ DocComment = "/**" ( {TraditionalComment} | [^*]* | (\*+ [^*/]))* \*+ "/"
 EndOfLineCommentPrefix = "//" {InputCharacter}*
 
 /* identifiers */
-IndentifierStart = [\w_--\d]
-IndentifierContinue = [\w_]
-Identifer = {IndentifierStart}{IndentifierContinue}*
+IndentifierStart = [\w_]
+IndentifierContinue = [\w_\-\d]
+Identifer = ( {IndentifierStart} {IndentifierContinue}* )
 
 ///* string literals */
 
@@ -329,6 +331,7 @@ Spacing=[\ \t]
 <NORMAL> {
  {LineTerminator}                                { yybegin(INDENT_TRACKING); return ToitTypes.NEWLINE; }
 }
+
 <NORMAL, INLINE_STRING_EXPRESSION, INLINE_DELIMITED_STRING_EXPRESSION> {
  {Identifer}                                     { return ToitTypes.IDENTIFIER; }
  "." / {Identifer}                               { return ToitTypes.DOT; }

@@ -3,17 +3,23 @@ package org.toitlang.intellij.psi.calls;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.toitlang.intellij.psi.ast.ToitIdentifier.normalizeMinusUnderscore;
+
 public class ParametersInfo {
+    private final Map<String, String> nameTranslations;
     private final Map<String, ParameterInfo> named;
     private final List<ParameterInfo> positionalParameters;
 
     public ParametersInfo() {
         named = new HashMap<>();
+        nameTranslations = new HashMap<>();
         positionalParameters = new ArrayList<>();
     }
 
     public synchronized void addNamed(String name, ParameterInfo info) {
         named.put(name,info);
+        if (name.contains("_")) nameTranslations.put(normalizeMinusUnderscore(name), name);
+        nameTranslations.put(name, name);
     }
 
     public synchronized void addPositional(ParameterInfo info) {
@@ -48,7 +54,9 @@ public class ParametersInfo {
     }
 
     public synchronized boolean hasNamedParameter(String name) {
-        return named.containsKey(name);
+        String translated = nameTranslations.get(name);
+        if (translated == null) return false;
+        return named.containsKey(translated);
     }
 
     public synchronized ParameterInfo getPositional(int position) {
@@ -56,6 +64,7 @@ public class ParametersInfo {
     }
 
     public synchronized ParameterInfo getNamedParameter(String name) {
-        return named.get(name);
+        String translated = nameTranslations.get(name);
+        return named.get(translated);
     }
 }

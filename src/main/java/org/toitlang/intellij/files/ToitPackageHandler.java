@@ -49,7 +49,7 @@ public class ToitPackageHandler {
             String pckPath = getPackageSourcePath(packageInfo);
             VirtualFile searchRoot = getPackageSearchRoot(packageLockFile, packageInfo);
             for (String file : filesToFind) {
-                var f = searchRoot.findFileByRelativePath(pckPath + file);
+                var f = ToitFileResolver.findRelativeIgnoreUnderscoreMinus(searchRoot, pckPath, file);
                 if (f != null) return (ToitFile) PsiManager.getInstance(toitFile.getProject()).findFile(f);
             }
         } catch (ProcessCanceledException e) {
@@ -57,7 +57,6 @@ public class ToitPackageHandler {
         } catch (Exception e) {
             // Ignore
             LOG.severe("Failed to parse lock file: " + e.getMessage());
-            e.printStackTrace();
         }
 
         return null;
@@ -82,7 +81,6 @@ public class ToitPackageHandler {
         } catch (Exception e) {
             // Ignore
             LOG.severe("Failed to parse lock file: " + e.getMessage());
-            e.printStackTrace();
         }
 
         return null;
@@ -151,6 +149,7 @@ public class ToitPackageHandler {
             String url;
             String version;
             String hash;
+            String name;
             Map<String, String> prefixes;
         }
     }

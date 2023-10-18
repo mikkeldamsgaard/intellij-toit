@@ -2,10 +2,13 @@ package org.toitlang.intellij.psi.calls;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveResult;
+import lombok.Getter;
 import org.toitlang.intellij.psi.ast.*;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 
 import java.util.*;
+
+import static org.toitlang.intellij.psi.ast.ToitIdentifier.normalizeMinusUnderscore;
 
 /**
  * Helper function to resolve expressions to calls. Both PrimaryExpression (with on reference identifier inside) and
@@ -112,22 +115,22 @@ public class ToitCallHelper {
         return res != null && res;
     }
 
-    public static List<ToitFunction> resolveFunctions(ToitExpression expression) {
-        return null;
-    }
-
 
     public static ResolvedFunctionCall parametersMatches(ToitFunction toitFunction, List<IToitElement> parameters) {
         ResolvedFunctionCall resolvedFunctionCall = new ResolvedFunctionCall(toitFunction);
         ParametersInfo parametersInfo = toitFunction.getParameterInfo();
         List<IToitElement> positionalArgs = new ArrayList<>();
         Map<String, ToitNamedArgument> names = new HashMap<>();
-
+        Map<String, ToitNamedArgument> namesIgnoreMinusUnderscore = new HashMap<>();
         for (IToitElement parameter : parameters) {
             if (parameter instanceof ToitExpression) positionalArgs.add(parameter);
             if (parameter instanceof ToitNamedArgument) {
                 ToitNamedArgument namedArgument = (ToitNamedArgument) parameter;
-                names.put(namedArgument.getName(), namedArgument);
+                String name = namedArgument.getName();
+                if (name != null) {
+                    names.put(name, namedArgument);
+                    namesIgnoreMinusUnderscore.put(normalizeMinusUnderscore(name), namedArgument);
+                }
             }
         }
 
@@ -143,7 +146,7 @@ public class ToitCallHelper {
 
         /* Named non default parameters */
         for (String nonDefaultNamedParameter : parametersInfo.getNonDefaultNamedParameters().keySet()) {
-            if (!names.containsKey(nonDefaultNamedParameter)) return null;
+            if (!namesIgnoreMinusUnderscore.containsKey(normalizeMinusUnderscore(nonDefaultNamedParameter))) return null;
             resolvedFunctionCall.addMatch(names.get(nonDefaultNamedParameter), parametersInfo.getNamedParameter(nonDefaultNamedParameter));
         }
 
@@ -157,14 +160,11 @@ public class ToitCallHelper {
 
     static public class ResolvedFunctionCall {
         private final Map<IToitElement, ParameterInfo> argsToParams = new HashMap<>();
-        private ToitFunction toitFunction;
+        @Getter
+        private final ToitFunction toitFunction;
 
         public ResolvedFunctionCall(ToitFunction toitFunction) {
             this.toitFunction = toitFunction;
-        }
-
-        public ToitFunction getToitFunction() {
-            return toitFunction;
         }
 
         private void addMatch(IToitElement arg, ParameterInfo param) {

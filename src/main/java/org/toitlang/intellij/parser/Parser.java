@@ -60,7 +60,7 @@ public class Parser {
         }
 
         while (true) {
-            if (!identifierMinusAllowed(IMPORT_IDENTIFIER)) {
+            if (!identifier(IMPORT_IDENTIFIER)) {
                 return importPart.error("Expected identifier");
             }
             if (!is(ToitTypes.DOT)) break;
@@ -446,7 +446,6 @@ public class Parser {
         if (is(DOT) && currentTokenIsAttached) {
             consumeAllowNewlines();
             if (!identifier(BREAK_CONTINUE_LABEL_IDENTIFIER)) return breakContinue.propagateError();
-            tryRule(() -> expression(true));
         }
         return breakContinue.done();
     }
@@ -1052,31 +1051,10 @@ public class Parser {
         return true;
     }
 
-    private boolean identifierMinusAllowed(IElementType elementType) {
-        if (!isIdentifier()) return false;
-        var i = mark(elementType);
-        consume();
-        return identifierWithMinus(i);
-    }
-
     private boolean minusMinusIdentifier(IElementType elementType) {
         if (!isIdentifier() || !currentTokenIsAttached) return false;
         var i = mark(elementType);
-        return identifierWithMinus(i);
-    }
-
-    private boolean identifierWithMinus(Marker i) {
-        boolean prevWasMinus = false;
-        while (currentTokenIsAttached && (is(IDENTIFIER) || is(MINUS))) {
-            if (is(IDENTIFIER)) {
-                prevWasMinus = false;
-                consume();
-            } else if (is(MINUS) && currentTokenIsAttached) {
-                prevWasMinus = true;
-                consume();
-            }
-        }
-        if (prevWasMinus) return i.error("Parameter name error");
+        consume();
         if (is(TokenType.WHITE_SPACE) || isNewLine() || isDedent() || isIndent()) {
             i.done();
             consumeAllowNewlines();

@@ -4,10 +4,11 @@ import com.intellij.psi.PsiElement;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
-import org.toitlang.intellij.model.IToitPrimaryLanguageElement;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.toitlang.intellij.psi.ast.ToitIdentifier.normalizeMinusUnderscore;
 
 public class ToitScope {
     private final static ToitScope ROOT = new ToitScope("root",true) {
@@ -48,14 +49,26 @@ public class ToitScope {
         this.parents = parents;
     }
 
+    private List<PsiElement> addToLocal(String key) {
+        var result = local.get(key);
+        if (result == null) {
+            result = new ArrayList<>();
+            if (key.contains("_")) {
+                local.put(normalizeMinusUnderscore(key), result);
+            }
+            local.put(key, result);
+        }
+        return result;
+    }
+
     public void add(String key, PsiElement value) {
         if (key == null) return;
-        local.computeIfAbsent(key, k -> new ArrayList<>(1)).add(value);
+        addToLocal(key).add(value);
     }
 
     public void add(String key, List<? extends PsiElement> value) {
         if (key == null) return;
-        local.computeIfAbsent(key, k -> new ArrayList<>(value.size())).addAll(value);
+        addToLocal(key).addAll(value);
     }
 
     public @NotNull List<PsiElement> resolve(String key) {
