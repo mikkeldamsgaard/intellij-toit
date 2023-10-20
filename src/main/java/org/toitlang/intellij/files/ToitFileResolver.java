@@ -11,11 +11,15 @@ import static org.toitlang.intellij.psi.ast.ToitIdentifier.normalizeMinusUndersc
 
 public class ToitFileResolver {
     public static ToitFile resolve(ToitFile source, int prefixDots, List<String> paths) {
-        String path = String.join(File.separator, paths);
+        String basePath = "";
+        if (paths.size() > 1) {
+            basePath = String.join(File.separator, paths.subList(0, paths.size()-1));
+        }
         String lastPath = paths.get(paths.size() - 1);
-        List<String> filesToFind = Arrays.asList(
-                String.format("%s.toit", path),
-                String.format("%s%s%s.toit", path, File.separator, lastPath));
+        String lastPathToitFile = String.format("%s.toit", lastPath);
+        List<FileInfo> filesToFind = Arrays.asList(
+                new FileInfo(basePath, lastPathToitFile),
+                new FileInfo(String.format("%s%s%s", basePath, File.separator, lastPath), lastPathToitFile));
 
         ToitFile psiFile;
         if (prefixDots == 0) {
@@ -33,13 +37,12 @@ public class ToitFileResolver {
     static VirtualFile findRelativeIgnoreUnderscoreMinus(VirtualFile root, String path, String file) {
         String normalizedFile = normalizeMinusUnderscore(file);
         var dir = root.findFileByRelativePath(path);
-        if (dir == null) return null;
+        if (dir == null)
+            return null;
         for (VirtualFile child : dir.getChildren()) {
-            if (file.equals("partition-table.toit")) {
-                System.out.println(child.getName());
-            }
             if (normalizeMinusUnderscore(child.getName()).equals(normalizedFile)) return child;
         }
         return null;
     }
+
 }

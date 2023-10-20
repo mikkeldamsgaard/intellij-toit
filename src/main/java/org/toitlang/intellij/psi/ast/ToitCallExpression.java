@@ -44,4 +44,15 @@ public class ToitCallExpression extends ToitExpression {
         }
         return result;
     }
+
+    public List<IToitElement> getArguments() {
+        List<IToitElement> arguments = new ArrayList<>();
+        var children = getChildren();
+        if (children.length <= 1) return null;
+        for (int i = 1; i < children.length; i++) {
+            if (children[i] instanceof ToitExpression || children[i] instanceof ToitNamedArgument)
+                arguments.add((IToitElement) children[i]);
+        }
+        return arguments;
+    }
 }

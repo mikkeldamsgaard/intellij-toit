@@ -6,23 +6,22 @@ import org.toitlang.intellij.psi.ast.*;
 import org.toitlang.intellij.psi.visitor.ToitVisitableElement;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class ToitLocalScopeCalculator extends ToitVisitor {
     private final static String SUPER = "super";
+
     private final static String THIS = "this";
 
     private final IToitElement origin;
-    private final List<ToitScope> localScopes;
 
-    public ToitLocalScopeCalculator(IToitElement origin) {
+    private ToitScope current;
+
+    public ToitLocalScopeCalculator(IToitElement origin, ToitScope parent) {
         this.origin = origin;
-        this.localScopes = new ArrayList<>();
+        this.current = parent;
     }
 
-    public static ToitScope calculate(IToitElement origin) {
-        return new ToitLocalScopeCalculator(origin).calculate();
+    public static ToitScope calculate(IToitElement origin, ToitScope parent) {
+        return new ToitLocalScopeCalculator(origin, parent).calculate();
     }
 
     private ToitVariableDeclaration getImmediateVariableDeclarationParentOfOrigin() {
@@ -46,36 +45,41 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
             }
 
             if (scopeStart == null) {
-                return toitVariableDeclaration.getToitFile().getToitFileScope().getToitScope();
+                return toitVariableDeclaration.getToitFile().getToitFileScope().getToitScope(current);
             }
         }
 
         if (scopeStart == null) scopeStart = origin;
 
         scopeStart.accept(this);
-        return ToitScope.chain(origin +"-"+origin.getName()+"-local", localScopes.toArray(new ToitScope[0]));
+
+        return current;
+    }
+
+    void pushScope(String name) {
+        current = current.sub(name);
     }
 
     public void visitElement(@NotNull PsiElement element) {
-        if (element.getParent() instanceof ToitBlock) {
-            ToitScope scope = new ToitScope(element.toString(), true);
-            var e = element.getPrevSibling();
-            while (e != null) {
-                if (e instanceof ToitVariableDeclaration) addVariableDeclarationToScope(scope, (ToitVariableDeclaration) e);
-                e = e.getPrevSibling();
-            }
-            localScopes.add(scope);
-        }
         if (!(element instanceof ToitVisitableElement)) return;
         element.getParent().accept(this);
+
+        if (element.getParent() instanceof ToitBlock) {
+            pushScope(element.toString());
+            var e = element.getPrevSibling();
+            while (e != null) {
+                if (e instanceof ToitVariableDeclaration) addVariableDeclarationToCurrent((ToitVariableDeclaration) e);
+                e = e.getPrevSibling();
+            }
+        }
+
     }
 
     @Override
     public void visit(ToitVariableDeclaration toitVariableDeclaration) {
-        ToitScope scope = new ToitScope(toitVariableDeclaration.getName(), true);
-        addVariableDeclarationToScope(scope, toitVariableDeclaration);
-        localScopes.add(scope);
         visitElement(toitVariableDeclaration);
+        pushScope(toitVariableDeclaration.getName());
+        addVariableDeclarationToCurrent(toitVariableDeclaration);
     }
 
     @Override
@@ -94,54 +98,49 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
     }
 
     private void processNestedVariableDeclarations(ToitElement element) {
-        ToitScope scope = new ToitScope(element.toString(), true);
-        for (var v : element.getChildrenOfType(ToitVariableDeclaration.class)) {
-            addVariableDeclarationToScope(scope,v);
-        }
-        localScopes.add(scope);
         visitElement(element);
+        pushScope(element.toString());
+        for (var v : element.getChildrenOfType(ToitVariableDeclaration.class)) {
+            addVariableDeclarationToCurrent(v);
+        }
     }
 
 
     @Override
     public void visit(ToitStructure toitStructure) {
-        localScopes.add(toitStructure.getScope(false));
+        current = toitStructure.getScope(false, current);
     }
 
     @Override
     public void visit(ToitFunction toitFunction) {
-        localScopes.add(toitFunction.getParameterScope());
         visitElement(toitFunction);
+
+        ToitStructure structure = toitFunction.getParentOfType(ToitStructure.class);
+        if (structure != null && !toitFunction.isStatic()) {
+            pushScope(toitFunction.getName() + "::super-this");
+            current.add(THIS, structure);
+
+            ToitStructure baseClass = structure.getBaseClass();
+            if (baseClass != null) {
+                if (!toitFunction.isConstructor()) {
+                    current.add(SUPER, baseClass.getScope(false, current).resolve(toitFunction.getName()));
+                } else {
+                    current.add(SUPER, baseClass);
+                }
+            }
+        }
+
+        current = toitFunction.getParameterScope(current);
     }
 
     @Override
     public void visit(ToitBlock toitBlock) {
-        localScopes.add(toitBlock.getParameterScope());
-
-        if (toitBlock.getParent() instanceof ToitFunction) {
-            ToitFunction function = (ToitFunction) toitBlock.getParent();
-
-            ToitStructure structure = toitBlock.getParentOfType(ToitStructure.class);
-            if (!function.isStatic() && structure != null) {
-                ToitScope superThis = new ToitScope(function.getName(), true);
-                superThis.add(THIS, structure);
-
-                ToitStructure baseClass = structure.getBaseClass();
-                if (baseClass != null) {
-                    if (!function.isConstructor()) {
-                        superThis.add(SUPER, baseClass.getScope(false).resolve(function.getName()));
-                    } else {
-                        superThis.add(SUPER, baseClass);
-                    }
-                }
-
-                localScopes.add(superThis);
-            }
-        }
         visitElement(toitBlock);
+
+        current = toitBlock.getParameterScope(current);
     }
 
-    private static void addVariableDeclarationToScope(ToitScope scope, ToitVariableDeclaration toitVariableDeclaration) {
-        scope.add(toitVariableDeclaration.getName(), toitVariableDeclaration);
+    private void addVariableDeclarationToCurrent(ToitVariableDeclaration toitVariableDeclaration) {
+        current.add(toitVariableDeclaration.getName(), toitVariableDeclaration);
     }
 }

@@ -80,7 +80,14 @@ public abstract class ToitIdentifier extends ToitElement {
     }
 
     public static String normalizeMinusUnderscore(String s) {
-        return s.replaceAll("_", "-");
+        int prefix_ = 0;
+        int suffix_ = s.length();
+        while (prefix_ < s.length() && s.charAt(prefix_) == '_') prefix_++;
+        while (suffix_ > 0 && s.charAt(suffix_-1) == '_') suffix_--;
+        return String.format("%s%s%s",
+                s.substring(0, prefix_),
+                s.substring(prefix_, suffix_).replaceAll("_", "-"),
+                s.substring(suffix_));
     }
 
 }

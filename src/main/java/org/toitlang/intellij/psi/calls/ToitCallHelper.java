@@ -19,13 +19,7 @@ public class ToitCallHelper {
         return expression.accept(new ToitExpressionVisitor<>() {
             @Override
             public ResolvedFunctionCall visit(ToitCallExpression toitCallExpression) {
-                List<IToitElement> arguments = new ArrayList<>();
-                var children = toitCallExpression.getChildren();
-                if (children.length <= 1) return null;
-                for (int i = 1; i < children.length; i++) {
-                    if (children[i] instanceof ToitExpression || children[i] instanceof ToitNamedArgument)
-                        arguments.add((IToitElement) children[i]);
-                }
+                List<IToitElement> arguments = toitCallExpression.getArguments();
 
                 for (ToitFunction function : toitCallExpression.getFunctions()) {
                     ResolvedFunctionCall resolved = parametersMatches(function, arguments);
@@ -106,10 +100,8 @@ public class ToitCallHelper {
             }
 
             private boolean check(ToitReferenceIdentifier ref) {
-                for (ResolveResult resolveResult : ref.getReference().multiResolve(false)) {
-                    if (resolveResult.getElement() instanceof ToitFunction) return true;
-                }
-                return false;
+                var element = ref.getReference().resolve();
+                return element instanceof ToitFunction;
             }
         });
         return res != null && res;

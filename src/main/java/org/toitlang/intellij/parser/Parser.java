@@ -929,7 +929,7 @@ public class Parser {
         }
 
         if (is(COLON)) {
-            if (!block(false, this::functionStatement)) return primitive.propagateError();
+            if (!block(true, this::functionStatement)) return primitive.propagateError();
         }
 
         return primitive.done();

@@ -1,5 +1,6 @@
 package org.toitlang.intellij.psi.reference;
 
+import lombok.Getter;
 import org.toitlang.intellij.psi.ast.*;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 import org.toitlang.intellij.psi.scope.ToitScope;
@@ -10,14 +11,11 @@ import static org.toitlang.intellij.psi.reference.ToitEvaluatedType.resolveTypeO
 
 public class ToitPostfixExpressionTypeEvaluatedType {
     private final LinkedHashMap<ToitExpression, ToitEvaluatedType> prevModel;
+    @Getter
     private ToitEvaluatedType last;
 
     public ToitPostfixExpressionTypeEvaluatedType() {
         prevModel = new LinkedHashMap<>();
-    }
-
-    public ToitEvaluatedType getLast() {
-        return last;
     }
 
     public ToitEvaluatedType getTypeForPreviousChild(ToitExpression child) {
@@ -54,7 +52,7 @@ public class ToitPostfixExpressionTypeEvaluatedType {
                             ToitScope prevFileScope = fPrev.getFile().getToitFileScope().getExportedScope();
                             return resolveTypeOfNameInScope(name, prevFileScope);
                         } else {
-                            ToitScope scructureScope = fPrev.getStructure().getScope(fPrev.isStatic());
+                            ToitScope scructureScope = fPrev.getStructure().getScope(fPrev.isStatic(), ToitScope.ROOT);
                             return resolveTypeOfNameInScope(name, scructureScope);
                         }
                     }

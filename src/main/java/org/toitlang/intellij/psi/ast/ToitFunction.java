@@ -151,8 +151,8 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
         return getChildrenOfType(ToitParameterName.class);
     }
 
-    public ToitScope getParameterScope() {
-        ToitScope scope = new ToitScope(getName() + "-param", true);
+    public ToitScope getParameterScope(ToitScope parent) {
+        ToitScope scope = parent.sub(getName() + "::param");
         getParameters().forEach(p -> scope.add(p.getName(), p));
         return scope;
     }
@@ -200,7 +200,7 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
                 hasDefaultVale = true;
             }
         } finally {
-            ParameterInfo info = new ParameterInfo(toitType, pn.getName(), nullable, hasDefaultVale, isBlock, isMemberInitializer);
+            ParameterInfo info = new ParameterInfo(toitType, pn, nullable, hasDefaultVale, isBlock, isMemberInitializer);
 
             if (isNamed) {
                 parametersInfo.addNamed(pn.getName(), info);

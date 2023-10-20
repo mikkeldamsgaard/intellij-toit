@@ -53,8 +53,13 @@ public class ParametersInfo {
         return res;
     }
 
+    String getTranslatedName(String name) {
+        if (name.startsWith("no-") && !nameTranslations.containsKey(name))
+            name = name.substring(3);
+        return nameTranslations.get(name);
+    }
     public synchronized boolean hasNamedParameter(String name) {
-        String translated = nameTranslations.get(name);
+        String translated = getTranslatedName(name);
         if (translated == null) return false;
         return named.containsKey(translated);
     }
@@ -64,7 +69,7 @@ public class ParametersInfo {
     }
 
     public synchronized ParameterInfo getNamedParameter(String name) {
-        String translated = nameTranslations.get(name);
+        String translated = getTranslatedName(name);
         return named.get(translated);
     }
 }

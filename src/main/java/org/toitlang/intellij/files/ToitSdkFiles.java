@@ -12,19 +12,16 @@ import com.intellij.util.indexing.IndexableSetContributor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.model.IToitPrimaryLanguageElement;
-import org.toitlang.intellij.psi.scope.ToitFileScope;
-import org.toitlang.intellij.ui.ToitApplicationSettings;
 import org.toitlang.intellij.psi.ToitFile;
-import org.toitlang.intellij.ui.ToitNotifier;
 import org.toitlang.intellij.psi.scope.ToitScope;
+import org.toitlang.intellij.ui.ToitApplicationSettings;
+import org.toitlang.intellij.ui.ToitNotifier;
 
 import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class ToitSdkFiles extends IndexableSetContributor {
-    private final static Map<Project, ToitScope> coreMap = new WeakHashMap<>();
-
     public static VirtualFile getSdkRoot(@NotNull Project project) {
         String sdkRoot = ToitApplicationSettings.ToitPersistentStateComponent.getInstance().getState().getSdkPath();
         if (sdkRoot == null || !ToitApplicationSettings.isSdkValid(sdkRoot)) {
@@ -33,11 +30,11 @@ public class ToitSdkFiles extends IndexableSetContributor {
         return LocalFileSystem.getInstance().findFileByIoFile(new File(sdkRoot + "/lib"));
     }
 
-    public static ToitFile findLibraryFile(@NotNull Project project, List<String> filesToFind) {
+    public static ToitFile findLibraryFile(@NotNull Project project, List<FileInfo> filesToFind) {
         var root = getSdkRoot(project);
         if (root == null) return null;
-        for (String path : filesToFind) {
-            var f = root.findFileByRelativePath(path);
+        for (FileInfo fileInfo : filesToFind) {
+            var f = root.findFileByRelativePath(fileInfo.constructPath());
             if (f != null) return (ToitFile) PsiManager.getInstance(project).findFile(f);
         }
         return null;
@@ -58,11 +55,11 @@ public class ToitSdkFiles extends IndexableSetContributor {
 
     private static CachedValue<ToitScope> buildCache(Project project) {
         return CachedValuesManager.getManager((project)).createCachedValue(
-                new CachedValueProvider<ToitScope>() {
+                new CachedValueProvider<>() {
                     @Override
                     public @Nullable Result<ToitScope> compute() {
                         var root = getSdkRoot(project);
-                        if (root == null) return new CachedValueProvider.Result<>(new ToitScope("core", false));
+                        if (root == null) return new CachedValueProvider.Result<>(ToitScope.ROOT.sub("core"));
 
 
                         List<PsiElement> dependencies = new ArrayList<>(2000);
@@ -86,7 +83,7 @@ public class ToitSdkFiles extends IndexableSetContributor {
                             }
                         }
 
-                        var scope = ToitScope.fromMap("core", coreElements, false);
+                        var scope = ToitScope.ROOT.subFromMap("core", coreElements);
                         return new CachedValueProvider.Result<>(scope, (Object[]) dependencies.toArray(new PsiElement[0]));
                     }
                 }

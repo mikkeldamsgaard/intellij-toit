@@ -1,8 +1,6 @@
 package org.toitlang.intellij.psi.scope;
 
 import com.intellij.psi.PsiElement;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -11,10 +9,9 @@ import java.util.stream.Collectors;
 import static org.toitlang.intellij.psi.ast.ToitIdentifier.normalizeMinusUnderscore;
 
 public class ToitScope {
-    private final static ToitScope ROOT = new ToitScope("root",true) {
-
+    public final static ToitScope ROOT = new ToitScope("root", null) {
         @Override
-        public @NotNull List<PsiElement> resolve(String key) {
+        public @NotNull List<PsiElement> resolveNormalized(String key) {
             return Collections.emptyList();
         }
 
@@ -30,35 +27,26 @@ public class ToitScope {
         protected void addVariant(Set<PsiElement> variants) {
         }
     };
-    private final static List<ToitScope> DEFAULT_PARENTS = Collections.singletonList(ROOT);
-    private final List<ToitScope> parents;
-    private final boolean finalResolver;
+
+    private final ToitScope parent;
+
     Map<String, List<PsiElement>> local = new HashMap<>();
 
     private final String name;
 
-    public ToitScope(String name, boolean finalResolver) {
+    public ToitScope(String name) {
         this.name = name;
-        this.finalResolver = finalResolver;
-        this.parents = DEFAULT_PARENTS;
+        this.parent = ROOT;
     }
 
-    private ToitScope(String name, List<ToitScope> parents, boolean finalResolver) {
+    private ToitScope(String name, ToitScope parent) {
         this.name = name;
-        this.finalResolver = finalResolver;
-        this.parents = parents;
+        this.parent = parent;
     }
 
     private List<PsiElement> addToLocal(String key) {
-        var result = local.get(key);
-        if (result == null) {
-            result = new ArrayList<>();
-            if (key.contains("_")) {
-                local.put(normalizeMinusUnderscore(key), result);
-            }
-            local.put(key, result);
-        }
-        return result;
+        var normalized = normalizeMinusUnderscore(key);
+        return local.computeIfAbsent(normalized, (k) -> new ArrayList<>());
     }
 
     public void add(String key, PsiElement value) {
@@ -72,31 +60,18 @@ public class ToitScope {
     }
 
     public @NotNull List<PsiElement> resolve(String key) {
-        return doResolve(key).result;
+        return resolveNormalized(normalizeMinusUnderscore(key));
     }
-
-    private ScopeResolveResult doResolve(String key) {
+    public @NotNull List<PsiElement> resolveNormalized(String normalized) {
         List<PsiElement> result = new ArrayList<>();
-        if (local.containsKey(key)) result.addAll(local.get(key));
-        if (finalResolver && !result.isEmpty()) return new ScopeResolveResult(result, true);
-
-        if (parents != null) {
-            for (ToitScope parent : parents) {
-                var parentResult = parent.doResolve(key);
-                if (parentResult.isFinal) return parentResult;
-
-                result.addAll(parent.resolve(key));
-            }
-        }
-
-        return new ScopeResolveResult(result,false);
+        if (local.containsKey(normalized)) result.addAll(local.get(normalized));
+        result.addAll(parent.resolveNormalized(normalized));
+        return result;
     }
 
     protected void addVariant(Set<PsiElement> variants) {
         variants.addAll(local.values().stream().flatMap(List::stream).collect(Collectors.toList()));
-        for (ToitScope parent : parents) {
-            parent.addVariant(variants);
-        }
+        parent.addVariant(variants);
     }
 
     public Collection<PsiElement> asVariant() {
@@ -105,33 +80,22 @@ public class ToitScope {
         return result;
     }
 
-    private boolean isRedundant() {
-        return local.isEmpty() && parents == DEFAULT_PARENTS;
-    }
-
     @Override
     public String toString() {
         return "ToitScope{" +
                 "name="+name+
-                ", parent=" + parents +
                 ", local=" + local +
+                ", parent=" + parent +
                 '}';
     }
 
-    public static ToitScope fromMap(String name, Map<String, List<? extends PsiElement>> locals, boolean finalResolver) {
-        ToitScope toitScope = new ToitScope(name, finalResolver);
+    public ToitScope subFromMap(String name, Map<String, List<? extends PsiElement>> locals) {
+        ToitScope toitScope = sub(name);
         locals.forEach(toitScope::add);
         return toitScope;
     }
 
-    public static ToitScope chain(String name, ToitScope... scopes) {
-        return new ToitScope(name, Arrays.stream(scopes).filter(t -> !t.isRedundant()).collect(Collectors.toList()), false);
-    }
-
-    @Data
-    @AllArgsConstructor
-    static class ScopeResolveResult {
-        List<PsiElement> result;
-        boolean isFinal;
+    public ToitScope sub(String name) {
+        return new ToitScope(name, this);
     }
 }

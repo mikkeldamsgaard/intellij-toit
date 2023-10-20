@@ -11,11 +11,8 @@ import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.ast.*;
 import org.toitlang.intellij.psi.calls.FunctionSignature;
-import org.toitlang.intellij.psi.calls.ToitCallHelper;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
-import org.toitlang.intellij.psi.reference.ToitReference;
-import org.toitlang.intellij.psi.visitor.ToitVisitableElement;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 import java.util.*;
@@ -43,7 +40,7 @@ public class SemanticErrorInspector extends LocalInspectionTool {
 
             @Override
             public void visit(ToitStructure toitStructure) {
-                checkMissingImplementations(toitStructure,holder);
+                checkMissingImplementations(toitStructure, holder);
             }
 
             @Override
@@ -54,7 +51,8 @@ public class SemanticErrorInspector extends LocalInspectionTool {
     }
 
     private void checkIllegalShadow(ToitVariableDeclaration toitVariableDeclaration, ProblemsHolder holder) {
-        if (toitVariableDeclaration.getParent().getParent() instanceof ToitStructure || toitVariableDeclaration.getParent() instanceof ToitFile) return;
+        if (toitVariableDeclaration.getParent().getParent() instanceof ToitStructure || toitVariableDeclaration.getParent() instanceof ToitFile)
+            return;
 
         ToitElement scopeElement = toitVariableDeclaration.getPrevSiblingOfType(ToitElement.class);
         if (scopeElement == null) scopeElement = toitVariableDeclaration.getParentOfType(ToitElement.class);
@@ -65,9 +63,12 @@ public class SemanticErrorInspector extends LocalInspectionTool {
 
         var resolved = scopeElement.getLocalToitResolveScope().resolve(nameIdentifier.getName());
         for (PsiElement psiElement : resolved) {
-            if (psiElement instanceof ToitVariableDeclaration && psiElement != toitVariableDeclaration) {
-                holder.registerProblem(toitVariableDeclaration.getProblemIdentifier(), "Illegal shadow of outer variable");
-                return;
+            if (psiElement instanceof ToitVariableDeclaration) {
+                var referenced = (ToitVariableDeclaration) psiElement;
+                if (referenced != toitVariableDeclaration && !referenced.isStatic()) {
+                    holder.registerProblem(toitVariableDeclaration.getProblemIdentifier(), "Illegal shadow of outer variable");
+                    return;
+                }
             }
         }
     }
@@ -90,8 +91,9 @@ public class SemanticErrorInspector extends LocalInspectionTool {
 
         List<FunctionSignature> missingImplementation = new ArrayList<>();
 
-        FunctionLoop: for (ToitFunction f : allFunctions) {
-            if ((f.isAbstract() || f.getParentOfType(ToitStructure.class).isInterface()) && !f.isOperator()) {
+        FunctionLoop:
+        for (ToitFunction f : allFunctions) {
+            if ((f.isAbstract() || f.getParentOfType(ToitStructure.class).isInterface()) && !f.isOperator() && !f.isStatic()) {
                 var overloaded = implementedFunctions.computeIfAbsent(f.getName(), n -> new HashSet<>());
                 FunctionSignature signature = f.getSignature();
 
@@ -103,8 +105,8 @@ public class SemanticErrorInspector extends LocalInspectionTool {
             }
         }
 
-        if (missingImplementation.size() > 0) {
-            holder.registerProblem(toitStructure.getProblemIdentifier(), "Missing implementation of\n>> "+
+        if (!missingImplementation.isEmpty()) {
+            holder.registerProblem(toitStructure.getProblemIdentifier(), "Missing implementation of\n>> " +
                     missingImplementation.stream().map(FunctionSignature::render).collect(Collectors.joining("\n>> ")));
         }
     }
@@ -193,7 +195,8 @@ public class SemanticErrorInspector extends LocalInspectionTool {
                 var expression = toitWhile.getFirstChildOfType(ToitExpression.class);
                 if (expression == null || !expression.getText().trim().equals("true")) {
                     ToitBlock toitBlock = toitWhile.getFirstChildOfType(ToitBlock.class);
-                    if (toitBlock != null && checkReturn(toitBlock, holder, returnType, noReturnValue)) result[0] = true;
+                    if (toitBlock != null && checkReturn(toitBlock, holder, returnType, noReturnValue))
+                        result[0] = true;
                 } else result[0] = true;
             }
 
@@ -222,7 +225,8 @@ public class SemanticErrorInspector extends LocalInspectionTool {
                         public Object visit(ToitPrimaryExpression toitPrimaryExpression) {
                             ToitReferenceIdentifier ref = toitPrimaryExpression.getFirstChildOfType(ToitReferenceIdentifier.class);
                             if (ref != null && ref.getName().equals("unreachable")) result[0] = true;
-                            if (toitPrimaryExpression.getFirstChildOfType(ToitPrimitive.class) != null) result[0] = true;
+                            if (toitPrimaryExpression.getFirstChildOfType(ToitPrimitive.class) != null)
+                                result[0] = true;
                             return null;
                         }
                     });

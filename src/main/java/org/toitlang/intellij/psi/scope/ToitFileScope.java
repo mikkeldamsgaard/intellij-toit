@@ -1,6 +1,7 @@
 package org.toitlang.intellij.psi.scope;
 
 import com.intellij.psi.PsiElement;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.files.ToitFileResolver;
 import org.toitlang.intellij.files.ToitSdkFiles;
@@ -13,6 +14,7 @@ import java.util.*;
 
 public class ToitFileScope {
     private final Map<String, List<ToitFile>> imports = new HashMap<>();
+    @Getter
     private final Map<String, List<IToitPrimaryLanguageElement>> locals = new HashMap<>();
     private final Map<String, ToitFile> importedLibraries = new HashMap<>();
     private final Map<ToitFile, List<String>> shows = new HashMap<>();
@@ -24,7 +26,7 @@ public class ToitFileScope {
         this.toitFile = toitFile;
     }
 
-    public ToitScope getToitScope() {
+    public ToitScope getToitScope(ToitScope parent) {
         Map<String, List<? extends PsiElement>> scope = new HashMap<>(locals);
         scope.putAll(imports);
         shows.forEach((k,v)->{
@@ -44,16 +46,12 @@ public class ToitFileScope {
             }
         });
 
-        return ToitScope.fromMap(toitFile.getName()+"-file", scope, true);
+        return parent.subFromMap(toitFile.getName()+"-file", scope);
     }
 
 
     public ToitScope getExportedScope() {
-        return ToitScope.fromMap(toitFile.getName()+"-exported", getExportedScope(new HashSet<>()),false);
-    }
-
-    public Map<String, List<IToitPrimaryLanguageElement>> getLocals() {
-        return locals;
+        return ToitScope.ROOT.subFromMap(toitFile.getName()+"-exported", getExportedScope(new HashSet<>()));
     }
 
     public ToitFile getImportedLibrary(String name) {

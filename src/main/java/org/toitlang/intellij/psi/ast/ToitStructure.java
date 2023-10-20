@@ -59,20 +59,21 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
         return nameIdentifier.getName();
     }
 
-    public ToitScope getScope(boolean staticOnly) {
-        return getScope(staticOnly, new HashSet<>());
+    public ToitScope getScope(boolean staticOnly, ToitScope parent) {
+        return getScope(staticOnly, parent, new HashSet<>());
     }
 
-    private ToitScope getScope(boolean staticOnly, Set<ToitStructure> seenClasses) {
-        ToitScope structureScope = new ToitScope(getName()+"-structure",false);
-        populateScope(structureScope, staticOnly);
+    private ToitScope getScope(boolean staticOnly, ToitScope parent, Set<ToitStructure> seenClasses) {
         seenClasses.add(this);
         if (!staticOnly) {
             var baseClass = getBaseClass();
             if (baseClass != null && !seenClasses.contains(baseClass)) {
-                structureScope = ToitScope.chain(getName()+"-structure-base", structureScope, baseClass.getScope(false,seenClasses));
+                parent = baseClass.getScope(false, parent, seenClasses);
             }
         }
+
+        ToitScope structureScope = parent.sub(getName()+"-structure");
+        populateScope(structureScope, staticOnly);
         return structureScope;
 
     }

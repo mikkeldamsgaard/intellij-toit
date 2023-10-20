@@ -21,7 +21,9 @@ import com.intellij.lexer.FlexLexer;
 %x TRIPLE_STRING_PARSING
 %x INLINE_STRING_EXPRESSION
 %x INLINE_DELIMITED_STRING_EXPRESSION
+%x COMMENT_PARSING
 %s NORMAL
+
 %eofval{
 
     return handleEof();
@@ -30,6 +32,7 @@ import com.intellij.lexer.FlexLexer;
             boolean trackIndents;
             int yyline;
             int yycolumn;
+            Stack<Integer> commentStack = new Stack<>();
 
             Stack<Integer> indentStack = new Stack<>();
 
@@ -164,6 +167,28 @@ import com.intellij.lexer.FlexLexer;
                 return false;
             }
 
+            final static int NORMAL_COMMENT = 0;
+            final static int DOC_COMMENT = 1;
+
+            void startComment(int type) {
+                commentStack.push(type);
+                if (yystate() != COMMENT_PARSING) yybegin(COMMENT_PARSING);
+            }
+
+            IElementType endComment() {
+                if (!commentStack.isEmpty()) {
+                    commentStack.pop();
+                    if (commentStack.isEmpty()) {
+                        yybegin(NORMAL);
+                        return ToitTypes.COMMENT;
+                    }
+                } else {
+                    return TokenType.BAD_CHARACTER;
+                }
+                return null;
+            }
+
+
 %}
 
 
@@ -171,14 +196,15 @@ LineTerminator = \r|\n|\r\n
 InputCharacter = [^\r\n]
 
 /* comments */
-TraditionalComment = "/*" ([^*]* \*+ [^*/])* [^*]* \*+ "/"
-DocComment = "/**" ( {TraditionalComment} | [^*]* | (\*+ [^*/]))* \*+ "/"
+//TraditionalComment = "/*" ([^*]* \*+ [^*/])* [^*]* \*+ "/"
+//DocComment = "/**" ( {TraditionalComment} | [^*]* | (\*+ [^*/]))* \*+ "/"
 EndOfLineCommentPrefix = "//" {InputCharacter}*
 
 /* identifiers */
-IndentifierStart = [\w_]
-IndentifierContinue = [\w_\-\d]
-Identifer = ( {IndentifierStart} {IndentifierContinue}* )
+IdentifierStart = [\w_]
+IdentifierNonMinusContinue = {IdentifierStart} | [\d]
+IdentifierContinue = {IdentifierNonMinusContinue} | "-" {IdentifierNonMinusContinue}
+Identifer = ( {IdentifierStart} {IdentifierContinue}* )
 
 ///* string literals */
 
@@ -226,10 +252,18 @@ Spacing=[\ \t]
   {LineTerminator} { return TokenType.WHITE_SPACE;  } // Totally blank lines are treated as whitespace
 }
 
+<COMMENT_PARSING> {
+ "*/"                                            { var res = endComment(); if (res != null) return res;}
+ [^]                                             { }
+}
+
+<YYINITIAL, INDENT_TRACKING, NORMAL, INLINE_DELIMITED_STRING_EXPRESSION, COMMENT_PARSING> {
+ "/**"                                           { startComment(DOC_COMMENT); }
+ "/*"                                            { startComment(NORMAL_COMMENT); }
+}
+
 <YYINITIAL, INDENT_TRACKING, NORMAL, INLINE_DELIMITED_STRING_EXPRESSION> {
  {WhiteSpace}                                    { return TokenType.WHITE_SPACE; }
- {TraditionalComment}                            { return ToitTypes.COMMENT; }
- {DocComment}                                    { return ToitTypes.COMMENT; }
  {EndOfLineCommentPrefix}                        { return ToitTypes.COMMENT; }
 }
 

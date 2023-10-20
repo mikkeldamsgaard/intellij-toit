@@ -39,15 +39,18 @@ public class ToitReferenceIdentifier extends ToitIdentifier {
         return null;
     }
 
-
     @Override
     public @NotNull ToitReference getReference() {
         return ToitReference.create(this);
     }
 
-
     public ToitExpression getExpressionParent() {
         return getParentOfType(ToitExpression.class);
     }
 
+    public String getText() {
+        var t = super.getText();
+        if (t == null) return t;
+        return t.trim();
+    }
 }
