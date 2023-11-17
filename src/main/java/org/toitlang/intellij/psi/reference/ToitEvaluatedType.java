@@ -60,9 +60,6 @@ public class ToitEvaluatedType {
         var resolved = scope.resolve(name);
         if (resolved.isEmpty()) return UNRESOLVED;
         List<ToitEvaluatedType> types = new ArrayList<>();
-        if (name.equals("n")) {
-            System.out.println("hurray");
-        }
         for (PsiElement resolvedElement : resolved) {
             resolvedElement.accept(new ToitVisitor() {
                 @Override

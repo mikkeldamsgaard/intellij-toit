@@ -29,14 +29,12 @@ public class ToitPackageHandler {
             PackageLock packageLock = mapper.readValue(packageLockFile.getInputStream(), PackageLock.class);
 
             String prefix = paths.get(0);
-            List<String> filesToFind;
+            List<List<String>> pathsToFind;
             if (paths.size() == 1) {
-                filesToFind = List.of(String.format("%s.toit", prefix));
+                // importing just the prefix, should find the file "src/$(prefix).toit"
+                pathsToFind = List.of(List.of(String.format("%s.toit", prefix)));
             } else {
-                String path = String.join(File.separator, paths.subList(1, paths.size()));
-                filesToFind = Arrays.asList(
-                        String.format("%s.toit", path),
-                        String.format("%s%s%s.toit", path, File.separator, paths.get(paths.size() - 1)));
+                pathsToFind = ToitFileResolver.constructSearchPaths(paths.subList(1, paths.size()));
             }
 
             if (!packageLock.prefixes.containsKey(prefix)) return null;
@@ -48,10 +46,8 @@ public class ToitPackageHandler {
 
             String pckPath = getPackageSourcePath(packageInfo);
             VirtualFile searchRoot = getPackageSearchRoot(packageLockFile, packageInfo);
-            for (String file : filesToFind) {
-                var f = ToitFileResolver.findRelativeIgnoreUnderscoreMinus(searchRoot, pckPath, file);
-                if (f != null) return (ToitFile) PsiManager.getInstance(toitFile.getProject()).findFile(f);
-            }
+            var vf = ToitFileResolver.findRelativeIgnoreUnderscoreMinus(searchRoot, pckPath, pathsToFind);
+            return toitFile.findProjectToitFile(vf);
         } catch (ProcessCanceledException e) {
             // Ignore
         } catch (Exception e) {
@@ -75,7 +71,7 @@ public class ToitPackageHandler {
 
             String pckPath = getPackageSourcePath(packageInfo);
             VirtualFile searchRoot = getPackageSearchRoot(packageLockFile, packageInfo);
-            return searchRoot.findFileByRelativePath(pckPath+String.join(File.separator, path.subList(1, path.size())));
+            return searchRoot.findFileByRelativePath(pckPath + String.join(File.separator, path.subList(1, path.size())));
         } catch (ProcessCanceledException e) {
             // Ignore
         } catch (Exception e) {
@@ -129,7 +125,7 @@ public class ToitPackageHandler {
 
         if (packageFile != null) {
             if (lockFile == null) ToitNotifier.notifyPackageLockFileMissing(project, packageFile);
-            else if (packageFile.getTimeStamp() > lockFile.getTimeStamp()+2500)
+            else if (packageFile.getTimeStamp() > lockFile.getTimeStamp() + 2500)
                 ToitNotifier.notifyStaleLockFile(project, packageFile);
         }
         if (lockFile != null) return lockFile;
@@ -142,6 +138,7 @@ public class ToitPackageHandler {
         Map<String, String> prefixes;
         Map<String, PackageInfo> packages;
         String sdk;
+
         @Data
         @NoArgsConstructor
         public static class PackageInfo {

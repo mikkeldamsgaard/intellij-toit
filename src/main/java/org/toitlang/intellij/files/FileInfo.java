@@ -4,11 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.io.File;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 public class FileInfo {
-    String path;
+    List<String> path;
     String fileName;
 
     public String constructPath() {

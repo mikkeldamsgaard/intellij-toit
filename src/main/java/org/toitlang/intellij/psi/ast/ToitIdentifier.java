@@ -80,14 +80,20 @@ public abstract class ToitIdentifier extends ToitElement {
     }
 
     public static String normalizeMinusUnderscore(String s) {
-        int prefix_ = 0;
-        int suffix_ = s.length();
-        while (prefix_ < s.length() && s.charAt(prefix_) == '_') prefix_++;
-        while (suffix_ > 0 && s.charAt(suffix_-1) == '_') suffix_--;
-        return String.format("%s%s%s",
-                s.substring(0, prefix_),
-                s.substring(prefix_, suffix_).replaceAll("_", "-"),
-                s.substring(suffix_));
+        try {
+            int prefix_ = 0;
+            int suffix_ = s.length();
+            while (prefix_ < s.length() && s.charAt(prefix_) == '_') prefix_++;
+            while (suffix_ > 0 && s.charAt(suffix_ - 1) == '_') suffix_--;
+            if (suffix_ < prefix_) return s; // special case, all underscores
+            return String.format("%s%s%s",
+                    s.substring(0, prefix_),
+                    s.substring(prefix_, suffix_).replaceAll("_", "-"),
+                    s.substring(suffix_));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to converted "+s, e);
+        }
+
     }
 
 }

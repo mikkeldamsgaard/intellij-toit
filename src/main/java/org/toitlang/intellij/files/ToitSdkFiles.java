@@ -30,14 +30,13 @@ public class ToitSdkFiles extends IndexableSetContributor {
         return LocalFileSystem.getInstance().findFileByIoFile(new File(sdkRoot + "/lib"));
     }
 
-    public static ToitFile findLibraryFile(@NotNull Project project, List<FileInfo> filesToFind) {
+    public static ToitFile findLibraryFile(@NotNull Project project, List<String> path) {
         var root = getSdkRoot(project);
         if (root == null) return null;
-        for (FileInfo fileInfo : filesToFind) {
-            var f = root.findFileByRelativePath(fileInfo.constructPath());
-            if (f != null) return (ToitFile) PsiManager.getInstance(project).findFile(f);
-        }
-        return null;
+        var pathsToFind = ToitFileResolver.constructSearchPaths(path);
+        var vf = ToitFileResolver.findRelativeIgnoreUnderscoreMinus(root, "", pathsToFind);
+        if (vf == null) return null;
+        return (ToitFile) PsiManager.getInstance(project).findFile(vf);
     }
 
 

@@ -3,8 +3,10 @@ package org.toitlang.intellij.psi;
 import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.util.NlsSafe;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.CachedValue;
 import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
@@ -83,5 +85,10 @@ public class ToitFile extends PsiFileBase implements IStructureViewable {
             name = name + "." + ToitFileType.INSTANCE.getDefaultExtension();
         
         return super.setName(name);
+    }
+
+    public ToitFile findProjectToitFile(VirtualFile vf) {
+        if (vf == null) return null;
+        return (ToitFile) PsiManager.getInstance(getProject()).findFile(vf);
     }
 }

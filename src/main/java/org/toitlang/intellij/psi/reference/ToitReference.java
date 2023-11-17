@@ -52,11 +52,18 @@ public class ToitReference implements PsiPolyVariantReference {
 
     @Override
     public @Nullable PsiElement resolve() {
+
         for (PsiElement destination : destinations) {
             // Filter out any ToitFunction destination where the parameters do not match
-            if (destination instanceof ToitFunction) {
+            if (destination instanceof ToitFunction && !source.isShow()) {
                 ToitFunction function = (ToitFunction) destination;
                 var expr = source.getExpressionParent();
+
+                if (expr == null) {
+                    System.out.println("Weird, investigate this");
+                    continue;
+                }
+
                 List<IToitElement> arguments = expr.accept(new ToitExpressionVisitor<>() {
                     private List<IToitElement> checkSetterOrCall(ToitExpression expression) {
                         var parentExpression = expression.getParentOfType(ToitExpression.class);
@@ -99,12 +106,10 @@ public class ToitReference implements PsiPolyVariantReference {
                 if (arguments == null) arguments = Collections.emptyList();
                 if (ToitCallHelper.parametersMatches((ToitFunction) destination, arguments) != null)
                     return destination;
-            } else {
-                return destination;
             }
         }
 
-        return null;
+        return destinations.stream().findAny().orElse(null);
     }
 
     @Override
@@ -204,12 +209,14 @@ public class ToitReference implements PsiPolyVariantReference {
             var resolved = ToitCallHelper.resolveCall(call);
             if (resolved != null) {
                 var parameterInfo = resolved.getParamForArg(source.getParentOfType(ToitNamedArgument.class));
-                var toitParameterName = parameterInfo.getParameterName();
-                ToitIdentifier identifier = toitParameterName.getNameIdentifier();
-                if (identifier instanceof ToitReferenceIdentifier) {
-                    destinations.addAll(((ToitReferenceIdentifier) identifier).getReference().destinations);
-                } else if (identifier instanceof ToitNameableIdentifier) {
-                    destinations.add(toitParameterName);
+                if (parameterInfo != null) {
+                    var toitParameterName = parameterInfo.getParameterName();
+                    ToitIdentifier identifier = toitParameterName.getNameIdentifier();
+                    if (identifier instanceof ToitReferenceIdentifier) {
+                        destinations.addAll(((ToitReferenceIdentifier) identifier).getReference().destinations);
+                    } else if (identifier instanceof ToitNameableIdentifier) {
+                        destinations.add(toitParameterName);
+                    }
                 }
             } else {
                 soft = true;
