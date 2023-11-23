@@ -17,6 +17,8 @@ import java.io.File;
 import java.util.*;
 import java.util.logging.Logger;
 
+import static org.toitlang.intellij.psi.ast.ToitIdentifier.normalizeMinusUnderscore;
+
 public class ToitPackageHandler {
     private final static Logger LOG = Logger.getLogger(ToitPackageHandler.class.getSimpleName());
     private final static ObjectMapper mapper = new ObjectMapper(new YAMLFactory().configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true));
@@ -29,20 +31,26 @@ public class ToitPackageHandler {
             PackageLock packageLock = mapper.readValue(packageLockFile.getInputStream(), PackageLock.class);
 
             String prefix = paths.get(0);
+            prefix = normalizeMinusUnderscore(prefix);
+
+
+            String packageId = packageLock.resolvePrefix(prefix);
+            if (packageId == null) return null;
+
+            PackageLock.PackageInfo packageInfo = packageLock.packages.get(packageId);
+            if (packageInfo == null) return null;
+
             List<List<String>> pathsToFind;
             if (paths.size() == 1) {
+                String packageName = packageInfo.getName();
+                if (packageName == null) packageName = prefix;
+                else packageName = normalizeMinusUnderscore(packageName);
+
                 // importing just the prefix, should find the file "src/$(prefix).toit"
-                pathsToFind = List.of(List.of(String.format("%s.toit", prefix)));
+                pathsToFind = List.of(List.of(String.format("%s.toit", packageName)));
             } else {
                 pathsToFind = ToitFileResolver.constructSearchPaths(paths.subList(1, paths.size()));
             }
-
-            if (!packageLock.prefixes.containsKey(prefix)) return null;
-
-            String package_ = packageLock.prefixes.get(prefix);
-            PackageLock.PackageInfo packageInfo = packageLock.packages.get(package_);
-
-            if (packageInfo == null) return null;
 
             String pckPath = getPackageSourcePath(packageInfo);
             VirtualFile searchRoot = getPackageSearchRoot(packageLockFile, packageInfo);
@@ -64,7 +72,7 @@ public class ToitPackageHandler {
 
         try {
             PackageLock packageLock = mapper.readValue(packageLockFile.getInputStream(), PackageLock.class);
-            var package_ = packageLock.getPrefixes().get(path.get(0));
+            var package_ = packageLock.resolvePrefix(normalizeMinusUnderscore(path.get(0)));
             if (package_ == null) return null;
             var packageInfo = packageLock.getPackages().get(package_);
             if (packageInfo == null) return null;
@@ -108,7 +116,7 @@ public class ToitPackageHandler {
         if (packageLockFile == null) return result;
         try {
             PackageLock packageLock = mapper.readValue(packageLockFile.getInputStream(), PackageLock.class);
-            result.addAll(packageLock.getPrefixes().keySet());
+            result.addAll(packageLock.getNormalizedPrefixes().keySet());
         } catch (Exception e) {
             // Ignore
         }
@@ -124,7 +132,10 @@ public class ToitPackageHandler {
         VirtualFile lockFile = virtualFile.findFileByRelativePath("package.lock");
 
         if (packageFile != null) {
-            if (lockFile == null) ToitNotifier.notifyPackageLockFileMissing(project, packageFile);
+            if (lockFile == null) {
+                if (!packageFile.getPath().contains(".packages"))
+                    ToitNotifier.notifyPackageLockFileMissing(project, packageFile);
+            }
             else if (packageFile.getTimeStamp() > lockFile.getTimeStamp() + 2500)
                 ToitNotifier.notifyStaleLockFile(project, packageFile);
         }
@@ -139,6 +150,7 @@ public class ToitPackageHandler {
         Map<String, PackageInfo> packages;
         String sdk;
 
+        transient Map<String,String> normalizedPrefixes;
         @Data
         @NoArgsConstructor
         public static class PackageInfo {
@@ -148,6 +160,18 @@ public class ToitPackageHandler {
             String hash;
             String name;
             Map<String, String> prefixes;
+        }
+
+        public String resolvePrefix(String normalizedPrefix) { // assumes prefix is already normalized
+            return getNormalizedPrefixes().get(normalizedPrefix);
+        }
+
+        public Map<String, String> getNormalizedPrefixes() {
+            if (normalizedPrefixes == null) {
+                normalizedPrefixes = new HashMap<>();
+                prefixes.keySet().forEach(k -> normalizedPrefixes.put(normalizeMinusUnderscore(k), prefixes.get(k)));
+            }
+            return normalizedPrefixes;
         }
     }
 }

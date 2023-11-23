@@ -6,20 +6,16 @@ import java.util.stream.Collectors;
 import static org.toitlang.intellij.psi.ast.ToitIdentifier.normalizeMinusUnderscore;
 
 public class ParametersInfo {
-    private final Map<String, String> nameTranslations;
     private final Map<String, ParameterInfo> named;
     private final List<ParameterInfo> positionalParameters;
 
     public ParametersInfo() {
         named = new HashMap<>();
-        nameTranslations = new HashMap<>();
         positionalParameters = new ArrayList<>();
     }
 
     public synchronized void addNamed(String name, ParameterInfo info) {
-        named.put(name,info);
-        if (name.contains("_")) nameTranslations.put(normalizeMinusUnderscore(name), name);
-        nameTranslations.put(name, name);
+        named.put(normalizeMinusUnderscore(name),info);
     }
 
     public synchronized void addPositional(ParameterInfo info) {
@@ -53,15 +49,8 @@ public class ParametersInfo {
         return res;
     }
 
-    String getTranslatedName(String name) {
-        if (name.startsWith("no-") && !nameTranslations.containsKey(name))
-            name = name.substring(3);
-        return nameTranslations.get(name);
-    }
     public synchronized boolean hasNamedParameter(String name) {
-        String translated = getTranslatedName(name);
-        if (translated == null) return false;
-        return named.containsKey(translated);
+        return named.containsKey(normalizeMinusUnderscore(name));
     }
 
     public synchronized ParameterInfo getPositional(int position) {
@@ -69,7 +58,6 @@ public class ParametersInfo {
     }
 
     public synchronized ParameterInfo getNamedParameter(String name) {
-        String translated = getTranslatedName(name);
-        return named.get(translated);
+        return named.get(normalizeMinusUnderscore(name));
     }
 }

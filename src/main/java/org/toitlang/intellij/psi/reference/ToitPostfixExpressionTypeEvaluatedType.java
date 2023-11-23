@@ -52,8 +52,8 @@ public class ToitPostfixExpressionTypeEvaluatedType {
                             ToitScope prevFileScope = fPrev.getFile().getToitFileScope().getExportedScope();
                             return resolveTypeOfNameInScope(name, prevFileScope);
                         } else {
-                            ToitScope scructureScope = fPrev.getStructure().getScope(fPrev.isStatic(), ToitScope.ROOT);
-                            return resolveTypeOfNameInScope(name, scructureScope);
+                            ToitScope structureScope = fPrev.getStructure().getScope(fPrev.isStatic(), ToitScope.ROOT);
+                            return resolveTypeOfNameInScope(name, structureScope);
                         }
                     }
 
@@ -65,7 +65,7 @@ public class ToitPostfixExpressionTypeEvaluatedType {
                     }
                 });
             }
-            result.addType(child,prev);
+            result.addType(child, prev);
         }
 
         return result;

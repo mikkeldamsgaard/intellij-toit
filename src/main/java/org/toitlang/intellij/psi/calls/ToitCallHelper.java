@@ -113,15 +113,13 @@ public class ToitCallHelper {
         ParametersInfo parametersInfo = toitFunction.getParameterInfo();
         List<IToitElement> positionalArgs = new ArrayList<>();
         Map<String, ToitNamedArgument> names = new HashMap<>();
-        Map<String, ToitNamedArgument> namesIgnoreMinusUnderscore = new HashMap<>();
         for (IToitElement parameter : parameters) {
             if (parameter instanceof ToitExpression) positionalArgs.add(parameter);
             if (parameter instanceof ToitNamedArgument) {
                 ToitNamedArgument namedArgument = (ToitNamedArgument) parameter;
                 String name = namedArgument.getName();
                 if (name != null) {
-                    names.put(name, namedArgument);
-                    namesIgnoreMinusUnderscore.put(normalizeMinusUnderscore(name), namedArgument);
+                    names.put(normalizeMinusUnderscore(name), namedArgument);
                 }
             }
         }
@@ -138,7 +136,7 @@ public class ToitCallHelper {
 
         /* Named non default parameters */
         for (String nonDefaultNamedParameter : parametersInfo.getNonDefaultNamedParameters().keySet()) {
-            if (!namesIgnoreMinusUnderscore.containsKey(normalizeMinusUnderscore(nonDefaultNamedParameter))) return null;
+            if (!names.containsKey(nonDefaultNamedParameter)) return null;
             resolvedFunctionCall.addMatch(names.get(nonDefaultNamedParameter), parametersInfo.getNamedParameter(nonDefaultNamedParameter));
         }
 

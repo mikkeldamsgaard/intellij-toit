@@ -63,9 +63,9 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
         return getScope(staticOnly, parent, new HashSet<>());
     }
 
-    private ToitScope getScope(boolean staticOnly, ToitScope parent, Set<ToitStructure> seenClasses) {
+    private ToitScope getScope(boolean static_, ToitScope parent, Set<ToitStructure> seenClasses) {
         seenClasses.add(this);
-        if (!staticOnly) {
+        if (!static_) {
             var baseClass = getBaseClass();
             if (baseClass != null && !seenClasses.contains(baseClass)) {
                 parent = baseClass.getScope(false, parent, seenClasses);
@@ -73,32 +73,30 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
         }
 
         ToitScope structureScope = parent.sub(getName()+"-structure");
-        populateScope(structureScope, staticOnly);
+        populateScope(structureScope, static_);
         return structureScope;
-
     }
-    public void populateScope(ToitScope scope, boolean staticOnly) {
+
+    public void populateScope(ToitScope scope, boolean static_) {
         getChildrenOfType(ToitBlock.class).forEach(b ->
                 b.acceptChildren(new ToitVisitor() {
                     @Override
                     public void visit(ToitVariableDeclaration toitVariableDeclaration) {
-                        if (!staticOnly || toitVariableDeclaration.isStatic())
+                        if (static_ == toitVariableDeclaration.isStatic())
                             scope.add(toitVariableDeclaration.getName(), toitVariableDeclaration);
                     }
 
                     @Override
                     public void visit(ToitFunction toitFunction) {
                         if (toitFunction.isConstructor()) {
-                            if (toitFunction.hasFactoryName()) {
+                            if (toitFunction.hasFactoryName() && static_) {
                                 scope.add(toitFunction.getFactoryName(), toitFunction);
                             }
                         } else if (!toitFunction.isOperator()) {
-                            if (!staticOnly || toitFunction.isStatic())
+                            if (static_ == toitFunction.isStatic())
                                 scope.add(toitFunction.getName(), toitFunction);
                         }
                     }
-
-
                 }));
     }
 

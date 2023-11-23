@@ -5,6 +5,7 @@ import com.intellij.icons.AllIcons;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.NlsSafe;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.TokenType;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.util.IncorrectOperationException;
 import org.jetbrains.annotations.NotNull;
@@ -196,7 +197,10 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
                     if (cur == null) return;
                 }
             }
-            if (cur.getNode().getElementType() == ToitTypes.EQUALS) {
+            while (cur != null && cur.getNode() != null && cur.getNode().getElementType() == TokenType.WHITE_SPACE)
+                cur = cur.getNextSibling();
+
+            if (cur != null && cur.getNode() != null && cur.getNode().getElementType() == ToitTypes.EQUALS) {
                 hasDefaultVale = true;
             }
         } finally {
