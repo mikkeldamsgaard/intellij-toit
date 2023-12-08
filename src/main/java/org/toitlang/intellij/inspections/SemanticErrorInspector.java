@@ -54,8 +54,8 @@ public class SemanticErrorInspector extends LocalInspectionTool {
         if (toitVariableDeclaration.getParent().getParent() instanceof ToitStructure || toitVariableDeclaration.getParent() instanceof ToitFile)
             return;
 
-        ToitElement scopeElement = toitVariableDeclaration.getPrevSiblingOfType(ToitElement.class);
-        if (scopeElement == null) scopeElement = toitVariableDeclaration.getParentOfType(ToitElement.class);
+        ToitElementBase scopeElement = toitVariableDeclaration.getPrevSiblingOfType(ToitElementBase.class);
+        if (scopeElement == null) scopeElement = toitVariableDeclaration.getParentOfType(ToitElementBase.class);
         if (scopeElement == null) return;
 
         ToitNameableIdentifier nameIdentifier = toitVariableDeclaration.getNameIdentifier();

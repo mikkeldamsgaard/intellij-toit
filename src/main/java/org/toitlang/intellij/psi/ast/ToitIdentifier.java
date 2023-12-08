@@ -7,7 +7,7 @@ import com.intellij.psi.tree.TokenSet;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ToitTypes;
 
-public abstract class ToitIdentifier extends ToitElement {
+public abstract class ToitIdentifier extends ToitElementBase {
     private String name;
 
     public ToitIdentifier(@NotNull ASTNode node) {

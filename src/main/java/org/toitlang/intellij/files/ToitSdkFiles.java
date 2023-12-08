@@ -11,7 +11,7 @@ import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.util.indexing.IndexableSetContributor;
 import org.jetbrains.annotations.NotNull;
-import org.toitlang.intellij.model.IToitPrimaryLanguageElement;
+import org.toitlang.intellij.psi.ast.ToitPrimaryLanguageElement;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.scope.ToitScope;
 import org.toitlang.intellij.ui.ToitApplicationSettings;
@@ -72,7 +72,7 @@ public class ToitSdkFiles extends IndexableSetContributor {
                                 .collect(Collectors.toList());
 
                         for (ToitFile toitFile : coreFiles) {
-                            Map<String, List<IToitPrimaryLanguageElement>> locals = toitFile.getToitFileScope().getLocals();
+                            Map<String, List<ToitPrimaryLanguageElement>> locals = toitFile.getToitFileScope().getLocals();
                             coreElements.putAll(locals);
 
                             dependencies.add(toitFile);

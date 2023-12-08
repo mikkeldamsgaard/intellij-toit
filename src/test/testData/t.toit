@@ -1,5 +1,3 @@
-class A:
-
-class A:
-
+a: 1
 main:
+    print a

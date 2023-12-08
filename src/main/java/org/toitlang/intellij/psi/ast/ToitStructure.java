@@ -7,6 +7,7 @@ import com.intellij.openapi.util.NlsSafe;
 import com.intellij.psi.stubs.IStubElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
 import org.toitlang.intellij.structureview.IStructureViewable;
 import org.toitlang.intellij.psi.stub.ToitStructureElementType;
 import org.toitlang.intellij.psi.stub.ToitStructureStub;
@@ -18,7 +19,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, ToitStructureStub> {
+public class ToitStructure extends ToitPrimaryLanguageElementBase<ToitStructure, ToitStructureStub> {
     public ToitStructure(@NotNull ASTNode node) {
         super(node);
     }
@@ -241,6 +242,11 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
         var block = getFirstChildOfType(ToitBlock.class);
         if (block == null) return Collections.emptySet(); // Malformed syntax
         return new HashSet<>(block.getChildrenOfType(ToitFunction.class));
+    }
+
+    @Override
+    public ToitEvaluatedType getEvaluatedType() {
+        return ToitEvaluatedType.staticStructure(this);
     }
 
     public enum StaticScope {

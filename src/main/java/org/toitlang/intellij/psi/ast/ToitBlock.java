@@ -9,7 +9,7 @@ import org.toitlang.intellij.psi.visitor.ToitVisitor;
 import java.util.Collections;
 import java.util.List;
 
-public class ToitBlock extends ToitElement {
+public class ToitBlock extends ToitElementBase {
 
     public ToitBlock(@NotNull ASTNode node) {
         super(node);

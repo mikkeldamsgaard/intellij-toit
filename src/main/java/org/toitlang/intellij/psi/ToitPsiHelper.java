@@ -1,10 +1,9 @@
 package org.toitlang.intellij.psi;
 
 import com.intellij.psi.PsiElement;
-import org.toitlang.intellij.psi.ast.IToitElement;
+import org.toitlang.intellij.psi.ast.ToitElement;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class ToitPsiHelper {
@@ -20,9 +19,9 @@ public class ToitPsiHelper {
         return result;
     }
 
-    public static IToitElement findClosestIToitElement(PsiElement e) {
-        while (e != null && !(e instanceof IToitElement)) e = e.getParent();
+    public static ToitElement findClosestIToitElement(PsiElement e) {
+        while (e != null && !(e instanceof ToitElement)) e = e.getParent();
 
-        return (IToitElement) e;
+        return (ToitElement) e;
     }
 }

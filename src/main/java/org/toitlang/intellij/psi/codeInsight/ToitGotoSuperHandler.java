@@ -18,7 +18,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.psi.ToitPsiHelper;
-import org.toitlang.intellij.psi.ast.IToitElement;
+import org.toitlang.intellij.psi.ast.ToitElement;
 import org.toitlang.intellij.psi.ast.ToitFunction;
 import org.toitlang.intellij.psi.ast.ToitStructure;
 import org.toitlang.intellij.psi.ui.renders.FunctionCellRenderer;
@@ -29,7 +29,7 @@ import java.util.List;
 public class ToitGotoSuperHandler implements PresentableCodeInsightActionHandler {
     @Override
     public void invoke(@NotNull Project project, @NotNull Editor editor, @NotNull PsiFile file) {
-        IToitElement toitElm = ToitPsiHelper.findClosestIToitElement(file.findElementAt(editor.getCaretModel().getOffset()));
+        ToitElement toitElm = ToitPsiHelper.findClosestIToitElement(file.findElementAt(editor.getCaretModel().getOffset()));
         int offset = editor.getCaretModel().getOffset();
         PsiElement[] superElements = findSuperElements(file, offset);
         if (superElements.length == 0) return;

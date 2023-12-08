@@ -2,6 +2,7 @@ package org.toitlang.intellij.psi.scope;
 
 import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
+import org.toitlang.intellij.psi.ast.ToitReferenceTarget;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -9,26 +10,26 @@ import java.util.stream.Collectors;
 public class ToitScope {
     public final static ToitScope ROOT = new ToitScope("root", null) {
         @Override
-        public @NotNull List<PsiElement> resolve(String key) {
+        public @NotNull List<ToitReferenceTarget> resolve(String key) {
             return Collections.emptyList();
         }
 
         @Override
-        public void add(String key, PsiElement value) {
+        public void add(String key, ToitReferenceTarget value) {
         }
 
         @Override
-        public void add(String key, List<? extends PsiElement> value) {
+        public void add(String key, List<? extends ToitReferenceTarget> value) {
         }
 
         @Override
-        protected void addVariant(Set<PsiElement> variants) {
+        protected void addVariant(Set<ToitReferenceTarget> variants) {
         }
     };
 
     private final ToitScope parent;
 
-    Map<String, List<PsiElement>> local = new HashMap<>();
+    Map<String, List<ToitReferenceTarget>> local = new HashMap<>();
 
     private final String name;
     private final boolean finalScope;
@@ -47,22 +48,22 @@ public class ToitScope {
         this.finalScope = finalScope;
     }
 
-    private List<PsiElement> addToLocal(String key) {
+    private List<ToitReferenceTarget> addToLocal(String key) {
         return local.computeIfAbsent(key, (k) -> new ArrayList<>());
     }
 
-    public void add(String key, PsiElement value) {
+    public void add(String key, ToitReferenceTarget value) {
         if (key == null) return;
         addToLocal(key).add(value);
     }
 
-    public void add(String key, List<? extends PsiElement> value) {
+    public void add(String key, List<? extends ToitReferenceTarget> value) {
         if (key == null) return;
         addToLocal(key).addAll(value);
     }
 
-    public @NotNull List<PsiElement> resolve(String key) {
-        List<PsiElement> result = new ArrayList<>();
+    public @NotNull List<ToitReferenceTarget> resolve(String key) {
+        List<ToitReferenceTarget> result = new ArrayList<>();
         if (local.containsKey(key)) {
             if (finalScope) return local.get(key);
             result.addAll(local.get(key));
@@ -71,13 +72,13 @@ public class ToitScope {
         return result;
     }
 
-    protected void addVariant(Set<PsiElement> variants) {
+    protected void addVariant(Set<ToitReferenceTarget> variants) {
         variants.addAll(local.values().stream().flatMap(List::stream).collect(Collectors.toList()));
         parent.addVariant(variants);
     }
 
-    public Collection<PsiElement> asVariant() {
-        Set<PsiElement> result = new HashSet<>();
+    public Collection<ToitReferenceTarget> asVariant() {
+        Set<ToitReferenceTarget> result = new HashSet<>();
         addVariant(result);
         return result;
     }
@@ -91,7 +92,7 @@ public class ToitScope {
                 '}';
     }
 
-    public ToitScope subFromMap(String name, Map<String, List<? extends PsiElement>> locals) {
+    public ToitScope subFromMap(String name, Map<String, List<? extends ToitReferenceTarget>> locals) {
         ToitScope toitScope = sub(name);
         locals.forEach(toitScope::add);
         return toitScope;

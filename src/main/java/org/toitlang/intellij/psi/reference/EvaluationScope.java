@@ -4,6 +4,7 @@ import com.intellij.psi.PsiElement;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ToitFile;
+import org.toitlang.intellij.psi.ast.ToitReferenceTarget;
 import org.toitlang.intellij.psi.scope.ToitFileScope;
 import org.toitlang.intellij.psi.scope.ToitScope;
 
@@ -15,7 +16,7 @@ public class EvaluationScope {
     private final ToitScope scope;
     private final ToitFileScope currentFileScope;
 
-    public @NotNull List<PsiElement> resolve(String key) {
+    public @NotNull List<ToitReferenceTarget> resolve(String key) {
         return scope.resolve(key);
     }
 

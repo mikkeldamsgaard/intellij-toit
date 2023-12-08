@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ToitElementFactory;
 import org.toitlang.intellij.psi.ToitPsiHelper;
 import org.toitlang.intellij.psi.ToitTypes;
-import org.toitlang.intellij.psi.ast.IToitElement;
+import org.toitlang.intellij.psi.ast.ToitElement;
 import org.toitlang.intellij.psi.ast.ToitBlock;
 import org.toitlang.intellij.psi.ast.ToitFunction;
 import org.toitlang.intellij.psi.ast.ToitStructure;
@@ -32,7 +32,7 @@ public class OverrideImplementUtil {
         int offset = editor.getCaretModel().getOffset();
         PsiElement element = file.findElementAt(offset);
         if (element == null) element = file.getLastChild();
-        IToitElement toitElm = ToitPsiHelper.findClosestIToitElement(element);
+        ToitElement toitElm = ToitPsiHelper.findClosestIToitElement(element);
         if (toitElm == null) return null;
         if (toitElm instanceof ToitStructure) return (ToitStructure) toitElm;
         return toitElm.getParentOfType(ToitStructure.class);
@@ -149,7 +149,7 @@ public class OverrideImplementUtil {
     private static PsiElement getAnchor(ToitStructure structure, Editor editor) {
         var block =structure.getFirstChildOfType(ToitBlock.class);
         assert block != null;
-        for (var function : block.getChildrenOfType(IToitElement.class)) {
+        for (var function : block.getChildrenOfType(ToitElement.class)) {
             if (function.getTextRange().getStartOffset() >= editor.getCaretModel().getOffset()) {
                 return function;
             }

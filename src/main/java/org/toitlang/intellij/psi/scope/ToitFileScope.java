@@ -5,7 +5,7 @@ import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.files.ToitFileResolver;
 import org.toitlang.intellij.files.ToitSdkFiles;
-import org.toitlang.intellij.model.IToitPrimaryLanguageElement;
+import org.toitlang.intellij.psi.ast.ToitPrimaryLanguageElement;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ast.*;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
@@ -15,7 +15,7 @@ import java.util.*;
 public class ToitFileScope {
     private final Map<String, List<ToitFile>> imports = new HashMap<>();
     @Getter
-    private final Map<String, List<IToitPrimaryLanguageElement>> locals = new HashMap<>();
+    private final Map<String, List<ToitPrimaryLanguageElement>> locals = new HashMap<>();
     private final Map<String, ToitFile> importedLibraries = new HashMap<>();
     private final Map<ToitFile, List<String>> shows = new HashMap<>();
     private final List<ToitFile> projectImports = new ArrayList<>();
@@ -27,7 +27,7 @@ public class ToitFileScope {
     }
 
     public ToitScope getToitScope(ToitScope parent) {
-        Map<String, List<? extends PsiElement>> scope = new HashMap<>(locals);
+        Map<String, List<? extends ToitReferenceTarget>> scope = new HashMap<>(locals);
         scope.putAll(imports);
         shows.forEach((k,v)->{
             var exported = k.getToitFileScope().getExportedScope(new HashSet<>());
@@ -40,7 +40,7 @@ public class ToitFileScope {
         });
 
         projectImports.forEach(p -> {
-            Map<String, List<? extends PsiElement>> exportedScope = p.getToitFileScope().getExportedScope(new HashSet<>());
+            Map<String, List<? extends ToitReferenceTarget>> exportedScope = p.getToitFileScope().getExportedScope(new HashSet<>());
             for (String name : exportedScope.keySet()) {
                 if (!locals.containsKey(name)) scope.put(name, exportedScope.get(name));
             }
@@ -58,8 +58,8 @@ public class ToitFileScope {
         return importedLibraries.get(name);
     }
 
-    private @NotNull  Map<String, List<? extends PsiElement>> getExportedScope(Set<ToitFileScope> seen) {
-        Map<String, List<? extends PsiElement>> result = new HashMap<>();
+    private @NotNull  Map<String, List<? extends ToitReferenceTarget>> getExportedScope(Set<ToitFileScope> seen) {
+        Map<String, List<? extends ToitReferenceTarget>> result = new HashMap<>();
         if (seen.contains(this)) return result; // Cycle detection. If export are cycled, it is an error
         seen.add(this);
         result.putAll(locals);

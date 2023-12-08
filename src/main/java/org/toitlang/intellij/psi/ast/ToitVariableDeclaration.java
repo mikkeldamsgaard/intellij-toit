@@ -10,13 +10,15 @@ import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.calls.FunctionSignature;
+import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
+import org.toitlang.intellij.psi.scope.ToitScope;
 import org.toitlang.intellij.psi.stub.ToitVariableDeclarationStub;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 import javax.swing.*;
 import java.util.Collections;
 
-public class ToitVariableDeclaration extends ToitPrimaryLanguageElement<ToitVariableDeclaration, ToitVariableDeclarationStub> {
+public class ToitVariableDeclaration extends ToitPrimaryLanguageElementBase<ToitVariableDeclaration, ToitVariableDeclarationStub> {
     public ToitVariableDeclaration(@NotNull ASTNode node) {
         super(node);
     }
@@ -80,5 +82,19 @@ public class ToitVariableDeclaration extends ToitPrimaryLanguageElement<ToitVari
 
     public FunctionSignature getGetterSignature() {
         return new FunctionSignature(getName(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap());
+    }
+
+    @Override
+    public ToitEvaluatedType getEvaluatedType() {
+        var toitType = getType();
+        if (toitType != null) return ToitEvaluatedType.fromType(toitType);
+
+        for (ToitExpression toitExpression : getChildrenOfType(ToitExpression.class)) {
+            ToitScope localToitResolveScope = getLocalToitResolveScope();
+            var type = toitExpression.getType(localToitResolveScope);
+            if (type != null) return type;
+        }
+
+        return null;
     }
 }

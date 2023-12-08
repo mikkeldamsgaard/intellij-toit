@@ -15,6 +15,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.ToitFileType;
 import org.toitlang.intellij.ToitLanguage;
+import org.toitlang.intellij.psi.ast.ToitReferenceTarget;
+import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
 import org.toitlang.intellij.psi.scope.ToitFileScope;
 import org.toitlang.intellij.structureview.IStructureViewable;
 
@@ -22,7 +24,7 @@ import javax.swing.*;
 import java.io.IOException;
 import java.util.List;
 
-public class ToitFile extends PsiFileBase implements IStructureViewable {
+public class ToitFile extends PsiFileBase implements IStructureViewable, ToitReferenceTarget {
     CachedValue<ToitFileScope> cachedScope =
             CachedValuesManager.getManager(getProject()).createCachedValue(() -> {
                 ToitFileScope toitFileScope = new ToitFileScope(this);
@@ -90,5 +92,10 @@ public class ToitFile extends PsiFileBase implements IStructureViewable {
     public ToitFile findProjectToitFile(VirtualFile vf) {
         if (vf == null) return null;
         return (ToitFile) PsiManager.getInstance(getProject()).findFile(vf);
+    }
+
+    @Override
+    public ToitEvaluatedType getEvaluatedType() {
+        return ToitEvaluatedType.file(this);
     }
 }

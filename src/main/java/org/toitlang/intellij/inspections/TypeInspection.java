@@ -3,7 +3,6 @@ package org.toitlang.intellij.inspections;
 import com.intellij.codeInspection.LocalInspectionTool;
 import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ast.*;
@@ -92,13 +91,13 @@ public class TypeInspection extends LocalInspectionTool {
                         // Check if the function can resolve
                         var resolvedFunctionCall = ToitCallHelper.resolveCall(toitCallExpression);
                         if (resolvedFunctionCall == null) {
-                            IToitElement errorElm = toitCallExpression.getFirstChildOfType(ToitExpression.class);
+                            ToitElement errorElm = toitCallExpression.getFirstChildOfType(ToitExpression.class);
                             if (errorElm != null) errorElm = errorElm.getLastDescendentOfType(ToitReferenceIdentifier.class);
                             if (errorElm == null) errorElm = toitCallExpression;
                             holder.registerProblem(errorElm, "Cannot match arguments to function call");
                         } else {
                             // Check parameter types
-                            for (IToitElement argument : resolvedFunctionCall.getArguments()) {
+                            for (ToitElement argument : resolvedFunctionCall.getArguments()) {
                                 if (argument instanceof ToitExpression) {
                                     ToitEvaluatedType type = ((ToitExpression)argument).getType(argument.getLocalToitResolveScope());
                                     ParameterInfo parameterInfo = resolvedFunctionCall.getParamForArg(argument);

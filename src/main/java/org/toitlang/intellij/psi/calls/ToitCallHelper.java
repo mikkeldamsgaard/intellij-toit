@@ -17,7 +17,7 @@ public class ToitCallHelper {
         return expression.accept(new ToitExpressionVisitor<>() {
             @Override
             public ResolvedFunctionCall visit(ToitCallExpression toitCallExpression) {
-                List<IToitElement> arguments = toitCallExpression.getArguments();
+                List<ToitElement> arguments = toitCallExpression.getArguments();
 
                 for (ToitFunction function : toitCallExpression.getFunctions()) {
                     ResolvedFunctionCall resolved = parametersMatches(function, arguments);
@@ -106,12 +106,12 @@ public class ToitCallHelper {
     }
 
 
-    public static ResolvedFunctionCall parametersMatches(ToitFunction toitFunction, List<IToitElement> parameters) {
+    public static ResolvedFunctionCall parametersMatches(ToitFunction toitFunction, List<ToitElement> parameters) {
         ResolvedFunctionCall resolvedFunctionCall = new ResolvedFunctionCall(toitFunction);
         ParametersInfo parametersInfo = toitFunction.getParameterInfo();
-        List<IToitElement> positionalArgs = new ArrayList<>();
+        List<ToitElement> positionalArgs = new ArrayList<>();
         Map<String, ToitNamedArgument> names = new HashMap<>();
-        for (IToitElement parameter : parameters) {
+        for (ToitElement parameter : parameters) {
             if (parameter instanceof ToitExpression) positionalArgs.add(parameter);
             if (parameter instanceof ToitNamedArgument) {
                 ToitNamedArgument namedArgument = (ToitNamedArgument) parameter;
@@ -131,7 +131,7 @@ public class ToitCallHelper {
                 positionalArgs.size() > parametersInfo.getNumberOfPositionalParameters()) return null;
 
         int position = 0;
-        for (IToitElement positionalArg : positionalArgs) {
+        for (ToitElement positionalArg : positionalArgs) {
             ParameterInfo param = parametersInfo.getPositional(position++);
             resolvedFunctionCall.addMatch(positionalArg, param);
         }
@@ -151,7 +151,7 @@ public class ToitCallHelper {
     }
 
     static public class ResolvedFunctionCall {
-        private final Map<IToitElement, ParameterInfo> argsToParams = new HashMap<>();
+        private final Map<ToitElement, ParameterInfo> argsToParams = new HashMap<>();
         @Getter
         private final ToitFunction toitFunction;
 
@@ -159,15 +159,15 @@ public class ToitCallHelper {
             this.toitFunction = toitFunction;
         }
 
-        private void addMatch(IToitElement arg, ParameterInfo param) {
+        private void addMatch(ToitElement arg, ParameterInfo param) {
             argsToParams.put(arg, param);
         }
 
-        public ParameterInfo getParamForArg(IToitElement arg) {
+        public ParameterInfo getParamForArg(ToitElement arg) {
             return argsToParams.get(arg);
         }
 
-        public Set<IToitElement> getArguments() {
+        public Set<ToitElement> getArguments() {
             return argsToParams.keySet();
         }
     }

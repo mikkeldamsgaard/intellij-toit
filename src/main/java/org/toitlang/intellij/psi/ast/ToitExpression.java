@@ -3,7 +3,6 @@ package org.toitlang.intellij.psi.ast;
 
 import com.intellij.lang.ASTNode;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
 import org.toitlang.intellij.psi.scope.ToitScope;
@@ -13,7 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public abstract class ToitExpression extends ToitElement {
+public abstract class ToitExpression extends ToitElementBase {
 
   public ToitExpression(@NotNull ASTNode node) {
     super(node);

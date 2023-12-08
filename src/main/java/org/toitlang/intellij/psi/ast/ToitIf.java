@@ -5,7 +5,7 @@ import com.intellij.lang.ASTNode;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
-public class ToitIf extends ToitElement {
+public class ToitIf extends ToitElementBase {
 
   public ToitIf(@NotNull ASTNode node) {
     super(node);

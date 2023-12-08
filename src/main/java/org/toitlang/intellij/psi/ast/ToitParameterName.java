@@ -8,11 +8,12 @@ import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.util.IncorrectOperationException;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ToitTypes;
+import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 import java.util.List;
 
-public class ToitParameterName extends ToitElement implements PsiNameIdentifierOwner {
+public class ToitParameterName extends ToitElementBase implements ToitReferenceTarget, PsiNameIdentifierOwner {
 
   public ToitParameterName(@NotNull ASTNode node) {
     super(node);
@@ -25,17 +26,10 @@ public class ToitParameterName extends ToitElement implements PsiNameIdentifierO
 
   @Override
   public ToitIdentifier getNameIdentifier() {
-    List<ToitNameableIdentifier> toitNameableIdentifiers = getChildrenOfType(ToitNameableIdentifier.class);
-    if (toitNameableIdentifiers.size() > 0) {
-      return toitNameableIdentifiers.get(0);
-    }
+    var toitNameableIdentifier = getChildrenOfType(ToitNameableIdentifier.class).stream().findAny().orElse(null);
+    if (toitNameableIdentifier != null) return toitNameableIdentifier;
 
-    List<ToitReferenceIdentifier> toitReferenceIdentifiers = getChildrenOfType(ToitReferenceIdentifier.class);
-    if (toitReferenceIdentifiers.size() > 0) {
-      return toitReferenceIdentifiers.get(0);
-    }
-
-    return null;
+    return getChildrenOfType(ToitNameableIdentifier.class).stream().findAny().orElse(null);
   }
 
   @Override
@@ -49,7 +43,8 @@ public class ToitParameterName extends ToitElement implements PsiNameIdentifierO
   public PsiElement setName(@NlsSafe @NotNull String name) throws IncorrectOperationException {
     ToitIdentifier nameIdentifier = getNameIdentifier();
     if (nameIdentifier == null) return this;
-    return nameIdentifier.setName(name);
+    nameIdentifier.setName(name);
+    return this;
   }
 
   public ToitType getType() {
@@ -62,5 +57,11 @@ public class ToitParameterName extends ToitElement implements PsiNameIdentifierO
       }
     }
     return null;
+  }
+
+  @Override
+  public ToitEvaluatedType getEvaluatedType() {
+    // TODO: <DOT> parameters should take type from instance variable
+    return ToitEvaluatedType.fromType(getType());
   }
 }

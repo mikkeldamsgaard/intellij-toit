@@ -5,7 +5,7 @@ import com.intellij.lang.ASTNode;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
-public class ToitRecover extends ToitElement {
+public class ToitRecover extends ToitElementBase {
 
   public ToitRecover(@NotNull ASTNode node) {
     super(node);

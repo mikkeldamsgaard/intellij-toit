@@ -56,4 +56,12 @@ public class ReferenceTest extends BasePlatformTestCase {
         var resolved = reference.resolve();
         assertNotNull(resolved);
     }
+
+    public void testChainedDeref() {
+        myFixture.configureByFile("chained-deref.toit");
+        var reference = myFixture.getFile().findReferenceAt(myFixture.getCaretOffset());
+        assertNotNull(reference);
+        var resolved = reference.resolve();
+        assertNotNull(resolved);
+    }
 }

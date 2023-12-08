@@ -11,16 +11,16 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
 
     private final static String THIS = "this";
 
-    private final IToitElement origin;
+    private final ToitElement origin;
 
     private ToitScope current;
 
-    public ToitLocalScopeCalculator(IToitElement origin, ToitScope parent) {
+    public ToitLocalScopeCalculator(ToitElement origin, ToitScope parent) {
         this.origin = origin;
         this.current = parent;
     }
 
-    public static ToitScope calculate(IToitElement origin, ToitScope parent) {
+    public static ToitScope calculate(ToitElement origin, ToitScope parent) {
         return new ToitLocalScopeCalculator(origin, parent).calculate();
     }
 
@@ -35,13 +35,13 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
     }
 
     private ToitScope calculate() {
-        IToitElement scopeStart = null;
+        ToitElement scopeStart = null;
         ToitVariableDeclaration toitVariableDeclaration = getImmediateVariableDeclarationParentOfOrigin();
         if (toitVariableDeclaration != null) { // Catch cases such as "x := x.y"
-            scopeStart = toitVariableDeclaration.getPrevSiblingOfType(IToitElement.class);
+            scopeStart = toitVariableDeclaration.getPrevSiblingOfType(ToitElement.class);
 
             if (scopeStart == null) {
-                scopeStart = toitVariableDeclaration.getParentOfType(ToitElement.class);
+                scopeStart = toitVariableDeclaration.getParentOfType(ToitElementBase.class);
             }
 
             if (scopeStart == null) {
@@ -96,7 +96,7 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
         processNestedVariableDeclarations(toitFor);
     }
 
-    private void processNestedVariableDeclarations(ToitElement element) {
+    private void processNestedVariableDeclarations(ToitElementBase element) {
         visitElement(element);
         pushScope(element.toString());
         for (var v : element.getChildrenOfType(ToitVariableDeclaration.class)) {

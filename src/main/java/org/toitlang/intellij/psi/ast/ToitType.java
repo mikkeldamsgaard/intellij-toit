@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 import static org.toitlang.intellij.psi.ToitTypes.*;
 
-public class ToitType extends ToitElement {
+public class ToitType extends ToitElementBase {
 
   public ToitType(@NotNull ASTNode node) {
     super(node);

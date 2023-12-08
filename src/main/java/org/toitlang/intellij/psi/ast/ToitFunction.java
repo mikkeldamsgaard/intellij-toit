@@ -15,6 +15,7 @@ import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.calls.FunctionSignature;
 import org.toitlang.intellij.psi.calls.ParameterInfo;
 import org.toitlang.intellij.psi.calls.ParametersInfo;
+import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
 import org.toitlang.intellij.psi.scope.ToitScope;
 import org.toitlang.intellij.psi.stub.ToitFunctionStub;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
@@ -22,7 +23,7 @@ import org.toitlang.intellij.psi.visitor.ToitVisitor;
 import javax.swing.*;
 import java.util.List;
 
-public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitFunctionStub> {
+public class ToitFunction extends ToitPrimaryLanguageElementBase<ToitFunction, ToitFunctionStub> {
     ParametersInfo parametersInfo;
 
     public ToitFunction(@NotNull ASTNode node) {
@@ -69,7 +70,8 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
 
     @Override
     public PsiElement setName(@NlsSafe @NotNull String name) throws IncorrectOperationException {
-        return getFunctionName().setName(name);
+        getFunctionName().setName(name);
+        return this;
     }
 
     public ToitNameableIdentifier getFunctionName() {
@@ -220,5 +222,20 @@ public class ToitFunction extends ToitPrimaryLanguageElement<ToitFunction, ToitF
                 parameterInfo.getNonDefaultPositionalParameters(),
                 parameterInfo.getNonDefaultNamedParameters(),
                 parameterInfo.getDefaultNamedParameters());
+    }
+
+    @Override
+    public ToitEvaluatedType getEvaluatedType() {
+        var type = getType();
+        if (type != null) {
+            return ToitEvaluatedType.fromType(type);
+        } else if (isConstructor()) {
+            // Factory constructor
+            ToitStructure structure = getParentOfType(ToitStructure.class);
+            if (structure != null) return ToitEvaluatedType.variableStructure(structure);
+        } else {
+            // TODO: Find type of return statement
+        }
+        return null;
     }
 }

@@ -3,7 +3,6 @@ package org.toitlang.intellij.completion;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.patterns.PlatformPatterns;
-import com.intellij.patterns.StandardPatterns;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.util.ProcessingContext;
@@ -48,7 +47,7 @@ public class ToitCompletionContributor extends CompletionContributor {
     public void fillCompletionVariants(@NotNull CompletionParameters parameters, @NotNull CompletionResultSet result) {
         super.fillCompletionVariants(parameters, result);
 
-        IToitElement toitElm = ToitPsiHelper.findClosestIToitElement(parameters.getPosition().getParent());
+        ToitElement toitElm = ToitPsiHelper.findClosestIToitElement(parameters.getPosition().getParent());
         if (toitElm == null) return;
 
         completeConstructionParameters(toitElm, result);
@@ -63,7 +62,7 @@ public class ToitCompletionContributor extends CompletionContributor {
         completeNoneAny(toitElm, result);
     }
 
-    private void completeNoneAny(IToitElement toitElm, CompletionResultSet result) {
+    private void completeNoneAny(ToitElement toitElm, CompletionResultSet result) {
         if (toitElm.getParent() instanceof ToitType) {
             var type = toitElm.getParentOfType(ToitType.class);
             PsiElement prevNonWhiteSpace = type.getPrevNonWhiteSpaceSibling();
@@ -74,7 +73,7 @@ public class ToitCompletionContributor extends CompletionContributor {
         }
     }
 
-    private void completeNullTrueFalse(IToitElement toitElm, CompletionResultSet result) {
+    private void completeNullTrueFalse(ToitElement toitElm, CompletionResultSet result) {
         if (toitElm.getParent() instanceof ToitPrimaryExpression) {
             result.addElement(keywordElement("null"));
             result.addElement(keywordElement("true"));
@@ -82,7 +81,7 @@ public class ToitCompletionContributor extends CompletionContributor {
         }
     }
 
-    private void completeConstructorAbstractStaticInStructureBlock(IToitElement toitElm, CompletionResultSet result) {
+    private void completeConstructorAbstractStaticInStructureBlock(ToitElement toitElm, CompletionResultSet result) {
         var toitStructure = toitElm.getParentChain(ToitStructure.class, List.of(ToitBlock.class, ToitFunction.class));
         if (toitStructure == null) return;
 
@@ -94,14 +93,14 @@ public class ToitCompletionContributor extends CompletionContributor {
         result.addElement(keywordElement("constructor"));
     }
 
-    private void completeFinally(IToitElement toitElm, CompletionResultSet result) {
+    private void completeFinally(ToitElement toitElm, CompletionResultSet result) {
         if (!(toitElm instanceof ToitRecover)) return;
         if (!(toitElm.getParent() instanceof ToitBlock)) return;
         if (!(toitElm.getPrevSibling() instanceof ToitTry)) return;
         result.addElement(keywordElement("finally: "));
     }
 
-    private void completeBreakContinueReturnAndControls(IToitElement toitElm, CompletionResultSet result) {
+    private void completeBreakContinueReturnAndControls(ToitElement toitElm, CompletionResultSet result) {
         var toitBlock = toitElm.getParentChain(ToitBlock.class, List.of(ToitTopLevelExpression.class, ToitPrimaryExpression.class));
         if (toitBlock == null) return;
 
@@ -120,7 +119,7 @@ public class ToitCompletionContributor extends CompletionContributor {
     }
 
     private static final TokenSet CLAZZ = TokenSet.create(ToitTypes.CLASS);
-    private void completeClassAfterAbstract(IToitElement toitElm, CompletionResultSet result) {
+    private void completeClassAfterAbstract(ToitElement toitElm, CompletionResultSet result) {
         if (!(toitElm instanceof ToitRecover)) return;
         var structure = toitElm.getPrevSiblingOfType(ToitStructure.class);
         if (structure == null) return;
@@ -128,7 +127,7 @@ public class ToitCompletionContributor extends CompletionContributor {
         result.addElement(keywordElement("class "));
     }
 
-    private void completeAbstractClassInterfaceMonitor(IToitElement toitElm, CompletionResultSet result) {
+    private void completeAbstractClassInterfaceMonitor(ToitElement toitElm, CompletionResultSet result) {
         ToitFunction toitFunction = toitElm.getParentWithIntermediaries(ToitFunction.class, ToitNameableIdentifier.class);
         if (toitFunction == null) return;
         if (!toitFunction.isTopLevel()) return;
@@ -141,7 +140,7 @@ public class ToitCompletionContributor extends CompletionContributor {
         }
     }
 
-    private void completeShowKeyword(IToitElement position, CompletionResultSet result) {
+    private void completeShowKeyword(ToitElement position, CompletionResultSet result) {
         if (position instanceof ToitRecover) {
             if (position.getPrevSibling() instanceof ToitImportDeclaration) {
                 result.addElement(keywordElement("show "));
@@ -149,7 +148,7 @@ public class ToitCompletionContributor extends CompletionContributor {
         }
     }
 
-    private void completeImportExportKeywords(IToitElement position, CompletionResultSet result) {
+    private void completeImportExportKeywords(ToitElement position, CompletionResultSet result) {
         var toitFunction = position.getParentWithIntermediaries(ToitFunction.class, ToitNameableIdentifier.class);
         if (toitFunction == null) return;
         if (position.getPrevSibling() != null) return;
@@ -159,7 +158,7 @@ public class ToitCompletionContributor extends CompletionContributor {
         }
     }
 
-    private void completeConstructionParameters(@NotNull IToitElement position, @NotNull CompletionResultSet result) {
+    private void completeConstructionParameters(@NotNull ToitElement position, @NotNull CompletionResultSet result) {
         var toitFunction = position.getParentWithIntermediaries(ToitFunction.class, ToitParameterName.class, ToitReferenceIdentifier.class);
         if (toitFunction == null) return;
         Set<String> existingParameters = new HashSet<>();

@@ -19,7 +19,7 @@ import org.toitlang.intellij.psi.visitor.ToitVisitableElement;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class ToitBaseStubableElement<T extends StubElement<? extends PsiElement>> extends ToitVisitableElement<T> implements IToitElement {
+public abstract class ToitBaseStubableElement<T extends StubElement<? extends PsiElement>> extends ToitVisitableElement<T> implements ToitElement {
     protected final static TokenSet ABSTRACT = TokenSet.create(ToitTypes.ABSTRACT);
     protected final static TokenSet STATIC = TokenSet.create(ToitTypes.STATIC);
     protected final static TokenSet STAR_SET = TokenSet.create(ToitTypes.STAR);
@@ -137,7 +137,7 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
         }
     }
 
-    private <V> V getParentWithIntermediaries(Class<V> vClass, List<Class<? extends IToitElement>> intermediaries) {
+    private <V> V getParentWithIntermediaries(Class<V> vClass, List<Class<? extends ToitElement>> intermediaries) {
         int cur = intermediaries.size() - 1;
         PsiElement parent = this;
         while (parent != null && cur >= 0) {
@@ -147,21 +147,21 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
 
         if (parent == null) return null;
         if (vClass.isInstance(parent)) return vClass.cast(parent);
-        return ((IToitElement) parent).getParentOfType(vClass);
+        return ((ToitElement) parent).getParentOfType(vClass);
     }
 
     @Override
-    public <V> V getParentWithIntermediaries(Class<V> vClass, Class<? extends IToitElement> p1) {
+    public <V> V getParentWithIntermediaries(Class<V> vClass, Class<? extends ToitElement> p1) {
         return getParentWithIntermediaries(vClass, List.of(p1));
     }
 
     @Override
-    public <V> V getParentWithIntermediaries(Class<V> vClass, Class<? extends IToitElement> p1, Class<? extends IToitElement> p2) {
+    public <V> V getParentWithIntermediaries(Class<V> vClass, Class<? extends ToitElement> p1, Class<? extends ToitElement> p2) {
         return getParentWithIntermediaries(vClass, List.of(p1, p2));
     }
 
     @Override
-    public <V> V getParentChain(Class<V> top, List<Class<? extends IToitElement>> classes) {
+    public <V> V getParentChain(Class<V> top, List<Class<? extends ToitElement>> classes) {
         int cur = classes.size() - 1;
         PsiElement elm = getParent();
         while (cur >= 0) {
