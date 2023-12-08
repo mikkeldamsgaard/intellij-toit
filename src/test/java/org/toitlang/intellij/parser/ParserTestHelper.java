@@ -1,6 +1,5 @@
 package org.toitlang.intellij.parser;
 
-import com.google.common.base.Charsets;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiErrorElement;
@@ -8,13 +7,9 @@ import com.intellij.psi.PsiFile;
 import com.intellij.testFramework.ParsingTestCase;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+public abstract class ParserTestHelper extends ParsingTestCase {
 
-public class ParserTest extends ParsingTestCase {
-
-    public ParserTest() {
+    public ParserTestHelper() {
         super("", "toit", new ToitParserDefinition());
     }
 
@@ -44,11 +39,6 @@ public class ParserTest extends ParsingTestCase {
     @Override
     protected String getTestDataPath() {
         return "src/test/testData";
-    }
-
-    @Override
-    protected boolean skipSpaces() {
-        return false;
     }
 
     @Override

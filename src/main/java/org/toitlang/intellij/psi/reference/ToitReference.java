@@ -15,27 +15,26 @@ import org.toitlang.intellij.files.ToitSdkFiles;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.ast.*;
+import org.toitlang.intellij.psi.ast.ToitStructure.StaticScope;
 import org.toitlang.intellij.psi.calls.ToitCallHelper;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 import org.toitlang.intellij.psi.scope.ToitFileScope;
 import org.toitlang.intellij.psi.scope.ToitLocalScopeCalculator;
 import org.toitlang.intellij.psi.scope.ToitScope;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ToitReference implements PsiPolyVariantReference {
     private final ToitReferenceIdentifier source;
-    private final List<PsiElement> destinations;
+    private final Set<PsiElement> destinations;
     @Getter
     private final List<PsiElement> dependencies;
     boolean soft;
 
     private ToitReference(ToitReferenceIdentifier source) {
         this.source = source;
-        destinations = new ArrayList<>();
+        destinations = new LinkedHashSet<>();
         dependencies = new ArrayList<>();
         soft = false;
     }
@@ -52,7 +51,6 @@ public class ToitReference implements PsiPolyVariantReference {
 
     @Override
     public @Nullable PsiElement resolve() {
-
         for (PsiElement destination : destinations) {
             // Filter out any ToitFunction destination where the parameters do not match
             if (destination instanceof ToitFunction && !source.isShow()) {
@@ -151,11 +149,13 @@ public class ToitReference implements PsiPolyVariantReference {
     }
 
     private EvaluationScope createEvaluationScope() {
+        ToitScope coreScope = ToitSdkFiles.getCoreScope(source.getProject());
+
         ToitFile file = source.getToitFile();
         ToitFileScope toitFileScope = file.getToitFileScope();
-        ToitScope core = ToitSdkFiles.getCoreScope(source.getProject());
-        ToitScope toitFileScopeScope = toitFileScope.getToitScope(core);
-        ToitScope localScope = ToitLocalScopeCalculator.calculate(source, toitFileScope.getToitScope(toitFileScopeScope));
+        ToitScope fileScope = toitFileScope.getToitScope(coreScope);
+
+        ToitScope localScope = ToitLocalScopeCalculator.calculate(source, fileScope);
 
         return new EvaluationScope(localScope, toitFileScope);
     }
@@ -227,7 +227,7 @@ public class ToitReference implements PsiPolyVariantReference {
                 // This is construction parameters
                 var structure = source.getParentOfType(ToitStructure.class);
                 if (structure != null) {
-                    var resolved = structure.getScope(false, ToitScope.ROOT).resolve(name);
+                    var resolved = structure.getScope(StaticScope.INSTANCE, ToitScope.ROOT).resolve(name);
                     destinations.addAll(resolved.stream()
                             .filter(ref -> ref instanceof ToitVariableDeclaration)
                             .collect(Collectors.toList()));
@@ -248,7 +248,21 @@ public class ToitReference implements PsiPolyVariantReference {
                         } else if (prev.getStructure() != null) {
                             // Special case for setters
                             boolean isPotentialSetterCall = ToitCallHelper.isPotentialSetterCall(toitDerefExpression);
-                            for (PsiElement psiElement : prev.getStructure().getScope(prev.isStatic(), ToitScope.ROOT).resolve(name)) {
+
+                            ToitScope structureScope;
+
+                            if (prev.isStatic()) {
+                                structureScope = prev.getStructure().getScope(StaticScope.STATIC, ToitScope.ROOT);
+                                structureScope = prev.getStructure().getScope(StaticScope.FACTORY, structureScope);
+                            } else {
+                                structureScope = prev.getStructure().getScope(StaticScope.INSTANCE, ToitScope.ROOT);
+                                var functionParent = source.getParentOfType(ToitFunction.class);
+                                if (functionParent != null && functionParent.isConstructor() ) {
+                                    structureScope = prev.getStructure().getScope(StaticScope.FACTORY, structureScope);
+                                }
+                            }
+
+                            for (PsiElement psiElement : structureScope.resolve(name)) {
                                 if (psiElement instanceof ToitFunction) {
                                     if (isPotentialSetterCall && ((ToitFunction) psiElement).isSetter()) {
                                         destinations.add(psiElement);
@@ -259,6 +273,7 @@ public class ToitReference implements PsiPolyVariantReference {
                                     destinations.add(psiElement);
                                 }
                             }
+
                         }
                         return null;
                     }

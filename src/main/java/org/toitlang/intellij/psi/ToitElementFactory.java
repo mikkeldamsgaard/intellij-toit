@@ -123,4 +123,8 @@ public class ToitElementFactory {
                 createFileFromText(name, ToitFileType.INSTANCE, text);
     }
 
+    public static ToitFunction createFunctionFromText(Project project, String text) {
+        final ToitFile file = createFile(project, text);
+        return (ToitFunction) file.getFirstChild();
+    }
 }

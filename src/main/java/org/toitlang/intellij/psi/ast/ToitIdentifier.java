@@ -30,7 +30,16 @@ public abstract class ToitIdentifier extends ToitElement {
     public @NotNull String getName() {
         if (name == null) name = getIdentifierToken().getText();
         if (name == null) name = "__UnknownToit__";
+        name = normalizeMinusUnderscore(name);
         return name.trim();
+    }
+
+    @Override
+    public String getText() {
+        String t = super.getText();
+        if (t == null) return t;
+        System.out.println("getText: "+t);
+        return normalizeMinusUnderscore(t.trim());
     }
 
     public boolean isImport() {
@@ -73,10 +82,6 @@ public abstract class ToitIdentifier extends ToitElement {
 
     protected PsiElement replaceIdentifierToken(ToitIdentifier newRef) {
         return getIdentifierToken().replace(newRef.getIdentifierToken());
-    }
-
-    public static boolean compareIgnoreUnderscoreMinus(String i1, String i2) {
-        return normalizeMinusUnderscore(i1).equals(normalizeMinusUnderscore(i2));
     }
 
     public static String normalizeMinusUnderscore(String s) {

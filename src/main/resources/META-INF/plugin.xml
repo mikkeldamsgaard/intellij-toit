@@ -76,18 +76,21 @@
         <localInspection level="ERROR" enabledByDefault="true" displayName="Semantic errors"
                          groupName="Mandatory checks"
                          implementationClass="org.toitlang.intellij.inspections.SemanticErrorInspector"
-                         hasStaticDescription="true"/>
+                         hasStaticDescription="true" language="Toit"/>
         <localInspection level="ERROR" enabledByDefault="true" displayName="Reference errors"
-                         groupName="Mandatory checks"
+                         groupName="Mandatory checks" language="Toit"
                          implementationClass="org.toitlang.intellij.inspections.ReferenceErrorInspector"/>
         <localInspection level="ERROR" enabledByDefault="true" displayName="Reference errors"
-                         groupName="Mandatory checks"
+                         groupName="Mandatory checks" language="Toit"
                          implementationClass="org.toitlang.intellij.inspections.StringErrorInspector"/>
         <localInspection level="ERROR" enabledByDefault="true" displayName="Type errors"
-                         groupName="Mandatory checks"
+                         groupName="Mandatory checks" language="Toit"
                          implementationClass="org.toitlang.intellij.inspections.TypeInspection"/>
+        <localInspection level="ERROR" enabledByDefault="true" displayName="Extended syntax errors"
+                         groupName="Mandatory checks" language="Toit"
+                         implementationClass="org.toitlang.intellij.inspections.ExtendedSyntaxErrorInspector"/>
 
-
+        <referencesSearch implementation="org.toitlang.intellij.psi.search.ToitReferencesSearcher"/>
         <completion.contributor language="Toit"
                                 implementationClass="org.toitlang.intellij.completion.ToitCompletionContributor"/>
 

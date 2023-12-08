@@ -59,42 +59,55 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
         return nameIdentifier.getName();
     }
 
-    public ToitScope getScope(boolean staticOnly, ToitScope parent) {
-        return getScope(staticOnly, parent, new HashSet<>());
+    public ToitScope getScope(StaticScope staticScope, ToitScope parent) {
+        return getScope(staticScope, parent, new HashSet<>());
     }
 
-    private ToitScope getScope(boolean static_, ToitScope parent, Set<ToitStructure> seenClasses) {
+    private ToitScope getScope(StaticScope staticScope, ToitScope parent, Set<ToitStructure> seenClasses) {
         seenClasses.add(this);
-        if (!static_) {
+        if (staticScope == StaticScope.INSTANCE || staticScope == StaticScope.FACTORY) {
             var baseClass = getBaseClass();
             if (baseClass != null && !seenClasses.contains(baseClass)) {
-                parent = baseClass.getScope(false, parent, seenClasses);
+                parent = baseClass.getScope(staticScope, parent, seenClasses);
+            }
+            if (isMonitor()) {
+                var resolvedMonitor = parent.resolve("__Monitor__");
+                if (!resolvedMonitor.isEmpty()) {
+                    var monitor = resolvedMonitor.get(0);
+                    if (monitor instanceof ToitStructure) {
+                        parent = ((ToitStructure) monitor).getScope(StaticScope.INSTANCE, parent, seenClasses);
+                    }
+                }
             }
         }
 
-        ToitScope structureScope = parent.sub(getName()+"-structure");
-        populateScope(structureScope, static_);
+        ToitScope structureScope = parent.sub(getName() + "-structure");
+        populateScope(structureScope, staticScope);
         return structureScope;
     }
 
-    public void populateScope(ToitScope scope, boolean static_) {
+    public void populateScope(ToitScope scope, StaticScope staticScope) {
         getChildrenOfType(ToitBlock.class).forEach(b ->
                 b.acceptChildren(new ToitVisitor() {
                     @Override
                     public void visit(ToitVariableDeclaration toitVariableDeclaration) {
-                        if (static_ == toitVariableDeclaration.isStatic())
+                        if (toitVariableDeclaration.isStatic() && staticScope == StaticScope.STATIC ||
+                                !toitVariableDeclaration.isStatic() && staticScope == StaticScope.INSTANCE) {
                             scope.add(toitVariableDeclaration.getName(), toitVariableDeclaration);
+                        }
                     }
 
                     @Override
                     public void visit(ToitFunction toitFunction) {
                         if (toitFunction.isConstructor()) {
-                            if (toitFunction.hasFactoryName() && static_) {
+                            if (toitFunction.hasFactoryName() && (staticScope == StaticScope.FACTORY)) {
                                 scope.add(toitFunction.getFactoryName(), toitFunction);
                             }
                         } else if (!toitFunction.isOperator()) {
-                            if (static_ == toitFunction.isStatic())
+                            if (toitFunction.isStatic() && staticScope == StaticScope.STATIC ||
+                                    !toitFunction.isStatic() && staticScope == StaticScope.INSTANCE) {
                                 scope.add(toitFunction.getName(), toitFunction);
+                            }
                         }
                     }
                 }));
@@ -144,21 +157,6 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
         return interfaces;
     }
 
-
-    public List<ToitFunction> getFactoryConstructors(String name) {
-        ToitBlock block = getFirstChildOfType(ToitBlock.class);
-        List<ToitFunction> result = new ArrayList<>();
-        if (block == null) return result;
-
-        var functions = block.getChildrenOfType(ToitFunction.class);
-        for (ToitFunction function : functions) {
-            if (function.isConstructor() && function.hasFactoryName() && name.equals(function.getFactoryName())) {
-                result.add(function);
-            }
-        }
-        return result;
-
-    }
 
     public List<ToitFunction> getDefaultConstructors() {
         ToitBlock block = getFirstChildOfType(ToitBlock.class);
@@ -243,5 +241,9 @@ public class ToitStructure extends ToitPrimaryLanguageElement<ToitStructure, Toi
         var block = getFirstChildOfType(ToitBlock.class);
         if (block == null) return Collections.emptySet(); // Malformed syntax
         return new HashSet<>(block.getChildrenOfType(ToitFunction.class));
+    }
+
+    public enum StaticScope {
+        STATIC, INSTANCE, FACTORY
     }
 }

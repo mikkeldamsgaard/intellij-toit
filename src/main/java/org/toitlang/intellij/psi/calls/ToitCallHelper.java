@@ -8,8 +8,6 @@ import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 
 import java.util.*;
 
-import static org.toitlang.intellij.psi.ast.ToitIdentifier.normalizeMinusUnderscore;
-
 /**
  * Helper function to resolve expressions to calls. Both PrimaryExpression (with on reference identifier inside) and
  * PostfixExpression can be calls in disguise with zero arguments
@@ -119,7 +117,11 @@ public class ToitCallHelper {
                 ToitNamedArgument namedArgument = (ToitNamedArgument) parameter;
                 String name = namedArgument.getName();
                 if (name != null) {
-                    names.put(normalizeMinusUnderscore(name), namedArgument);
+                    if (name.startsWith("no-")) {
+                        names.put(name.substring(3), namedArgument);
+                    } else {
+                        names.put(name, namedArgument);
+                    }
                 }
             }
         }

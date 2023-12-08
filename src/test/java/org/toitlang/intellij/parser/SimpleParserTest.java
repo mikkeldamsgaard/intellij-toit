@@ -1,14 +1,12 @@
 package org.toitlang.intellij.parser;
 
 import junit.framework.AssertionFailedError;
-import org.toitlang.intellij.lexer.ToitLexerAdapter;
-import org.toitlang.intellij.lexer.ToitRestartableLexerAdapter;
-import org.toitlang.intellij.psi.ast.ToitAssignmentExpression;
 import org.toitlang.intellij.psi.ast.ToitExpression;
 import org.toitlang.intellij.psi.ast.ToitVariableDeclaration;
 
 
-public class SimpleParserTest extends ParserTest {
+@SuppressWarnings("ConcatenationWithEmptyString")
+public class SimpleParserTest extends ParserTestHelper {
     public static final String PARSION_RETURN_WiTH_METHOD_CALL = "" +
             "class A:\n" +
             "  main:\n" +
@@ -518,6 +516,7 @@ public class SimpleParserTest extends ParserTest {
         assertTrue(p.getFirstChild() instanceof ToitVariableDeclaration);
         ToitVariableDeclaration vd = (ToitVariableDeclaration) p.getFirstChild();
         var e = vd.getFirstChildOfType(ToitExpression.class);
+        assertNotNull(e);
         assertEquals("f(1)", e.getText());
 
     }

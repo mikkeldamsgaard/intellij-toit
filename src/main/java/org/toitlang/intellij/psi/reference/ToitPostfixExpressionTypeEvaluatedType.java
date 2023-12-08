@@ -2,6 +2,7 @@ package org.toitlang.intellij.psi.reference;
 
 import lombok.Getter;
 import org.toitlang.intellij.psi.ast.*;
+import org.toitlang.intellij.psi.ast.ToitStructure.StaticScope;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 import org.toitlang.intellij.psi.scope.ToitScope;
 
@@ -52,7 +53,13 @@ public class ToitPostfixExpressionTypeEvaluatedType {
                             ToitScope prevFileScope = fPrev.getFile().getToitFileScope().getExportedScope();
                             return resolveTypeOfNameInScope(name, prevFileScope);
                         } else {
-                            ToitScope structureScope = fPrev.getStructure().getScope(fPrev.isStatic(), ToitScope.ROOT);
+                            ToitScope structureScope;
+                            if (fPrev.isStatic()) {
+                                structureScope = fPrev.getStructure().getScope(StaticScope.STATIC, ToitScope.ROOT);
+                                structureScope = fPrev.getStructure().getScope(StaticScope.FACTORY, structureScope);
+                            } else {
+                                structureScope = fPrev.getStructure().getScope(StaticScope.INSTANCE, ToitScope.ROOT);
+                            }
                             return resolveTypeOfNameInScope(name, structureScope);
                         }
                     }

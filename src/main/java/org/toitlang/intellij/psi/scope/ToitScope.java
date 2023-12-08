@@ -6,12 +6,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.toitlang.intellij.psi.ast.ToitIdentifier.normalizeMinusUnderscore;
-
 public class ToitScope {
     public final static ToitScope ROOT = new ToitScope("root", null) {
         @Override
-        public @NotNull List<PsiElement> resolveNormalized(String key) {
+        public @NotNull List<PsiElement> resolve(String key) {
             return Collections.emptyList();
         }
 
@@ -33,20 +31,24 @@ public class ToitScope {
     Map<String, List<PsiElement>> local = new HashMap<>();
 
     private final String name;
+    private final boolean finalScope;
 
     public ToitScope(String name) {
-        this.name = name;
-        this.parent = ROOT;
+        this(name, ROOT);
     }
 
     private ToitScope(String name, ToitScope parent) {
+        this(name, parent, false);
+    }
+
+    private ToitScope(String name, ToitScope parent, boolean finalScope) {
         this.name = name;
         this.parent = parent;
+        this.finalScope = finalScope;
     }
 
     private List<PsiElement> addToLocal(String key) {
-        var normalized = normalizeMinusUnderscore(key);
-        return local.computeIfAbsent(normalized, (k) -> new ArrayList<>());
+        return local.computeIfAbsent(key, (k) -> new ArrayList<>());
     }
 
     public void add(String key, PsiElement value) {
@@ -60,12 +62,12 @@ public class ToitScope {
     }
 
     public @NotNull List<PsiElement> resolve(String key) {
-        return resolveNormalized(normalizeMinusUnderscore(key));
-    }
-    public @NotNull List<PsiElement> resolveNormalized(String normalized) {
         List<PsiElement> result = new ArrayList<>();
-        if (local.containsKey(normalized)) result.addAll(local.get(normalized));
-        result.addAll(parent.resolveNormalized(normalized));
+        if (local.containsKey(key)) {
+            if (finalScope) return local.get(key);
+            result.addAll(local.get(key));
+        }
+        result.addAll(parent.resolve(key));
         return result;
     }
 
@@ -83,7 +85,7 @@ public class ToitScope {
     @Override
     public String toString() {
         return "ToitScope{" +
-                "name="+name+
+                "name=" + name +
                 ", local=" + local +
                 ", parent=" + parent +
                 '}';
@@ -97,5 +99,9 @@ public class ToitScope {
 
     public ToitScope sub(String name) {
         return new ToitScope(name, this);
+    }
+
+    public ToitScope sub(String name, boolean finalScope) {
+        return new ToitScope(name, this, finalScope);
     }
 }

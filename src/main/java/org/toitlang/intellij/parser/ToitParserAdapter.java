@@ -15,4 +15,5 @@ public class ToitParserAdapter implements PsiParser {
         new Parser(root, builder).parse();
         return builder.getTreeBuilt();
     }
+
 }

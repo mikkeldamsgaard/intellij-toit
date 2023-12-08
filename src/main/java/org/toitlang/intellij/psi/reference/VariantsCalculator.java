@@ -8,6 +8,7 @@ import org.toitlang.intellij.files.ToitSdkFiles;
 import org.toitlang.intellij.psi.ToitFile;
 import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.ast.*;
+import org.toitlang.intellij.psi.ast.ToitStructure.StaticScope;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
 import org.toitlang.intellij.psi.scope.ToitScope;
 
@@ -47,7 +48,12 @@ public class VariantsCalculator {
                             if (isTypeSelectingRelationalExpression(toitDerefExpression))
                                 filterVariants(ToitStructure.class, ToitFile.class);
                         } else if (prev.getStructure() != null) {
-                            variants.addAll(prev.getStructure().getScope(prev.isStatic(), ToitScope.ROOT).asVariant());
+                            if (prev.isStatic()) {
+                                variants.addAll(prev.getStructure().getScope(StaticScope.STATIC, ToitScope.ROOT).asVariant());
+                                variants.addAll(prev.getStructure().getScope(StaticScope.FACTORY, ToitScope.ROOT).asVariant());
+                            } else {
+                                variants.addAll(prev.getStructure().getScope(StaticScope.INSTANCE, ToitScope.ROOT).asVariant());
+                            }
                             if (isTypeSelectingRelationalExpression(toitDerefExpression)) variants.clear();
                         }
                     }

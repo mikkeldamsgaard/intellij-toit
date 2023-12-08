@@ -1,13 +1,10 @@
 package org.toitlang.intellij.files;
 
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiManager;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ToitFile;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.toitlang.intellij.psi.ast.ToitIdentifier.normalizeMinusUnderscore;
@@ -49,6 +46,7 @@ public class ToitFileResolver {
         if (path.isEmpty()) return cur;
         String next = path.get(0);
         String normalizedNext = normalizeMinusUnderscore(next);
+        //noinspection UnsafeVfsRecursion
         for (VirtualFile child : cur.getChildren()) {
             if (normalizeMinusUnderscore(child.getName()).equals(normalizedNext)) return findRelativeIgnoreUnderscoreMinus(child, path.subList(1, path.size()));
         }

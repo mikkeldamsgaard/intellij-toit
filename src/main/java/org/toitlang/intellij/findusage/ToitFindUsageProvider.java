@@ -1,21 +1,14 @@
 package org.toitlang.intellij.findusage;
 
-import com.intellij.lang.cacheBuilder.DefaultWordsScanner;
 import com.intellij.lang.cacheBuilder.WordsScanner;
 import com.intellij.lang.findUsages.FindUsagesProvider;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNameIdentifierOwner;
-import com.intellij.psi.tree.TokenSet;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.toitlang.intellij.lexer.ToitLexerAdapter;
-import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.ast.ToitNameableIdentifier;
-import org.toitlang.intellij.psi.ast.ToitReferenceIdentifier;
-
-import static org.toitlang.intellij.psi.ToitTypes.*;
 
 public class ToitFindUsageProvider implements FindUsagesProvider {
     private ToitNameableIdentifier getNamedIdentifier(PsiElement element) {
@@ -51,31 +44,12 @@ public class ToitFindUsageProvider implements FindUsagesProvider {
     @Override
     public @Nls @NotNull String getNodeText(@NotNull PsiElement element, boolean useFullName) {
         ToitNameableIdentifier ne = getNamedIdentifier(element);
+
         return ne.getName();
     }
 
     @Override
     public @Nullable WordsScanner getWordsScanner() {
-        return new DefaultWordsScanner(
-                new ToitLexerAdapter(false),
-                TokenSet.create(
-                        STRUCTURE_IDENTIFIER,
-                        FUNCTION_IDENTIFIER,
-                        IMPORT_AS_IDENTIFIER,
-                        FACTORY_IDENTIFIER,
-                        NAMED_PARAMETER_IDENTIFIER,
-                        SIMPLE_PARAMETER_IDENTIFIER,
-                        VARIABLE_IDENTIFIER,
-
-                        IMPORT_SHOW_IDENTIFIER,
-                        IMPORT_IDENTIFIER,
-                        EXPORT_IDENTIFIER,
-                        TYPE_IDENTIFIER,
-                        REFERENCE_IDENTIFIER,
-                        BREAK_CONTINUE_LABEL_IDENTIFIER,
-                        NAMED_ARGUMENT_IDENTIFIER),
-                TokenSet.create(COMMENT),
-                TokenSet.create(STRING_PART, STRING_PART, STRING_END, INTEGER, FLOAT)
-        );
+        return new ToitWordScanner();
     }
 }
