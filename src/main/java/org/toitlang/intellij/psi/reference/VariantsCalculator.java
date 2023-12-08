@@ -37,22 +37,32 @@ public class VariantsCalculator {
             expressionParent.accept(new ToitExpressionVisitor<>() {
                 @Override
                 public Object visit(ToitDerefExpression toitDerefExpression) {
-                    var postfixEvaluatedType =
-                            ToitPostfixExpressionTypeEvaluatedType
-                                    .calculate(toitDerefExpression.getParentOfType(ToitPostfixExpression.class));
-                    var prev = postfixEvaluatedType.getTypeForPreviousChild(toitDerefExpression);
+                    var previousExpression = toitDerefExpression.getPrevSibling();
+                    if (previousExpression == null) return null;
 
-                    if (prev != null && !prev.isUnresolved()) {
-                        if (prev.getFile() != null) {
-                            variants.addAll(prev.getFile().getToitFileScope().getExportedScope().asVariant());
+                    var reference = previousExpression.getReference();
+                    if (reference == null) return null;
+
+                    for (ToitReferenceTarget target : ((ToitReference) reference).getDestinations()) {
+                        ToitEvaluatedType evaluatedType = target.getEvaluatedType();
+                        if (evaluatedType == null) continue;
+
+                        if (evaluatedType.getFile() != null) {
+                            variants.addAll(evaluatedType.getFile().getToitFileScope().getExportedScope().asVariant());
                             if (isTypeSelectingRelationalExpression(toitDerefExpression))
                                 filterVariants(ToitStructure.class, ToitFile.class);
-                        } else if (prev.getStructure() != null) {
-                            if (prev.isStatic()) {
-                                variants.addAll(prev.getStructure().getScope(StaticScope.STATIC, ToitScope.ROOT).asVariant());
-                                variants.addAll(prev.getStructure().getScope(StaticScope.FACTORY, ToitScope.ROOT).asVariant());
+                        } else if (evaluatedType.getStructure() != null) {
+                            if (evaluatedType.isStatic()) {
+                                variants.addAll(evaluatedType.getStructure().getScope(StaticScope.STATIC, ToitScope.ROOT).asVariant());
+                                variants.addAll(evaluatedType.getStructure().getScope(StaticScope.FACTORY, ToitScope.ROOT).asVariant());
                             } else {
-                                variants.addAll(prev.getStructure().getScope(StaticScope.INSTANCE, ToitScope.ROOT).asVariant());
+                                var structureScope = evaluatedType.getStructure().getScope(StaticScope.INSTANCE, ToitScope.ROOT);
+                                var functionParent = source.getParentOfType(ToitFunction.class);
+                                if (functionParent != null && functionParent.isConstructor()) {
+                                    structureScope = evaluatedType.getStructure().getScope(StaticScope.FACTORY, structureScope);
+                                }
+
+                                variants.addAll(structureScope.asVariant());
                             }
                             if (isTypeSelectingRelationalExpression(toitDerefExpression)) variants.clear();
                         }

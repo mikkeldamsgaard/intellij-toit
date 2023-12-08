@@ -13,6 +13,8 @@ import org.toitlang.intellij.psi.ToitTypes;
 import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
+import java.util.stream.Collectors;
+
 import static org.toitlang.intellij.psi.ToitTypes.DOT;
 import static org.toitlang.intellij.psi.ToitTypes.DOT_DOT;
 
@@ -79,7 +81,8 @@ public class ToitImportDeclaration extends ToitElementBase implements ToitRefere
 
   @Override
   public ToitEvaluatedType getEvaluatedType() {
-    getToitFile().getToitFileScope().getImportedLibrary()
-    return null;
+    var imports = getChildrenOfType(ToitReferenceIdentifier.class).stream().filter(ToitReferenceIdentifier::isImport).collect(Collectors.toList());
+    String fqn = "$" + getPrefixDots() + "$" + imports.stream().map(ToitIdentifier::getName).collect(Collectors.joining("."));
+    return ToitEvaluatedType.file(getToitFile().getToitFileScope().getImportedLibrary(fqn));
   }
 }

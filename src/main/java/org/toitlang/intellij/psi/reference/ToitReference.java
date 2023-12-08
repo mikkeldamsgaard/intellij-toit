@@ -197,15 +197,9 @@ public class ToitReference implements PsiPolyVariantReference {
       soft = true;
     } else if (sType == ToitTypes.IMPORT_IDENTIFIER) {
       var importDecl = source.getParentOfType(ToitImportDeclaration.class);
-      var imports = importDecl.getChildrenOfType(ToitReferenceIdentifier.class).stream().filter(ToitReferenceIdentifier::isImport).collect(Collectors.toList());
-      if (importDecl.hasShow() || importDecl.isShowStar() || importDecl.hasAs() || importDecl.getPrefixDots() > 0) {
-        String fqn = "$" + importDecl.getPrefixDots() + "$" + imports.stream().map(ToitIdentifier::getName).collect(Collectors.joining("."));
-        var toitFile = scope.getImportedLibrary(fqn);
-        if (toitFile != null) destinations.add(toitFile);
-      } else {
-        var last = imports.get(imports.size() - 1);
-        List<ToitReferenceTarget> resolved = scope.resolve(last.getName());
-        destinations.addAll(resolved);
+      var evaluatedType = importDecl.getEvaluatedType();
+      if (evaluatedType != null && evaluatedType.getFile() != null) {
+        destinations.add(evaluatedType.getFile());
       }
     } else if (sType == ToitTypes.NAMED_ARGUMENT_IDENTIFIER) {
       var call = source.getParentOfType(ToitCallExpression.class);
@@ -236,70 +230,8 @@ public class ToitReference implements PsiPolyVariantReference {
             .collect(Collectors.toList()));
         }
       } else {
-        expressionParent.accept(new ToitExpressionVisitor<>() {
-          @Override
-          public Object visit(ToitDerefExpression toitDerefExpression) {
-            var previousExpression = toitDerefExpression.getPrevSibling();
-            if (previousExpression == null) return null;
-
-            var reference = previousExpression.getReference();
-            if (reference == null) return null;
-
-            for (ToitReferenceTarget target : ((ToitReference) reference).getDestinations()) {
-              ToitEvaluatedType evaluatedType = target.getEvaluatedType();
-              if (evaluatedType == null) continue;
-
-              if (evaluatedType.getFile() != null) {
-                destinations.addAll(evaluatedType.getFile().getToitFileScope().getExportedScope().resolve(name));
-              } else if (evaluatedType.getStructure() != null) {
-                // Special case for setters
-                boolean isPotentialSetterCall = ToitCallHelper.isPotentialSetterCall(toitDerefExpression);
-
-                ToitScope structureScope;
-
-                if (evaluatedType.isStatic()) {
-                  structureScope = evaluatedType.getStructure().getScope(StaticScope.STATIC, ToitScope.ROOT);
-                  structureScope = evaluatedType.getStructure().getScope(StaticScope.FACTORY, structureScope);
-                } else {
-                  structureScope = evaluatedType.getStructure().getScope(StaticScope.INSTANCE, ToitScope.ROOT);
-                  var functionParent = source.getParentOfType(ToitFunction.class);
-                  if (functionParent != null && functionParent.isConstructor()) {
-                    structureScope = evaluatedType.getStructure().getScope(StaticScope.FACTORY, structureScope);
-                  }
-                }
-
-                for (ToitReferenceTarget psiElement : structureScope.resolve(name)) {
-                  if (psiElement instanceof ToitFunction) {
-                    if (isPotentialSetterCall && ((ToitFunction) psiElement).isSetter()) {
-                      destinations.add(psiElement);
-                    } else if (!isPotentialSetterCall && !((ToitFunction) psiElement).isSetter()) {
-                      destinations.add(psiElement);
-                    }
-                  } else {
-                    destinations.add(psiElement);
-                  }
-                }
-              }
-            }
-            return null;
-          }
-
-          @Override
-          public Object visitExpression(ToitExpression expression) {
-            destinations.addAll(scope.resolve(name));
-            if (name.equals("it")) soft = true;
-            return null;
-          }
-
-          @Override
-          public Object visit(ToitPrimaryExpression toitPrimaryExpression) {
-            if (!toitPrimaryExpression.getChildrenOfType(ToitPrimitive.class).isEmpty()) {
-              soft = true;
-            }
-            return visitExpression(toitPrimaryExpression);
-          }
-        });
-
+        destinations.addAll(expressionParent.getReferenceTargets(scope).stream()
+          .map(ToitExpressionReferenceTarget::getTarget).collect(Collectors.toList()));
       }
     }
 

@@ -13,6 +13,7 @@ import com.intellij.util.indexing.IndexableSetContributor;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ast.ToitPrimaryLanguageElement;
 import org.toitlang.intellij.psi.ToitFile;
+import org.toitlang.intellij.psi.ast.ToitReferenceTarget;
 import org.toitlang.intellij.psi.scope.ToitScope;
 import org.toitlang.intellij.ui.ToitApplicationSettings;
 import org.toitlang.intellij.ui.ToitNotifier;
@@ -60,7 +61,7 @@ public class ToitSdkFiles extends IndexableSetContributor {
 
 
                     List<PsiElement> dependencies = new ArrayList<>(2000);
-                    Map<String, List<? extends PsiElement>> coreElements = new HashMap<>();
+                    Map<String, List<? extends ToitReferenceTarget>> coreElements = new HashMap<>();
 
                     VirtualFile core = root.findFileByRelativePath("core");
                     if (core != null) {
