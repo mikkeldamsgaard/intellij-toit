@@ -20,4 +20,9 @@ public class ToitOperator extends ToitElementBase {
   public boolean isConstDeclare() {
     return hasToken(CONST_OPERATOR);
   }
+
+  @Override
+  public String getName() {
+    return getText().trim();
+  }
 }

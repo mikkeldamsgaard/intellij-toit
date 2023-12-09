@@ -4,9 +4,9 @@ package org.toitlang.intellij.psi.ast;
 import com.intellij.lang.ASTNode;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
-import org.toitlang.intellij.psi.reference.EvaluationScope;
 import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
 import org.toitlang.intellij.psi.reference.ToitExpressionReferenceTarget;
+import org.toitlang.intellij.psi.reference.ToitReferenceTargets;
 import org.toitlang.intellij.psi.scope.ToitScope;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
@@ -36,7 +36,7 @@ public abstract class ToitExpression extends ToitElementBase {
             .collect(Collectors.toList());
   }
 
-  public ToitEvaluatedType getType(ToitScope scope) {
+  public @NotNull ToitEvaluatedType getType(ToitScope scope) {
     return ToitEvaluatedType.evaluate(this, scope);
   }
 
@@ -44,12 +44,8 @@ public abstract class ToitExpression extends ToitElementBase {
     return getText().trim().equals("null");
   }
 
-  public Collection<ToitExpressionReferenceTarget> getReferenceTargets(EvaluationScope scope) {
-    var child = singleToitElementChild();
-    if (child instanceof ToitExpression) {
-      return ((ToitExpression) child).getReferenceTargets(scope);
-    }
-    return Collections.emptyList();
+  public ToitReferenceTargets getReferenceTargets(ToitScope scope) {
+    return new ToitReferenceTargets();
   }
 
   public ToitElement singleToitElementChild() {

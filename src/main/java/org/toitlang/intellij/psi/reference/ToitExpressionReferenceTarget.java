@@ -2,6 +2,7 @@ package org.toitlang.intellij.psi.reference;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ast.ToitReferenceTarget;
 
 @Data
@@ -22,7 +23,7 @@ public class ToitExpressionReferenceTarget {
     return new ToitExpressionReferenceTarget(true, target);
   }
 
-  public ToitEvaluatedType getEvaluatedType() {
+  public @NotNull ToitEvaluatedType getEvaluatedType() {
     var type = target.getEvaluatedType();
     if (instanceTarget) type = type.nonStatic();
     return type;

@@ -58,6 +58,10 @@ public class ToitFunction extends ToitPrimaryLanguageElementBase<ToitFunction, T
         if (stub != null && stub.getName() != null) return stub.getName();
 
         if (isConstructor() && hasFactoryName()) return getFactoryName();
+        if (isOperator()) {
+            var operator = getFirstChildOfType(ToitOperator.class);
+            if (operator != null) return operator.getName();
+        }
         var functionName = getFunctionName();
         if (functionName == null) return "";
         return functionName.getName();
@@ -225,7 +229,7 @@ public class ToitFunction extends ToitPrimaryLanguageElementBase<ToitFunction, T
     }
 
     @Override
-    public ToitEvaluatedType getEvaluatedType() {
+    public @NotNull ToitEvaluatedType getEvaluatedType() {
         var type = getType();
         if (type != null) {
             return ToitEvaluatedType.fromType(type);
@@ -236,6 +240,6 @@ public class ToitFunction extends ToitPrimaryLanguageElementBase<ToitFunction, T
         } else {
             // TODO: Find type of return statement
         }
-        return null;
+        return ToitEvaluatedType.UNRESOLVED;
     }
 }

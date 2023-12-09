@@ -104,7 +104,7 @@ public class ToitStructure extends ToitPrimaryLanguageElementBase<ToitStructure,
                             if (toitFunction.hasFactoryName() && (staticScope == StaticScope.FACTORY)) {
                                 scope.add(toitFunction.getFactoryName(), toitFunction);
                             }
-                        } else if (!toitFunction.isOperator()) {
+                        } else { // TODO(mikkel): Setter
                             if (toitFunction.isStatic() && staticScope == StaticScope.STATIC ||
                                     !toitFunction.isStatic() && staticScope == StaticScope.INSTANCE) {
                                 scope.add(toitFunction.getName(), toitFunction);
@@ -245,7 +245,7 @@ public class ToitStructure extends ToitPrimaryLanguageElementBase<ToitStructure,
     }
 
     @Override
-    public ToitEvaluatedType getEvaluatedType() {
+    public @NotNull ToitEvaluatedType getEvaluatedType() {
         return ToitEvaluatedType.staticStructure(this);
     }
 

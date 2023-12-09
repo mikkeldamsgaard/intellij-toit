@@ -5,14 +5,12 @@ import com.intellij.lang.ASTNode;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.calls.ToitCallHelper;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
-import org.toitlang.intellij.psi.reference.EvaluationScope;
 import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
 import org.toitlang.intellij.psi.reference.ToitExpressionReferenceTarget;
+import org.toitlang.intellij.psi.reference.ToitReferenceTargets;
 import org.toitlang.intellij.psi.scope.ToitScope;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,18 +26,29 @@ public class ToitDerefExpression extends ToitExpression {
   }
 
   @Override
-  public Collection<ToitExpressionReferenceTarget> getReferenceTargets(EvaluationScope scope) {
+  public ToitReferenceTargets getReferenceTargets(ToitScope scope) {
     var previousSibling = getPrevSibling();
     var name = getName();
-    if (!(previousSibling instanceof ToitExpression) || name == null) return Collections.emptyList();
+    if (!(previousSibling instanceof ToitExpression) || name == null) return new ToitReferenceTargets();
     var previousExpression = (ToitExpression) previousSibling;
 
     List<ToitExpressionReferenceTarget> result = new ArrayList<>();
 
-    for (ToitExpressionReferenceTarget referenceTarget : previousExpression.getReferenceTargets(scope)) {
-      ToitEvaluatedType evaluatedType = referenceTarget.getEvaluatedType();
-      if (evaluatedType == null) continue;
+    List<ToitEvaluatedType> possibleTypes = new ArrayList<>();
 
+    ToitReferenceTargets previousTargets = previousExpression.getReferenceTargets(scope);
+    for (ToitExpressionReferenceTarget referenceTarget :previousTargets.getTargets()) {
+      ToitEvaluatedType evaluatedType = referenceTarget.getEvaluatedType();
+      if (!evaluatedType.resolved()) continue;
+      possibleTypes.add(evaluatedType);
+    }
+
+    if (possibleTypes.isEmpty()) {
+      var type = previousExpression.getType(scope);
+      if (type.resolved()) possibleTypes.add(type);
+    }
+
+    for (ToitEvaluatedType evaluatedType : possibleTypes) {
       if (evaluatedType.getFile() != null) {
           result.addAll(evaluatedType.getFile().getToitFileScope().getExportedScope()
             .resolve(getToitReferenceIdentifier().getName()).stream()
@@ -64,19 +73,21 @@ public class ToitDerefExpression extends ToitExpression {
         for (ToitReferenceTarget resolvedTarget : structureScope.resolve(name)) {
           var expressionTarget = new ToitExpressionReferenceTarget(resolvedTarget);
           if (resolvedTarget instanceof ToitFunction) {
-            if (isPotentialSetterCall && ((ToitFunction) resolvedTarget).isSetter()) {
-              result.add(expressionTarget);
-            } else if (!isPotentialSetterCall && !((ToitFunction) resolvedTarget).isSetter()) {
-              result.add(expressionTarget);
+            if (!isPotentialSetterCall && ((ToitFunction) resolvedTarget).isSetter() ||
+                isPotentialSetterCall && !((ToitFunction) resolvedTarget).isSetter()) {
+              continue;
             }
-          } else {
-            result.add(expressionTarget);
           }
+          result.add(expressionTarget);
         }
       }
     }
 
-    return result;
+    // Check for constructor calls
+    return
+      new ToitReferenceTargets(
+        result.stream().map(e -> ToitCallHelper.isDisguisedConstructorCall(e,this)).collect(Collectors.toList()),
+        possibleTypes.isEmpty() || previousTargets.isSoft());
   }
 
   public ToitReferenceIdentifier getToitReferenceIdentifier() {

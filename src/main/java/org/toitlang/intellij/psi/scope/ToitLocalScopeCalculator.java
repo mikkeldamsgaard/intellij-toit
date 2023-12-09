@@ -3,14 +3,11 @@ package org.toitlang.intellij.psi.scope;
 import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 import org.toitlang.intellij.psi.ast.*;
+import org.toitlang.intellij.psi.reference.ToitEvaluatedType;
 import org.toitlang.intellij.psi.visitor.ToitVisitableElement;
 import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 public class ToitLocalScopeCalculator extends ToitVisitor {
-    private final static String SUPER = "super";
-
-    private final static String THIS = "this";
-
     private final ToitElement origin;
 
     private ToitScope current;
@@ -117,14 +114,14 @@ public class ToitLocalScopeCalculator extends ToitVisitor {
         ToitStructure structure = toitFunction.getParentOfType(ToitStructure.class);
         if (structure != null && !toitFunction.isStatic()) {
             pushScope(toitFunction.getName() + "::super-this");
-            current.add(THIS, structure);
+            current.add(ToitEvaluatedType.THIS, structure);
 
             ToitStructure baseClass = structure.getBaseClass();
             if (baseClass != null) {
                 if (!toitFunction.isConstructor()) {
-                    current.add(SUPER, baseClass.getScope(ToitStructure.StaticScope.INSTANCE, current).resolve(toitFunction.getName()));
+                    current.add(ToitEvaluatedType.SUPER, baseClass.getScope(ToitStructure.StaticScope.INSTANCE, ToitScope.ROOT).resolve(toitFunction.getName()));
                 } else {
-                    current.add(SUPER, baseClass);
+                    current.add(ToitEvaluatedType.SUPER, baseClass);
                 }
             }
         }

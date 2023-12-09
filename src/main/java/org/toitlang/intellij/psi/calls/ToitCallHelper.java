@@ -5,6 +5,7 @@ import com.intellij.psi.ResolveResult;
 import lombok.Getter;
 import org.toitlang.intellij.psi.ast.*;
 import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
+import org.toitlang.intellij.psi.reference.ToitExpressionReferenceTarget;
 
 import java.util.*;
 
@@ -148,6 +149,35 @@ public class ToitCallHelper {
         }
 
         return resolvedFunctionCall;
+    }
+
+    public static ToitExpressionReferenceTarget isDisguisedConstructorCall(ToitExpressionReferenceTarget referenceTarget,
+                                                                           ToitExpression expression) {
+        // A primary expression or a deref expression can be disguised constructor calls, if the identifier
+        // is a reference to a structure and
+        // if its the right most leaf in the expression tree and close to the ToitTopLevelExpression
+        // ToitPrimaryExpression needs to be a direct child of ToitTopLevelExpression
+        // A deref expression needs to have top level expression as the grand parent
+        if (!(referenceTarget.getTarget() instanceof ToitStructure) || expression.getNextSibling() != null)
+            return referenceTarget;
+
+        if (expression instanceof ToitPrimaryExpression &&
+            expression.getParentChain(ToitTopLevelExpression.class, List.of()) == null ||
+          expression instanceof ToitDerefExpression &&
+            expression.getParentChain(ToitTopLevelExpression.class, List.of(ToitPostfixExpression.class)) == null) {
+            return referenceTarget;
+        }
+
+        // Check to see if any of the constructors in the target has no arguments
+        ToitStructure structure = (ToitStructure) referenceTarget.getTarget();
+        for (ToitFunction defaultConstructor : structure.getDefaultConstructors()) {
+            ResolvedFunctionCall resolvedFunctionCall = parametersMatches(defaultConstructor, Collections.emptyList());
+            if (resolvedFunctionCall != null) {
+                return new ToitExpressionReferenceTarget(defaultConstructor);
+            }
+        }
+
+        return referenceTarget;
     }
 
     static public class ResolvedFunctionCall {

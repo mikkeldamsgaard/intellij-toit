@@ -80,7 +80,7 @@ public class ToitImportDeclaration extends ToitElementBase implements ToitRefere
   }
 
   @Override
-  public ToitEvaluatedType getEvaluatedType() {
+  public @NotNull ToitEvaluatedType getEvaluatedType() {
     var imports = getChildrenOfType(ToitReferenceIdentifier.class).stream().filter(ToitReferenceIdentifier::isImport).collect(Collectors.toList());
     String fqn = "$" + getPrefixDots() + "$" + imports.stream().map(ToitIdentifier::getName).collect(Collectors.joining("."));
     return ToitEvaluatedType.file(getToitFile().getToitFileScope().getImportedLibrary(fqn));

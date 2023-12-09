@@ -1,34 +1,43 @@
 // This is a generated file. Not intended for manual editing.
-package org.toitlang.intellij.psi.ast;
+package org.toitlang.intellij.psi.ast
 
-import com.intellij.lang.ASTNode;
-import org.jetbrains.annotations.NotNull;
-import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
-import org.toitlang.intellij.psi.reference.EvaluationScope;
-import org.toitlang.intellij.psi.reference.ToitExpressionReferenceTarget;
+import com.intellij.lang.ASTNode
+import org.toitlang.intellij.psi.calls.ToitCallHelper
+import org.toitlang.intellij.psi.expression.ToitExpressionVisitor
+import org.toitlang.intellij.psi.reference.ToitEvaluatedType
+import org.toitlang.intellij.psi.reference.ToitExpressionReferenceTarget
+import org.toitlang.intellij.psi.reference.ToitReferenceTargets
+import org.toitlang.intellij.psi.scope.ToitScope
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.stream.Collectors;
+class ToitPrimaryExpression(node: ASTNode) : ToitExpression(node) {
+    // Possible children (Always only one child)
+    // ToitReferenceIdentifier
+    // ToitTopLevelExpression
+    // Literals
+    // ToitBlock (block or lambda)
 
-public class ToitPrimaryExpression extends ToitExpression {
-
-  public ToitPrimaryExpression(@NotNull ASTNode node) {
-    super(node);
-  }
-
-  @Override
-  public <T> T accept(ToitExpressionVisitor<T> expressionVisitor) {
-    return expressionVisitor.visit(this);
-  }
-
-  @Override
-  public Collection<ToitExpressionReferenceTarget> getReferenceTargets(EvaluationScope scope) {
-    ToitElement child = singleToitElementChild();
-    if (child instanceof ToitReferenceIdentifier) {
-      var name = child.getName();
-      return scope.resolve(name).stream().map(ToitExpressionReferenceTarget::new).collect(Collectors.toList());
+    override fun <T> accept(expressionVisitor: ToitExpressionVisitor<T>): T {
+        return expressionVisitor.visit(this)
     }
-    return super.getReferenceTargets(scope);
-  }
+
+    override fun getReferenceTargets(scope: ToitScope): ToitReferenceTargets {
+        val child = singleToitElementChild()
+        when (child) {
+            is ToitReferenceIdentifier -> {
+                val result = ArrayList<ToitExpressionReferenceTarget>(1)
+                val name = child.getName()
+                for (referenceTarget in scope.resolve(name)) {
+                    var expressionReferenceTarget = ToitExpressionReferenceTarget(referenceTarget)
+                    if (ToitEvaluatedType.SUPER == name || ToitEvaluatedType.THIS == name) {
+                        expressionReferenceTarget = expressionReferenceTarget.toInstance()
+                    }
+                    expressionReferenceTarget = ToitCallHelper.isDisguisedConstructorCall(expressionReferenceTarget, this)
+                    result.add(expressionReferenceTarget)
+                }
+                return ToitReferenceTargets(result)
+            }
+            is ToitTopLevelExpression -> return child.getReferenceTargets(scope)
+        }
+        return super.getReferenceTargets(scope)
+    }
 }

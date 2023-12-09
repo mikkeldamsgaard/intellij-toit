@@ -13,6 +13,7 @@ import org.toitlang.intellij.psi.visitor.ToitVisitor;
 
 import java.util.List;
 
+// TODO: Split into Reference and NameIdentifierOwner.
 public class ToitParameterName extends ToitElementBase implements ToitReferenceTarget, PsiNameIdentifierOwner {
 
   public ToitParameterName(@NotNull ASTNode node) {
@@ -26,13 +27,12 @@ public class ToitParameterName extends ToitElementBase implements ToitReferenceT
 
   @Override
   public ToitIdentifier getNameIdentifier() {
-    var toitNameableIdentifier = getChildrenOfType(ToitNameableIdentifier.class).stream().findAny().orElse(null);
-    if (toitNameableIdentifier != null) return toitNameableIdentifier;
-
-    return getChildrenOfType(ToitNameableIdentifier.class).stream().findAny().orElse(null);
+    ToitIdentifier identifier = getChildrenOfType(ToitNameableIdentifier.class).stream().findAny().orElse(null);
+    if (identifier == null) identifier = getChildrenOfType(ToitReferenceIdentifier.class).stream().findAny().orElse(null);
+    return identifier;
   }
 
-  @Override
+    @Override
   public String getName() {
     ToitIdentifier identifier = getNameIdentifier();
     if (identifier == null) return "__UnknownToit__";
@@ -60,7 +60,7 @@ public class ToitParameterName extends ToitElementBase implements ToitReferenceT
   }
 
   @Override
-  public ToitEvaluatedType getEvaluatedType() {
+  public @NotNull ToitEvaluatedType getEvaluatedType() {
     // TODO: <DOT> parameters should take type from instance variable
     return ToitEvaluatedType.fromType(getType());
   }

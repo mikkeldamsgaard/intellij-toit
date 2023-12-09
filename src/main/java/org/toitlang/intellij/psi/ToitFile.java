@@ -95,7 +95,7 @@ public class ToitFile extends PsiFileBase implements IStructureViewable, ToitRef
     }
 
     @Override
-    public ToitEvaluatedType getEvaluatedType() {
+    public @NotNull ToitEvaluatedType getEvaluatedType() {
         return ToitEvaluatedType.file(this);
     }
 }

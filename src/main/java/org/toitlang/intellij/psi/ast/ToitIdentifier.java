@@ -38,7 +38,6 @@ public abstract class ToitIdentifier extends ToitElementBase {
     public String getText() {
         String t = super.getText();
         if (t == null) return t;
-        System.out.println("getText: "+t);
         return normalizeMinusUnderscore(t.trim());
     }
 

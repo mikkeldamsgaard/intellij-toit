@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
 public class VariantsCalculator {
     private final ToitReferenceIdentifier source;
     private final Set<Object> variants;
-    private final EvaluationScope scope;
+    private final ToitScope scope;
 
-    private VariantsCalculator(ToitReferenceIdentifier source, EvaluationScope evaluationScope) {
+    private VariantsCalculator(ToitReferenceIdentifier source, ToitScope evaluationScope) {
         this.source = source;
         scope = evaluationScope;
         this.variants = new HashSet<>();
@@ -45,7 +45,7 @@ public class VariantsCalculator {
 
                     for (ToitReferenceTarget target : ((ToitReference) reference).getDestinations()) {
                         ToitEvaluatedType evaluatedType = target.getEvaluatedType();
-                        if (evaluatedType == null) continue;
+                        if (!evaluatedType.resolved()) continue;
 
                         if (evaluatedType.getFile() != null) {
                             variants.addAll(evaluatedType.getFile().getToitFileScope().getExportedScope().asVariant());
@@ -205,7 +205,7 @@ public class VariantsCalculator {
         return variants.stream().map(o -> (o instanceof ToitFile)?((ToitFile)o).getPresentableText():o).toArray();
     }
 
-    public static Object[] getVariants(ToitReferenceIdentifier source, EvaluationScope evaluationScope) {
+    public static Object[] getVariants(ToitReferenceIdentifier source, ToitScope evaluationScope) {
         return new VariantsCalculator(source, evaluationScope).build().getVariants();
     }
 

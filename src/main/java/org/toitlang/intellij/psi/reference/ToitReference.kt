@@ -1,244 +1,182 @@
-package org.toitlang.intellij.psi.reference;
+package org.toitlang.intellij.psi.reference
 
-import com.intellij.openapi.util.NlsSafe;
-import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiElementResolveResult;
-import com.intellij.psi.PsiPolyVariantReference;
-import com.intellij.psi.ResolveResult;
-import com.intellij.psi.tree.IElementType;
-import com.intellij.util.IncorrectOperationException;
-import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.toitlang.intellij.files.ToitSdkFiles;
-import org.toitlang.intellij.psi.ToitFile;
-import org.toitlang.intellij.psi.ToitTypes;
-import org.toitlang.intellij.psi.ast.*;
-import org.toitlang.intellij.psi.ast.ToitStructure.StaticScope;
-import org.toitlang.intellij.psi.calls.ToitCallHelper;
-import org.toitlang.intellij.psi.expression.ToitExpressionVisitor;
-import org.toitlang.intellij.psi.scope.ToitFileScope;
-import org.toitlang.intellij.psi.scope.ToitLocalScopeCalculator;
-import org.toitlang.intellij.psi.scope.ToitScope;
+import com.intellij.openapi.util.NlsSafe
+import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiElementResolveResult
+import com.intellij.psi.PsiPolyVariantReference
+import com.intellij.psi.ResolveResult
+import com.intellij.util.IncorrectOperationException
+import lombok.Getter
+import org.toitlang.intellij.files.ToitSdkFiles
+import org.toitlang.intellij.psi.ToitFile
+import org.toitlang.intellij.psi.ToitTypes
+import org.toitlang.intellij.psi.ast.*
+import org.toitlang.intellij.psi.ast.ToitStructure.StaticScope
+import org.toitlang.intellij.psi.calls.ToitCallHelper
+import org.toitlang.intellij.psi.expression.ToitExpressionVisitor
+import org.toitlang.intellij.psi.scope.ToitLocalScopeCalculator
+import org.toitlang.intellij.psi.scope.ToitScope
+import org.toitlang.intellij.psi.visitor.ToitVisitor
+import java.util.stream.Collectors
 
-import java.util.*;
-import java.util.stream.Collectors;
+class ToitReference private constructor(private val source: ToitReferenceIdentifier) : PsiPolyVariantReference {
+    val destinations: MutableSet<ToitReferenceTarget?>
+    private val dependencies: MutableList<PsiElement>
+    var soft: Boolean
 
-public class ToitReference implements PsiPolyVariantReference {
-  private final ToitReferenceIdentifier source;
-  @Getter
-  private final Set<ToitReferenceTarget> destinations;
-  @Getter
-  private final List<PsiElement> dependencies;
-  boolean soft;
+    init {
+        destinations = LinkedHashSet()
+        dependencies = ArrayList()
+        soft = false
+    }
 
-  private ToitReference(ToitReferenceIdentifier source) {
-    this.source = source;
-    destinations = new LinkedHashSet<>();
-    dependencies = new ArrayList<>();
-    soft = false;
-  }
+    override fun getVariants(): Array<Any> {
+        return VariantsCalculator.getVariants(source, createEvaluationScope())
+    }
 
-  @Override
-  public Object @NotNull [] getVariants() {
-    return VariantsCalculator.getVariants(source, createEvaluationScope());
-  }
+    override fun multiResolve(incompleteCode: Boolean): Array<ResolveResult> {
+        return destinations.stream().map { element: ToitReferenceTarget? -> PsiElementResolveResult(element!!) }.toArray { length: Int -> arrayOfNulls(length) }
+    }
 
-  @Override
-  public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
-    return destinations.stream().map(PsiElementResolveResult::new).toArray(ResolveResult[]::new);
-  }
+    override fun resolve(): PsiElement? {
+        return destinations.stream().findAny().orElse(null)
+    }
 
-  @Override
-  public @Nullable PsiElement resolve() {
-    for (PsiElement destination : destinations) {
-      // Filter out any ToitFunction destination where the parameters do not match
-      if (destination instanceof ToitFunction && !source.isShow()) {
-        ToitFunction function = (ToitFunction) destination;
-        var expr = source.getExpressionParent();
+    override fun getElement(): PsiElement {
+        return source
+    }
 
-        if (expr == null) {
-          System.out.println("Weird, investigate this");
-          continue;
+    override fun getRangeInElement(): TextRange {
+        return TextRange(0, source.textLength)
+    }
+
+    override fun getCanonicalText(): @NlsSafe String {
+        return source.getName()
+    }
+
+    @Throws(IncorrectOperationException::class)
+    override fun handleElementRename(newElementName: String): PsiElement {
+        return source.setName(newElementName)
+    }
+
+    @Throws(IncorrectOperationException::class)
+    override fun bindToElement(element: PsiElement): PsiElement {
+        destinations.clear()
+        if (element is ToitReferenceTarget) {
+            destinations.add(element)
         }
+        dependencies.add(element)
+        return element
+    }
 
-        List<ToitElement> arguments = expr.accept(new ToitExpressionVisitor<>() {
-          private List<ToitElement> checkSetterOrCall(ToitExpression expression) {
-            var parentExpression = expression.getParentOfType(ToitExpression.class);
-            if (parentExpression == null) return null;
-            return parentExpression.accept(new ToitExpressionVisitor<>() {
-              @Override
-              public List<ToitElement> visit(ToitCallExpression toitCallExpression) {
-                if (function.isSetter()) return null;
-                if (toitCallExpression.getFirstChild() == expression)
-                  return toitCallExpression.getArguments();
-                return null;
-              }
+    override fun isReferenceTo(element: PsiElement): Boolean {
+        return getElement().manager.areElementsEquivalent(resolve(), element)
+    }
 
-              @Override
-              public List<ToitElement> visit(ToitAssignmentExpression toitAssignmentExpression) {
-                if (toitAssignmentExpression.getFirstChild() == expression) {
-                  if (!function.isSetter()) return null;
-                  return Collections.singletonList(toitAssignmentExpression.getLastChildOfType(ToitExpression.class));
+    override fun isSoft(): Boolean {
+        return soft
+    }
+
+    private fun createEvaluationScope(): ToitScope {
+        val coreScope = ToitSdkFiles.getCoreScope(source.getProject())
+        val file = source.toitFile
+        val toitFileScope = file.toitFileScope
+        val fileScope = toitFileScope.getToitScope(coreScope)
+        return ToitLocalScopeCalculator.calculate(source, fileScope)
+    }
+
+    private fun build(): ToitReference {
+        val scope = createEvaluationScope()
+        val name = source.getName()
+        dependencies.add(source)
+        val sType = source.getNode().elementType
+        if (sType === ToitTypes.TYPE_IDENTIFIER) {
+            val prevSib = source.prevSibling
+            if (prevSib != null) {
+                val refs = source.getParentOfType(ToitType::class.java).getChildrenOfType(ToitReferenceIdentifier::class.java)
+                val idx = refs.indexOf(source)
+                if (idx == 1) {
+                    val prevRefs = refs[0].reference.multiResolve(false)
+                    for (prevRef in prevRefs) {
+                        if (prevRef.element is ToitFile) {
+                            val exportedScope = (prevRef.element as ToitFile?)!!.toitFileScope.exportedScope
+                            val elm = exportedScope.resolve(name)
+                            destinations.addAll(elm)
+                        }
+                    }
                 }
-                return null;
-              }
-            });
-          }
-
-          @Override
-          public List<ToitElement> visit(ToitPrimaryExpression toitPrimaryExpression) {
-            return checkSetterOrCall(toitPrimaryExpression);
-          }
-
-          @Override
-          public List<ToitElement> visit(ToitDerefExpression toitDerefExpression) {
-            if (expr.getParent() instanceof ToitPostfixExpression) {
-              var postfixExpr = (ToitPostfixExpression) expr.getParent();
-              if (postfixExpr.getLastChildOfType(ToitDerefExpression.class) == toitDerefExpression)
-                return checkSetterOrCall(postfixExpr);
+            } else {
+                if ("none" == name || "any" == name) {
+                    soft = true
+                } else {
+                    destinations.addAll(source.toitResolveScope.resolve(name))
+                }
             }
-            return null;
-          }
-        });
-        if (arguments == null) arguments = Collections.emptyList();
-        if (ToitCallHelper.parametersMatches((ToitFunction) destination, arguments) != null)
-          return destination;
-      }
-    }
-
-    return destinations.stream().findAny().orElse(null);
-  }
-
-  @Override
-  public @NotNull PsiElement getElement() {
-    return source;
-  }
-
-  @Override
-  public @NotNull TextRange getRangeInElement() {
-    return new TextRange(0, source.getTextLength());
-  }
-
-  @Override
-  public @NotNull @NlsSafe String getCanonicalText() {
-    return source.getName();
-  }
-
-  @Override
-  public PsiElement handleElementRename(@NotNull String newElementName) throws IncorrectOperationException {
-    return source.setName(newElementName);
-  }
-
-  @Override
-  public PsiElement bindToElement(@NotNull PsiElement element) throws IncorrectOperationException {
-    destinations.clear();
-    if (element instanceof ToitReferenceTarget) {
-      destinations.add((ToitReferenceTarget) element);
-    }
-    dependencies.add(element);
-    return element;
-  }
-
-  @Override
-  public boolean isReferenceTo(@NotNull PsiElement element) {
-    return getElement().getManager().areElementsEquivalent(resolve(), element);
-  }
-
-  @Override
-  public boolean isSoft() {
-    return soft;
-  }
-
-  private EvaluationScope createEvaluationScope() {
-    ToitScope coreScope = ToitSdkFiles.getCoreScope(source.getProject());
-
-    ToitFile file = source.getToitFile();
-    ToitFileScope toitFileScope = file.getToitFileScope();
-    ToitScope fileScope = toitFileScope.getToitScope(coreScope);
-
-    ToitScope localScope = ToitLocalScopeCalculator.calculate(source, fileScope);
-
-    return new EvaluationScope(localScope, toitFileScope);
-  }
-
-
-  private ToitReference build() {
-    EvaluationScope scope = createEvaluationScope();
-    String name = source.getName();
-    dependencies.add(source);
-    IElementType sType = source.getNode().getElementType();
-    if (sType == ToitTypes.TYPE_IDENTIFIER) {
-      var prevSib = source.getPrevSibling();
-      if (prevSib != null) {
-        List<ToitReferenceIdentifier> refs = source.getParentOfType(ToitType.class).getChildrenOfType(ToitReferenceIdentifier.class);
-        int idx = refs.indexOf(source);
-        if (idx == 1) {
-          var prevRefs = refs.get(0).getReference().multiResolve(false);
-          for (ResolveResult prevRef : prevRefs) {
-            if (prevRef.getElement() instanceof ToitFile) {
-              ToitScope exportedScope = ((ToitFile) prevRef.getElement()).getToitFileScope().getExportedScope();
-              var elm = exportedScope.resolve(name);
-              destinations.addAll(elm);
+        } else if (sType === ToitTypes.IMPORT_SHOW_IDENTIFIER || sType === ToitTypes.EXPORT_IDENTIFIER) {
+            destinations.addAll(scope.resolve(name))
+        } else if (sType === ToitTypes.BREAK_CONTINUE_LABEL_IDENTIFIER) {
+            soft = true
+        } else if (sType === ToitTypes.IMPORT_IDENTIFIER) {
+            val importDecl = source.getParentOfType(ToitImportDeclaration::class.java)
+            val evaluatedType = importDecl.getEvaluatedType()
+            if (evaluatedType.resolved() && evaluatedType.file != null) {
+                destinations.add(evaluatedType.file)
             }
-          }
+        } else if (sType === ToitTypes.NAMED_ARGUMENT_IDENTIFIER) {
+            val call = source.getParentOfType(ToitCallExpression::class.java)
+            val resolved = ToitCallHelper.resolveCall(call)
+            if (resolved != null) {
+                val parameterInfo = resolved.getParamForArg(source.getParentOfType(ToitNamedArgument::class.java))
+                if (parameterInfo != null) {
+                    val toitParameterName = parameterInfo.parameterName
+                    val identifier = toitParameterName.getNameIdentifier()
+                    if (identifier is ToitReferenceIdentifier) {
+                        destinations.addAll(identifier.reference.destinations)
+                    } else if (identifier is ToitNameableIdentifier) {
+                        destinations.add(toitParameterName)
+                    }
+                }
+            } else {
+                soft = true
+            }
+        } else if (sType === ToitTypes.REFERENCE_IDENTIFIER) {
+            val parent = source.getParent()
+            when(parent) { // Handle all possible parent types
+                is ToitPrimitive -> soft = true
+                is ToitParameterName -> {
+                    // This is dotted parameters
+                    val structure = source.getParentOfType(ToitStructure::class.java)
+                    if (structure != null) {
+                        val resolved = structure.getScope(StaticScope.INSTANCE, ToitScope.ROOT).resolve(name)
+                        destinations.addAll(resolved.stream()
+                                .filter { ref: ToitReferenceTarget? -> ref is ToitVariableDeclaration }
+                                .collect(Collectors.toList()))
+                    }
+                }
+                is ToitDerefExpression -> processExpressionParent(parent, scope)
+                is ToitPrimaryExpression -> {
+                    if (name == ToitEvaluatedType.IT) soft = true;
+                    processExpressionParent(parent, scope)
+                }
+            }
         }
-      } else {
-        if ("none".equals(name) || "any".equals(name)) {
-          soft = true;
-        } else {
-          destinations.addAll(source.getToitResolveScope().resolve(name));
-        }
-      }
-    } else if (sType == ToitTypes.IMPORT_SHOW_IDENTIFIER || sType == ToitTypes.EXPORT_IDENTIFIER) {
-      destinations.addAll(scope.resolve(name));
-    } else if (sType == ToitTypes.BREAK_CONTINUE_LABEL_IDENTIFIER) {
-      soft = true;
-    } else if (sType == ToitTypes.IMPORT_IDENTIFIER) {
-      var importDecl = source.getParentOfType(ToitImportDeclaration.class);
-      var evaluatedType = importDecl.getEvaluatedType();
-      if (evaluatedType != null && evaluatedType.getFile() != null) {
-        destinations.add(evaluatedType.getFile());
-      }
-    } else if (sType == ToitTypes.NAMED_ARGUMENT_IDENTIFIER) {
-      var call = source.getParentOfType(ToitCallExpression.class);
-      var resolved = ToitCallHelper.resolveCall(call);
-      if (resolved != null) {
-        var parameterInfo = resolved.getParamForArg(source.getParentOfType(ToitNamedArgument.class));
-        if (parameterInfo != null) {
-          var toitParameterName = parameterInfo.getParameterName();
-          ToitIdentifier identifier = toitParameterName.getNameIdentifier();
-          if (identifier instanceof ToitReferenceIdentifier) {
-            destinations.addAll(((ToitReferenceIdentifier) identifier).getReference().destinations);
-          } else if (identifier instanceof ToitNameableIdentifier) {
-            destinations.add(toitParameterName);
-          }
-        }
-      } else {
-        soft = true;
-      }
-    } else if (sType == ToitTypes.REFERENCE_IDENTIFIER) {
-      var expressionParent = source.getExpressionParent();
-      if (expressionParent == null) {
-        // This is construction parameters
-        var structure = source.getParentOfType(ToitStructure.class);
-        if (structure != null) {
-          var resolved = structure.getScope(StaticScope.INSTANCE, ToitScope.ROOT).resolve(name);
-          destinations.addAll(resolved.stream()
-            .filter(ref -> ref instanceof ToitVariableDeclaration)
-            .collect(Collectors.toList()));
-        }
-      } else {
-        destinations.addAll(expressionParent.getReferenceTargets(scope).stream()
-          .map(ToitExpressionReferenceTarget::getTarget).collect(Collectors.toList()));
-      }
+        return this
     }
 
-    return this;
-  }
+    private fun processExpressionParent(parent: ToitExpression, scope: ToitScope) {
+        val referenceTargets = parent.getReferenceTargets(scope)
+        soft = soft or referenceTargets.isSoft
+        for (referenceTarget in referenceTargets.getTargets()) {
+            destinations.add(referenceTarget.getTarget())
+        }
+    }
 
-  public static ToitReference create(ToitReferenceIdentifier source) {
-    return new ToitReference(source).build();
-  }
+
+    companion object {
+        @JvmStatic
+        fun create(source: ToitReferenceIdentifier): ToitReference {
+            return ToitReference(source).build()
+        }
+    }
 }

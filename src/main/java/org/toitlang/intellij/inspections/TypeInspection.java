@@ -25,7 +25,7 @@ public class TypeInspection extends LocalInspectionTool {
                         if (variable == null) return null;
                         ToitScope localToitResolveScope = toitAssignmentExpression.getLocalToitResolveScope();
                         ToitEvaluatedType variableType = variable.getType(localToitResolveScope);
-                        if (variableType == null || variableType.isUnresolved() || variableType.isEstimated()) return null;
+                        if (!variableType.resolved() || variableType.isEstimated()) return null;
                         var expression = toitAssignmentExpression.getRightHandSide();
                         if (expression == null) return null;
                         if (expression.isNull()) {
@@ -101,7 +101,7 @@ public class TypeInspection extends LocalInspectionTool {
                                 if (argument instanceof ToitExpression) {
                                     ToitEvaluatedType type = ((ToitExpression)argument).getType(argument.getLocalToitResolveScope());
                                     ParameterInfo parameterInfo = resolvedFunctionCall.getParamForArg(argument);
-                                    if (type != null && !type.isUnresolved() && parameterInfo.getType() != null) {
+                                    if (type.resolved() && parameterInfo.getType() != null) {
                                         ToitStructure resolvedParameterType = parameterInfo.getType().resolve();
                                         if (resolvedParameterType != null && !type.isAssignableTo(resolvedParameterType) && type.getStructure() != null) {
                                             holder.registerProblem(argument, "Cannot assign expression of type "+type.getStructure().getName()+" to parameter of type "+ resolvedParameterType.getName());

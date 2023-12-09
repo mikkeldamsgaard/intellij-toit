@@ -33,5 +33,6 @@ public class TypeInspectionTest extends BasePlatformTestCase {
     }
 
     public void testMinusMinusNo() { doTestInspection(); }
+    public void testStringInference() { doTestInspection(); }
 
 }

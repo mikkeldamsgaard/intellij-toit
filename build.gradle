@@ -2,10 +2,12 @@ plugins {
     id 'org.jetbrains.intellij' version '1.9.0'
     id 'java'
     id "io.freefair.lombok" version "5.3.3.3"
+    id 'org.jetbrains.kotlin.jvm' version '1.9.21'
+    id 'org.jetbrains.kotlin.plugin.lombok' version '1.9.21'
 }
 
 group 'org.toitlang'
-version '1.7'
+version '1.8'
 
 repositories {
     mavenCentral()
@@ -15,6 +17,7 @@ dependencies {
     implementation 'org.projectlombok:lombok:1.18.24'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.10.0'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
@@ -31,7 +34,7 @@ tasks {
 patchPluginXml {
     changeNotes = """
 <ul>
-<li>Bump version dependencies</li>
+<li>Updated to support for kebab-case</li>
 </ul>
       """
 }
@@ -51,3 +54,13 @@ publishPlugin {
 }
 
 sourceSets.main.java.srcDirs 'src/main/gen'
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+}
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+}

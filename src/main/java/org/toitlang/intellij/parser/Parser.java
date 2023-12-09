@@ -238,6 +238,7 @@ public class Parser {
         } else if (isIdentifier("operator")) {
             if (static_) return function.error("Operators may not be static");
             identifier(PSEUDO_KEYWORD);
+            var operatorMarker = mark(OPERATOR);
             if (is(OVERLOADABLE_OPERATORS)) {
                 consumeAllowNewlines();
             } else if (isSequence(LBRACKET, DOT_DOT, RBRACKET) ||
@@ -249,8 +250,10 @@ public class Parser {
                 consume();
                 consumeAllowNewlines();
             } else {
+                operatorMarker.drop();
                 return function.error("Invalid overloaded operator");
             }
+            operatorMarker.done();
         } else {
             if (!identifier(FUNCTION_IDENTIFIER)) return function.error("Expected function name");
 

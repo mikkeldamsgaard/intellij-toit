@@ -40,5 +40,7 @@ public interface ToitElement extends PsiElement {
 
     <V> V getParentChain(Class<V> top, List<Class<? extends ToitElement>> classes);
 
+    List<ToitElement> getAncestorsUntil(Class<? extends ToitElement> clazz);
+
     String getName();
 }

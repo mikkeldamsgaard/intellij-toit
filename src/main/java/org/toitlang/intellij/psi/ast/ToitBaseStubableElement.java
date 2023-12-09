@@ -173,4 +173,18 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
         if (!top.isInstance(elm)) return null;
         return top.cast(elm);
     }
+
+
+    @Override
+    public List<ToitElement> getAncestorsUntil(Class<? extends ToitElement> clazz) {
+        List<ToitElement> result = new ArrayList<>();
+        PsiElement parent = getParent();
+        while (parent instanceof ToitElement && !clazz.isInstance(parent)) {
+            result.add((ToitElement) parent);
+            parent = parent.getParent();
+        }
+        if (parent instanceof ToitElement) result.add((ToitElement) parent);
+        return result;
+    }
+
 }
