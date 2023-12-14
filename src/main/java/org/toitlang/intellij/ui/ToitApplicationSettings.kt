@@ -1,110 +1,99 @@
-package org.toitlang.intellij.ui;
+package org.toitlang.intellij.ui
 
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.State;
-import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.fileChooser.FileChooserDescriptor;
-import com.intellij.openapi.options.Configurable;
-import com.intellij.openapi.options.ConfigurationException;
-import com.intellij.openapi.ui.TextBrowseFolderListener;
-import com.intellij.openapi.ui.TextFieldWithBrowseButton;
-import com.intellij.openapi.util.NlsContexts;
-import com.intellij.ui.components.JBLabel;
-import com.intellij.util.ui.FormBuilder;
-import org.jetbrains.annotations.Nls;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import com.intellij.openapi.application.runWriteAction
+import com.intellij.openapi.externalSystem.service.ui.setSelectedJdkReference
+import com.intellij.openapi.options.Configurable
+import com.intellij.openapi.options.ConfigurationException
+import com.intellij.openapi.project.DumbService
+import com.intellij.openapi.project.ProjectManager
+import com.intellij.openapi.projectRoots.ProjectJdkTable
+import com.intellij.openapi.projectRoots.Sdk
+import com.intellij.openapi.projectRoots.SdkModel
+import com.intellij.openapi.projectRoots.SdkModificator
+import com.intellij.openapi.roots.ProjectRootManager
+import com.intellij.openapi.roots.ui.configuration.*
+import com.intellij.openapi.util.NlsContexts.ConfigurableName
+import com.intellij.ui.dsl.builder.panel
+import com.intellij.util.PlatformUtils
+import org.jetbrains.annotations.Nls
+import org.toitlang.intellij.sdk.SimpleToitSdkType
+import javax.swing.JComponent
+import com.intellij.openapi.roots.ui.configuration.projectRoot.ProjectSdksModel
+import java.awt.Dialog
+import java.awt.Frame
+import javax.swing.JDialog
 
-import javax.swing.*;
-import java.io.File;
-
-public class ToitApplicationSettings implements Configurable {
-    @Nls(capitalization = Nls.Capitalization.Title)
-    @Override
-    public @NlsContexts.ConfigurableName String getDisplayName() {
-        return "Toit";
+class ToitApplicationSettings : Configurable {
+    var changed = false
+    var sdkComboBox: SdkComboBox? = null
+    override fun getDisplayName(): @Nls(capitalization = Nls.Capitalization.Title) @ConfigurableName String? {
+        return "Toit"
     }
-
-    TextFieldWithBrowseButton sdkPathDialog;
-
-    @Override
-    public @Nullable JComponent createComponent() {
-        var sdkPath = ToitPersistentStateComponent.getInstance().getState().getSdkPath();
-
-        sdkPathDialog = new TextFieldWithBrowseButton();
-        sdkPathDialog.setText(sdkPath != null?sdkPath:"");
-        sdkPathDialog.addBrowseFolderListener(new TextBrowseFolderListener(new FileChooserDescriptor(false,true,false,false,false,false)));
-        return FormBuilder.createFormBuilder()
-                .addLabeledComponent(new JBLabel("Toit sdk dir: "), sdkPathDialog)
-                .addComponentFillVertically(new JPanel(), 0)
-                .getPanel();
-    }
-
-    @Override
-    public void disposeUIResources() {
-        sdkPathDialog = null;
-    }
-
-    @Override
-    public boolean isModified() {
-        String sdkPath = ToitPersistentStateComponent.getInstance().getState().getSdkPath();
-        if (sdkPath == null) return true;
-        return !sdkPath.equals(this.sdkPathDialog.getText());
-    }
-
-    @Override
-    public void apply() throws ConfigurationException {
-        var newPath = sdkPathDialog.getText();
-        if (isSdkValid(newPath)) {
-            ToitPersistentStateComponent.getInstance().getState().setSdkPath(newPath);
+    override fun createComponent(): JComponent? {
+        if (PlatformUtils.isIntelliJ() || PlatformUtils.getPlatformPrefix() == "AndroidStudio") {
+            return panel {
+                row() {
+                    text("Use project settings to change Toit SDK")
+                }
+            }
         } else {
-            throw new ConfigurationException("Invalid sdk dir");
+            ToitNotifier.notifyDebug("Yo")
+            return panel {
+                row {
+                    text("Select toit sdk")
+                }
+
+                ProjectManager.getInstance().defaultProject.let { project ->
+                    val sdksModel = ProjectSdksModel()
+                    sdksModel.reset(project)
+                    sdksModel.addListener(object : SdkModel.Listener {
+                        override fun sdkAdded(sdk: Sdk) {
+                            runWriteAction {
+                                val jdkTable = ProjectJdkTable.getInstance()
+                                if (jdkTable.findJdk(sdk.name) == null) {
+                                    jdkTable.addJdk(sdk)
+                                }
+                            }
+                        }
+                    })
+                    SdkComboBoxModel.createSdkComboBoxModel(project, sdksModel, {it is SimpleToitSdkType}).let { model ->
+                        sdkComboBox = SdkComboBox(model)
+
+                        sdkComboBox!!.addItemListener {
+                            ToitNotifier.notifyDebug("CHANGE Selected sdk: ${sdkComboBox!!.getSelectedSdk()?.name}")
+                            changed = true
+
+                        }
+
+                        if (ProjectRootManager.getInstance(project).projectSdk != null) {
+                            sdkComboBox!!.setSelectedSdk(ProjectRootManager.getInstance(project).projectSdk!!)
+                            ToitNotifier.notifyDebug("Selected sdk: ${sdkComboBox!!.getSelectedSdk()?.name}")
+                        }
+
+                        row {
+                            cell(sdkComboBox!!)
+                        }
+                    }
+                }
+            }
         }
     }
 
-    public static boolean isSdkValid(String sdkRoot) {
-        return new File(sdkRoot+"/lib/core/numbers.toit").exists();
+    override fun disposeUIResources() {
     }
 
-
-
-    @State(
-            name = "org.toitlang.intellij",
-            storages = @Storage("ApplicationSettings.xml")
-    )
-    public static class ToitPersistentStateComponent implements PersistentStateComponent<ToitApplicationsSettingsState> {
-        public static ToitPersistentStateComponent getInstance() {
-            return ApplicationManager.getApplication().getService(ToitPersistentStateComponent.class);
-        }
-
-        private ToitApplicationsSettingsState state = new ToitApplicationsSettingsState();
-
-        @NotNull
-        @Override
-        public ToitApplicationsSettingsState getState() {
-            return state;
-        }
-
-        @Override
-        public void loadState(@NotNull ToitApplicationsSettingsState state) {
-            this.state = state;
-        }
-
+    override fun isModified(): Boolean {
+        return changed;
     }
 
-    public static class ToitApplicationsSettingsState {
-        private String sdkPath = null;
-
-        public ToitApplicationsSettingsState() {
-        }
-
-        public String getSdkPath() {
-            return sdkPath;
-        }
-
-        public void setSdkPath(String sdkPath) {
-            this.sdkPath = sdkPath;
+    @Throws(ConfigurationException::class)
+    override fun apply() {
+        if (sdkComboBox != null) {
+            ProjectManager.getInstance().defaultProject.let { project ->
+                runWriteAction {
+                    ProjectRootManager.getInstance(project).projectSdk = sdkComboBox!!.getSelectedSdk()
+                }
+            }
         }
     }
 }

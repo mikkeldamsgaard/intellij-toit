@@ -21,13 +21,12 @@ public class ToitWordScanner extends VersionedWordsScanner {
 
     @Override
     public int getVersion() {
-        return 2;
+        return 3;
     }
 
     @Override
     public void processWords(@NotNull CharSequence fileText, @NotNull Processor<? super WordOccurrence> processor) {
         lexer.start(fileText);
-        WordOccurrence occurrence = new WordOccurrence(fileText, 0, 0, null); // shared occurrence
 
         IElementType type;
         while ((type = lexer.getTokenType()) != null) {
@@ -45,7 +44,7 @@ public class ToitWordScanner extends VersionedWordsScanner {
             }
 
             if (word != null) {
-                occurrence.init(word,0, word.length(), kind);
+                WordOccurrence occurrence =  new WordOccurrence(word, 0, word.length(), kind);
                 if (!processor.process(occurrence))
                     return;
             }

@@ -40,15 +40,19 @@ class SemanticErrorInspector : LocalInspectionTool() {
     }
 
     private fun checkIllegalShadow(toitVariableDeclaration: ToitVariableDeclaration, holder: ProblemsHolder) {
-        if (toitVariableDeclaration.getParent().parent is ToitStructure || toitVariableDeclaration.getParent() is ToitFile) return
+        if (toitVariableDeclaration.parent.parent is ToitStructure ||
+                toitVariableDeclaration.parent is ToitFile) return
+
+        var functionParent = toitVariableDeclaration.getParentOfType(ToitFunction::class.java)
+
         var scopeElement = toitVariableDeclaration.getPrevSiblingOfType(ToitElementBase::class.java)
         if (scopeElement == null) scopeElement = toitVariableDeclaration.getParentOfType(ToitElementBase::class.java)
         if (scopeElement == null) return
         val nameIdentifier = toitVariableDeclaration.getNameIdentifier() ?: return
         val resolved = scopeElement.localToitResolveScope.resolve(nameIdentifier.getName())
-        for (psiElement in resolved) {
-            if (psiElement is ToitVariableDeclaration) {
-                val referenced = psiElement
+        for (referenced in resolved) {
+            if (referenced is ToitVariableDeclaration) {
+                if (referenced.parent.parent is ToitStructure && functionParent != null && functionParent!!.isStatic) continue
                 if (referenced !== toitVariableDeclaration && !referenced.isStatic()) {
                     holder.registerProblem(toitVariableDeclaration.getProblemIdentifier(), "Illegal shadow of outer variable")
                     return

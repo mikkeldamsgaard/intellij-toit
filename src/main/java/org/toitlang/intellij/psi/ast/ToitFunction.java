@@ -170,7 +170,7 @@ public class ToitFunction extends ToitPrimaryLanguageElementBase<ToitFunction, T
         return type.getNextSibling() != null && type.getNextSibling().getNode().getElementType() == ToitTypes.QUESTION;
     }
 
-    public ParametersInfo getParameterInfo() {
+    public synchronized ParametersInfo getParameterInfo() {
         if (parametersInfo == null) {
             parametersInfo = new ParametersInfo();
             getChildrenOfType(ToitParameterName.class).forEach(this::parseParameterName);
@@ -178,6 +178,11 @@ public class ToitFunction extends ToitPrimaryLanguageElementBase<ToitFunction, T
         return parametersInfo;
     }
 
+    PsiElement skipWhiteSpace(PsiElement element) {
+        while (element != null && element.getNode() != null && element.getNode().getElementType() == TokenType.WHITE_SPACE)
+            element = element.getNextSibling();
+        return element;
+    }
     private void parseParameterName(ToitParameterName pn) {
         boolean isNamed = pn.getNode().getFirstChildNode().getElementType() == ToitTypes.MINUS_MINUS;
         boolean isMemberInitializer = pn.getNode().getChildren(DOT_SET).length != 0;
@@ -190,23 +195,21 @@ public class ToitFunction extends ToitPrimaryLanguageElementBase<ToitFunction, T
             PsiElement cur = pn.getNextSibling();
             if (cur == null) return;
             if (cur.getNode().getElementType() == ToitTypes.SLASH) {
-                cur = cur.getNextSibling();
+                cur = skipWhiteSpace(cur.getNextSibling());
                 if (cur == null) return;
                 if (cur instanceof ToitType) {
                     toitType = (ToitType) cur;
-                    cur = cur.getNextSibling();
+                    cur = skipWhiteSpace(cur.getNextSibling());
                     if (cur == null) return;
                 }
                 if (cur.getNode().getElementType() == ToitTypes.QUESTION) {
                     nullable = true;
-                    cur = cur.getNextSibling();
+                    cur = skipWhiteSpace(cur.getNextSibling());
                     if (cur == null) return;
                 }
             }
-            while (cur != null && cur.getNode() != null && cur.getNode().getElementType() == TokenType.WHITE_SPACE)
-                cur = cur.getNextSibling();
 
-            if (cur != null && cur.getNode() != null && cur.getNode().getElementType() == ToitTypes.EQUALS) {
+            if (cur.getNode() != null && cur.getNode().getElementType() == ToitTypes.EQUALS) {
                 hasDefaultVale = true;
             }
         } finally {

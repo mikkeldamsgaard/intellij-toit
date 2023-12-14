@@ -20,7 +20,7 @@ public class ToitFileResolver {
 //
         ToitFile psiFile;
         if (prefixDots == 0) {
-            psiFile = ToitSdkFiles.findLibraryFile(source.getProject(), paths);
+            psiFile = ToitSdkFiles.Util.findLibraryFile(source, paths);
             if (psiFile == null) {
                 psiFile = ToitPackageHandler.findPackageSourceFile(source, paths);
             }

@@ -44,7 +44,6 @@ public class ToitFindUsageProvider implements FindUsagesProvider {
     @Override
     public @Nls @NotNull String getNodeText(@NotNull PsiElement element, boolean useFullName) {
         ToitNameableIdentifier ne = getNamedIdentifier(element);
-
         return ne.getName();
     }
 

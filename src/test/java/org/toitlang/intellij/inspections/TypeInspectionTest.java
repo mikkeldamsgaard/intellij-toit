@@ -25,7 +25,7 @@ public class TypeInspectionTest extends BasePlatformTestCase {
     }
 
     private void doTestInspection() {
-        myFixture.testHighlighting(getTestName(false) + ".toit");
+        myFixture.testHighlighting(getTestName(false) + ".toit", "i.toit");
     }
 
     protected String getTestDataPath() {
@@ -34,5 +34,6 @@ public class TypeInspectionTest extends BasePlatformTestCase {
 
     public void testMinusMinusNo() { doTestInspection(); }
     public void testStringInference() { doTestInspection(); }
+    public void testResolveTypeType() { doTestInspection(); }
 
 }

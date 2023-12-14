@@ -169,7 +169,7 @@ public class ToitPackageHandler {
         public Map<String, String> getNormalizedPrefixes() {
             if (normalizedPrefixes == null) {
                 normalizedPrefixes = new HashMap<>();
-                prefixes.keySet().forEach(k -> normalizedPrefixes.put(normalizeMinusUnderscore(k), prefixes.get(k)));
+                if (prefixes != null) prefixes.keySet().forEach(k -> normalizedPrefixes.put(normalizeMinusUnderscore(k), prefixes.get(k)));
             }
             return normalizedPrefixes;
         }

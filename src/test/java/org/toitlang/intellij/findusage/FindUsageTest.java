@@ -4,10 +4,12 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import com.intellij.usageView.UsageInfo;
 import org.toitlang.intellij.psi.ToitElementFactory;
 import org.toitlang.intellij.psi.ast.ToitFunction;
 import org.toitlang.intellij.psi.ast.ToitParameterName;
 
+import java.util.Collection;
 import java.util.List;
 
 public class FindUsageTest extends BasePlatformTestCase {
@@ -50,5 +52,14 @@ public class FindUsageTest extends BasePlatformTestCase {
 
     public void testUnderscoreMinusFind() {
         doTest(getTextUnderscoreMinus);
+    }
+
+    protected String getTestDataPath() {
+        return "src/test/testData/findUsages";
+    }
+
+    public void testRemote() {
+        Collection<UsageInfo> usageInfos =  myFixture.testFindUsages("remote.toit","remote-include.toit");
+        assertEquals(3, usageInfos.size());
     }
 }

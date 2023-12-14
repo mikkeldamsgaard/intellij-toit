@@ -15,9 +15,9 @@ repositories {
 
 dependencies {
     implementation 'org.projectlombok:lombok:1.18.24'
+//    implementation 'org.apache.commons:commons-compress:1.23.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.10.0'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/

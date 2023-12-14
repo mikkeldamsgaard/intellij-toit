@@ -100,7 +100,7 @@ public abstract class ToitBaseStubableElement<T extends StubElement<? extends Ps
 
     @Override
     public ToitScope getToitResolveScope() {
-        return getToitFile().getToitFileScope().getToitScope(ToitSdkFiles.getCoreScope(getProject()));
+        return getToitFile().getToitFileScope().getToitScope(ToitSdkFiles.Util.getCoreScope(getToitFile()));
     }
 
     @Override

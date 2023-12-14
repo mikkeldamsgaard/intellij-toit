@@ -25,7 +25,10 @@
     <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
          on how to target different products -->
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
     <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="org.toitlang.intellij.ui.ToitProjectSettingsService"/>
+
         <fileType name="Toit File"
                   implementationClass="org.toitlang.intellij.ToitFileType"
                   fieldName="INSTANCE"
@@ -67,8 +70,6 @@
 
         <applicationConfigurable parentId="language" instance="org.toitlang.intellij.ui.ToitApplicationSettings"
                                  id="org.toitlang.intellij.ui.ToitApplicationSettings" displayName="Toit"/>
-        <applicationService
-                serviceImplementation="org.toitlang.intellij.ui.ToitApplicationSettings$ToitPersistentStateComponent"/>
 
         <projectService serviceImplementation="org.toitlang.intellij.engine.ToitApiEngine"/>
         <indexedRootsProvider implementation="org.toitlang.intellij.files.ToitSdkFiles"/>
@@ -93,7 +94,8 @@
         <referencesSearch implementation="org.toitlang.intellij.psi.search.ToitReferencesSearcher"/>
         <completion.contributor language="Toit"
                                 implementationClass="org.toitlang.intellij.completion.ToitCompletionContributor"/>
-
+        <sdkType implementation="org.toitlang.intellij.sdk.SimpleToitSdkType"/>
+        <sdkDownload implementation="org.toitlang.intellij.sdk.DownloadToitSdkType"/>
     </extensions>
 
     <actions>

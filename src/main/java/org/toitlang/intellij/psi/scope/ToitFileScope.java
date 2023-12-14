@@ -82,7 +82,7 @@ public class ToitFileScope {
 
         for (String export : exports) {
             if (!"*".equals(export) && !result.containsKey(export)) {
-                result.put(export, ToitSdkFiles.getCoreScope(toitFile.getProject()).resolve(export));
+                result.put(export, ToitSdkFiles.Util.getCoreScope(toitFile).resolve(export));
             }
         }
 

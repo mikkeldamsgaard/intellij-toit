@@ -7,17 +7,14 @@ import com.intellij.psi.PsiElementResolveResult
 import com.intellij.psi.PsiPolyVariantReference
 import com.intellij.psi.ResolveResult
 import com.intellij.util.IncorrectOperationException
-import lombok.Getter
 import org.toitlang.intellij.files.ToitSdkFiles
 import org.toitlang.intellij.psi.ToitFile
 import org.toitlang.intellij.psi.ToitTypes
 import org.toitlang.intellij.psi.ast.*
 import org.toitlang.intellij.psi.ast.ToitStructure.StaticScope
 import org.toitlang.intellij.psi.calls.ToitCallHelper
-import org.toitlang.intellij.psi.expression.ToitExpressionVisitor
 import org.toitlang.intellij.psi.scope.ToitLocalScopeCalculator
 import org.toitlang.intellij.psi.scope.ToitScope
-import org.toitlang.intellij.psi.visitor.ToitVisitor
 import java.util.stream.Collectors
 
 class ToitReference private constructor(private val source: ToitReferenceIdentifier) : PsiPolyVariantReference {
@@ -79,8 +76,8 @@ class ToitReference private constructor(private val source: ToitReferenceIdentif
     }
 
     private fun createEvaluationScope(): ToitScope {
-        val coreScope = ToitSdkFiles.getCoreScope(source.getProject())
         val file = source.toitFile
+        val coreScope = ToitSdkFiles.Util.getCoreScope(file)
         val toitFileScope = file.toitFileScope
         val fileScope = toitFileScope.getToitScope(coreScope)
         return ToitLocalScopeCalculator.calculate(source, fileScope)

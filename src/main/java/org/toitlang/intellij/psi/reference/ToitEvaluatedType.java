@@ -59,7 +59,6 @@ public class ToitEvaluatedType {
     return file != null || structure != null;
   }
 
-
   private final static String LIST_CLASS_NAME = "List";
   private final static String BYTE_ARRAY_CLASS_NAME = "ByteArray";
   private final static String INT_CLASS_NAME = "int";
