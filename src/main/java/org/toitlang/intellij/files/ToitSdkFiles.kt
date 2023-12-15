@@ -70,7 +70,7 @@ class ToitSdkFiles : IndexableSetContributor() {
         @JvmStatic
         fun getSdkRoot(file: ToitFile): VirtualFile? {
             val sdk = getSdk(file) ?: return null
-            return sdk.homeDirectory?.findFileByRelativePath("lib");
+            return getSdkRoot(sdk)
         }
 
         fun getSdkRoot(sdk: Sdk): VirtualFile? {

@@ -35,6 +35,7 @@ public class Parser {
     public void parse() {
         var root = mark(this.root);
         if (is(TokenSet.WHITE_SPACE)) consumeAllowNewlines();
+        if (is(NEWLINE)) consume(); // This happens with an empty document
         currentIsAtBeginningOfLine = true;
         importsAndExports();
         declarations();
@@ -363,7 +364,11 @@ public class Parser {
 
                 try {
                     while (currentIndentLevel >= currentBlockIndentLevel() && !builder.eof()) {
+                        int preOffset = builder.getCurrentOffset();
                         if (!elementParser.produce()) recoverToNextStatement();
+                        if (preOffset == builder.getCurrentOffset()) {
+                            return block.done();
+                        }
                     }
                 } finally {
                     currentBlockIndentLevel.pop();
@@ -411,7 +416,7 @@ public class Parser {
     }
 
     private boolean functionStatement() {
-        while (!builder.eof()) {
+        while (!builder.eof() && !STATEMENT_TERMINATORS.contains(tokenType())) {
             if (is(WHILE)) {
                 if (!whileStatement()) return false;
             } else if (is(IF)) {

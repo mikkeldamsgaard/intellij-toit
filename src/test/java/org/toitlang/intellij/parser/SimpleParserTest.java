@@ -520,4 +520,14 @@ public class SimpleParserTest extends ParserTestHelper {
         assertEquals("f(1)", e.getText());
 
     }
+
+    public void testEmptyLambda() {
+        var p = parseFile("tmp", "x := (::)");
+        checkError(p, "");
+    }
+
+    public void testEmptyDocument() {
+        var p = parseFile("tmp", "");
+        checkError(p, "");
+    }
 }
