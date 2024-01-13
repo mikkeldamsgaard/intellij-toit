@@ -48,7 +48,9 @@ class SimpleToitSdkType : SdkType("Toit SDK") {
     }
 
     override fun suggestSdkName(currentSdkName: String?, sdkHome: String): String {
-        return suggestedNameFromVersion(getVersionString(sdkHome))
+        if (sdkHome.startsWith(defaultSdkHome().toString()))
+            return suggestedNameFromVersion(getVersionString(sdkHome))
+        return sdkHome
     }
 
     override fun createAdditionalDataConfigurable(sdkModel: SdkModel, sdkModificator: SdkModificator): AdditionalDataConfigurable? {

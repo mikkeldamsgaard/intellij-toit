@@ -22,7 +22,7 @@ import org.toitlang.intellij.psi.ToitPsiCreator;
 import org.toitlang.intellij.psi.ToitTypes;
 
 public class ToitParserDefinition implements ParserDefinition {
-    public static final TokenSet COMMENTS = TokenSet.create(ToitTypes.COMMENT);
+    public static final TokenSet COMMENTS = TokenSet.create(ToitTypes.COMMENT, ToitTypes.START_COMMENT, ToitTypes.START_DOC_COMMENT);
     public static final TokenSet STRINGS = TokenSet.create(ToitTypes.STRING_START, ToitTypes.STRING_END, ToitTypes.STRING_PART);
 
     @Override

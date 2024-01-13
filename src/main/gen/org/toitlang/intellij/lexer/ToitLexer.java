@@ -672,6 +672,7 @@ class ToitLexer implements FlexLexer {
                 if (!trackIndents) {
                     switch (yystate()) {
                         case YYINITIAL:
+                        case INDENT_TRACKING:
                         case NORMAL:
                             return null;
                         default:
@@ -1289,7 +1290,7 @@ class ToitLexer implements FlexLexer {
             // fall through
           case 142: break;
           case 43: 
-            { startComment(NORMAL_COMMENT);
+            { startComment(NORMAL_COMMENT); return ToitTypes.START_COMMENT;
             } 
             // fall through
           case 143: break;
@@ -1437,7 +1438,7 @@ class ToitLexer implements FlexLexer {
             // fall through
           case 171: break;
           case 72: 
-            { startComment(DOC_COMMENT);
+            { startComment(DOC_COMMENT); return ToitTypes.START_DOC_COMMENT;
             } 
             // fall through
           case 172: break;

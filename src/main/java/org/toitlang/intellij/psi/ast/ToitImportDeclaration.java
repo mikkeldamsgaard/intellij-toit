@@ -58,9 +58,9 @@ public class ToitImportDeclaration extends ToitElementBase implements ToitRefere
   @Override
   public @Nullable PsiElement getNameIdentifier() {
     if (hasAs()) {
-      return getChildrenOfType(ToitIdentifier.class).stream().filter(ToitIdentifier::isImportAs).findFirst().orElseThrow();
+      return getChildrenOfType(ToitIdentifier.class).stream().filter(ToitIdentifier::isImportAs).findFirst().orElse(null);
     }
-    return getChildrenOfType(ToitIdentifier.class).stream().reduce((f,s) -> s).orElseThrow();
+    return getChildrenOfType(ToitIdentifier.class).stream().reduce((f,s) -> s).orElse(null);
   }
 
   @Override

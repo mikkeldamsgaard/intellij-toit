@@ -39,6 +39,8 @@
         <stubIndex implementation="org.toitlang.intellij.psi.stub.indecies.ToitVariableShortNameIndex"/>
         <stubIndex implementation="org.toitlang.intellij.psi.stub.indecies.ToitFunctionShortNameIndex"/>
 
+        <fileBasedIndex implementation="org.toitlang.intellij.psi.search.ToitReferenceNameIndex"/>
+
         <lang.parserDefinition language="Toit"
                                implementationClass="org.toitlang.intellij.parser.ToitParserDefinition"/>
         <lang.syntaxHighlighterFactory language="Toit"

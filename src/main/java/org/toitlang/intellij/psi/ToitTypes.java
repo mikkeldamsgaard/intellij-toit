@@ -24,6 +24,8 @@ public interface ToitTypes {
   IElementType COLON_COLON = new ToitTokenType("COLON_COLON");
   IElementType COMMA = new ToitTokenType("COMMA");
   IElementType COMMENT = new ToitTokenType("COMMENT");
+  IElementType START_COMMENT = new ToitTokenType("START_COMMENT");
+  IElementType START_DOC_COMMENT = new ToitTokenType("START_DOC_COMMENT");
   IElementType CONST_DECLARE = new ToitTokenType("CONST_DECLARE");
   IElementType CONTINUE = new ToitTokenType("CONTINUE");
   IElementType DECLARE = new ToitTokenType("DECLARE");

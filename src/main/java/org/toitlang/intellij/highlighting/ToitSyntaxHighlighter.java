@@ -66,7 +66,9 @@ public class ToitSyntaxHighlighter extends SyntaxHighlighterBase {
             return STRING_KEYS;
         }
 
-        if (tokenType.equals(ToitTypes.COMMENT)) {
+        if (tokenType.equals(ToitTypes.COMMENT) ||
+                tokenType.equals(ToitTypes.START_COMMENT) ||
+                tokenType.equals(ToitTypes.START_DOC_COMMENT)) {
             return COMMENT_KEYS;
         }
 

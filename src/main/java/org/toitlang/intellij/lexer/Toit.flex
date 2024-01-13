@@ -87,6 +87,7 @@ import com.intellij.lexer.FlexLexer;
                 if (!trackIndents) {
                     switch (yystate()) {
                         case YYINITIAL:
+                        case INDENT_TRACKING:
                         case NORMAL:
                             return null;
                         default:
@@ -252,14 +253,14 @@ Spacing=[\ \t]
   {LineTerminator} { return TokenType.WHITE_SPACE;  } // Totally blank lines are treated as whitespace
 }
 
+<YYINITIAL, INDENT_TRACKING, NORMAL, INLINE_DELIMITED_STRING_EXPRESSION, COMMENT_PARSING> {
+ "/**"                                           { startComment(DOC_COMMENT); return ToitTypes.START_DOC_COMMENT; }
+ "/*"                                            { startComment(NORMAL_COMMENT); return ToitTypes.START_COMMENT;}
+}
+
 <COMMENT_PARSING> {
  "*/"                                            { var res = endComment(); if (res != null) return res;}
  [^]                                             { }
-}
-
-<YYINITIAL, INDENT_TRACKING, NORMAL, INLINE_DELIMITED_STRING_EXPRESSION, COMMENT_PARSING> {
- "/**"                                           { startComment(DOC_COMMENT); }
- "/*"                                            { startComment(NORMAL_COMMENT); }
 }
 
 <YYINITIAL, INDENT_TRACKING, NORMAL, INLINE_DELIMITED_STRING_EXPRESSION> {

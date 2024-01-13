@@ -35,6 +35,7 @@ public class SemanticErrorInspectorTest extends BasePlatformTestCase {
     public void testMissingImplementation1() { doTestInspection(); }
     public void testMissingImplementation2() { doTestInspection(); }
     public void testMissingImplementation3() { doTestInspection(); }
+    public void testMissingImplementationFactoryConstructor() { doTestInspection(); }
 
     public void testIllegalShadow() { doTestInspection(); }
     public void testStaticNotIllegalShadow() { doTestInspection(); }

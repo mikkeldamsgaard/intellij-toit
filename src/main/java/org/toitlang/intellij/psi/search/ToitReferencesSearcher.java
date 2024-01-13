@@ -20,6 +20,7 @@ import org.toitlang.intellij.psi.ast.ToitIdentifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 public class ToitReferencesSearcher extends QueryExecutorBase<PsiReference, ReferencesSearch.SearchParameters> {
   <T> T runReadAction(@NotNull Computable<T> computation) {
@@ -33,17 +34,20 @@ public class ToitReferencesSearcher extends QueryExecutorBase<PsiReference, Refe
     String nameToSearch = runReadAction(elementToSearch::getName);
 
     List<LocalSearchScope> localScopes = new ArrayList<>();
-
     if (queryParameters.getEffectiveSearchScope() instanceof GlobalSearchScope) {
       var scope = (GlobalSearchScope) queryParameters.getScopeDeterminedByUser();
       ApplicationManager.getApplication().runReadAction(() -> {
-        for (VirtualFile file : FileTypeIndex.getFiles(ToitFileType.INSTANCE, scope)) {
-          var toitFile = PsiManager.getInstance(elementToSearch.getProject()).findFile(file);
-          if (toitFile != null) {
-            System.out.println(toitFile.getVirtualFile().getName());
-            localScopes.add(new LocalSearchScope(toitFile, null));
-          }
-        }
+        FileBasedIndex.getInstance().getFilesWithKey(
+          ToitReferenceNameIndex.INDEX_NAME,
+          Set.of(nameToSearch),
+          virtualFile -> {
+            var toitFile = PsiManager.getInstance(elementToSearch.getProject()).findFile(virtualFile);
+            if (toitFile != null) {
+              localScopes.add(new LocalSearchScope(toitFile, null));
+            }
+            return true;
+          },
+          scope);
       });
     } else {
       localScopes.add((LocalSearchScope) queryParameters.getEffectiveSearchScope());

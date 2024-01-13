@@ -79,7 +79,7 @@ class SemanticErrorInspector : LocalInspectionTool() {
         }
         val missingImplementation: MutableList<FunctionSignature> = ArrayList()
         FunctionLoop@ for (f in allFunctions) {
-            if ((f.isAbstract || f.getParentOfType<ToitStructure>(ToitStructure::class.java).isInterface) && !f.isOperator() && !f.isStatic) {
+            if ((f.isAbstract || f.getParentOfType<ToitStructure>(ToitStructure::class.java).isInterface) && !f.isOperator() && !f.isStatic && !f.isConstructor()) {
                 val overloaded: Set<FunctionSignature> = implementedFunctions.computeIfAbsent(f.getName()) { n: String? -> HashSet() }
                 val signature = f.getSignature()
                 for (functionSignature in overloaded) {

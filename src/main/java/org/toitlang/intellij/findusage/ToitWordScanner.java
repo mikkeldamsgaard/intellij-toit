@@ -16,7 +16,7 @@ public class ToitWordScanner extends VersionedWordsScanner {
     private final Lexer lexer = new ToitLexerAdapter(false);
 
     private final TokenSet identifierTokenSet = TokenSet.create(IDENTIFIER);
-    private final TokenSet commentTokenSet = TokenSet.create(COMMENT);
+    private final TokenSet commentTokenSet = TokenSet.create(COMMENT, START_COMMENT, START_DOC_COMMENT);
     private final TokenSet literalTokenSet = TokenSet.create(STRING_PART, STRING_PART, STRING_END, INTEGER, FLOAT);
 
     @Override
