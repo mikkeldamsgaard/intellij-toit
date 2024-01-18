@@ -1,27 +1,20 @@
 package org.toitlang.intellij.ui
 
 import com.intellij.openapi.application.runWriteAction
-import com.intellij.openapi.externalSystem.service.ui.setSelectedJdkReference
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ConfigurationException
-import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.projectRoots.SdkModel
-import com.intellij.openapi.projectRoots.SdkModificator
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.roots.ui.configuration.*
+import com.intellij.openapi.roots.ui.configuration.projectRoot.ProjectSdksModel
 import com.intellij.openapi.util.NlsContexts.ConfigurableName
 import com.intellij.ui.dsl.builder.panel
-import com.intellij.util.PlatformUtils
 import org.jetbrains.annotations.Nls
 import org.toitlang.intellij.sdk.SimpleToitSdkType
 import javax.swing.JComponent
-import com.intellij.openapi.roots.ui.configuration.projectRoot.ProjectSdksModel
-import java.awt.Dialog
-import java.awt.Frame
-import javax.swing.JDialog
 
 class ToitApplicationSettings : Configurable {
     var changed = false
@@ -29,15 +22,20 @@ class ToitApplicationSettings : Configurable {
     override fun getDisplayName(): @Nls(capitalization = Nls.Capitalization.Title) @ConfigurableName String? {
         return "Toit"
     }
+
+    fun getPlatformPrefix(defaultPrefix: String?): String {
+        return System.getProperty("idea.platform.prefix", defaultPrefix)
+    }
+
     override fun createComponent(): JComponent? {
-        if (PlatformUtils.isIntelliJ() || PlatformUtils.getPlatformPrefix() == "AndroidStudio") {
+        var platform = getPlatformPrefix("idea");
+        if (platform == "idea" || platform == "Idea" || platform == "AndroidStudio") {
             return panel {
                 row() {
                     text("Use project settings to change Toit SDK")
                 }
             }
         } else {
-            ToitNotifier.notifyDebug("Yo")
             return panel {
                 row {
                     text("Select toit sdk")
