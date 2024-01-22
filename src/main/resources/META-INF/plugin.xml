@@ -1,5 +1,5 @@
 <idea-plugin>
-    <idea-version since-build="222"/>
+    <idea-version since-build="231"/>
     <id>org.toitlang.intellij-toit</id>
     <name>Toit Language Support</name>
     <vendor email="krulimut@gmail.com" url="https://github.com/mikkeldamsgaard">Mikkel Damsgaard</vendor>
